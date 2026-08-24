@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CVT/UAT 자료 자동 생성</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --accent:#FC6969;
+    --accent-dark:#E24E4E;
+    --accent-tint:#FFECEC;
+    --bg:#FFFBFA;
+    --surface:#FFFFFF;
+    --border:#F0E3E1;
+    --text:#2B2523;
+    --text-muted:#9B928D;
+    --pass:#2E9E5B;
+    --minor:#F2B705;
+    --na:#AFB3B8;
+    --major:#F2790F;
+    --fatal:#FC6969;
+    --critical:#8B1E3F;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
+
+  /* Header */
+  .header{margin-bottom:24px;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:600;letter-spacing:.04em;
+    color:var(--accent-dark);background:var(--accent-tint);
+    padding:4px 10px;border-radius:999px;margin-bottom:10px;
+  }
+  .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  h1{font-size:26px;font-weight:800;margin:0 0 4px;letter-spacing:-0.02em;}
+  .subtitle{font-size:14px;color:var(--text-muted);margin:0;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+  .tab-btn{
+    appearance:none;border:none;background:transparent;cursor:pointer;
+    padding:12px 18px;font-size:14.5px;font-weight:600;color:var(--text-muted);
+    border-bottom:2.5px solid transparent;margin-bottom:-1px;
+    transition:color .15s ease, border-color .15s ease;
+    font-family:inherit;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--accent-dark);border-bottom-color:var(--accent);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* Cards */
+  .card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:20px 22px;margin-bottom:20px;
+    box-shadow:0 1px 2px rgba(60,30,30,.03);
+  }
+  .card h2{font-size:15px;font-weight:700;margin:0 0 14px;}
+  .card h2 .num{color:var(--accent-dark);margin-right:4px;}
+
+  /* Dropzone */
+  .dropzone{
+    border:1.5px dashed var(--border);border-radius:10px;
+    padding:26px;text-align:center;cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--accent);background:var(--accent-tint);}
+  .dropzone .icon{font-size:22px;margin-bottom:6px;}
+  .dropzone .main-txt{font-size:13.5px;font-weight:600;}
+  .sub-txt{font-size:12px;color:var(--text-muted);margin:0;font-family:inherit;}
+  .dropzone .sub-txt{margin-top:2px;}
+  .file-chip{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent-tint);color:var(--accent-dark);
+    padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-top:10px;
+  }
+  .file-chip button{
+    border:none;background:none;color:var(--accent-dark);cursor:pointer;font-size:13px;
+    font-weight:700;padding:0;line-height:1;
+  }
+
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+  .field-inline{display:flex;flex-direction:column;gap:4px;}
+  .field-inline label{font-size:11.5px;color:var(--text-muted);font-weight:600;}
+  .field-inline input, .field-inline select{
+    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;
+    font-family:inherit;min-width:150px;background:#fff;color:var(--text);
+  }
+  .field-inline input:focus, .field-inline select:focus{outline:none;border-color:var(--accent);}
+
+  button.primary{
+    appearance:none;border:none;cursor:pointer;
+    background:var(--accent);color:#fff;font-weight:700;font-size:13.5px;
+    padding:9px 18px;border-radius:9px;transition:background .15s ease, transform .1s ease;
+    font-family:inherit;
+  }
+  button.primary:hover{background:var(--accent-dark);}
+  button.primary:disabled{background:#E9D9D9;cursor:not-allowed;}
+  button.ghost{
+    appearance:none;cursor:pointer;background:#fff;color:var(--text);
+    border:1px solid var(--border);font-weight:600;font-size:13.5px;
+    padding:9px 16px;border-radius:9px;font-family:inherit;
+  }
+  button.ghost:hover{border-color:var(--accent);color:var(--accent-dark);}
+  button.ghost:disabled{opacity:.45;cursor:not-allowed;}
+  button.small{padding:5px 10px;font-size:12px;border-radius:7px;}
+
+  .spinner{
+    width:14px;height:14px;border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;border-radius:50%;display:inline-block;
+    animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-box{
+    background:#FFF1F1;border:1px solid #FBC7C7;color:#B23434;
+    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+  }
+  .notice-box{
+    background:#F1F4FF;border:1px solid #D6DEFB;color:#3B4A9E;
+    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+  }
+  .warn-box{
+    background:#FFF8EA;border:1px solid #F5DDA3;color:#8A5A00;
+    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+  }
+
+  /* Status distribution bar */
+  .dist-wrap{margin-bottom:8px;}
+  .dist-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#F2EEEC;}
+  .dist-bar span{height:100%;}
+  .dist-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-muted);}
+  .dist-legend .item{display:flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dist-group{margin-bottom:18px;}
+  .dist-group:last-child{margin-bottom:0;}
+  .dist-group-title{
+    font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:7px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dist-group-title .count-badge{font-weight:500;color:var(--text-muted);}
+  .dist-empty{color:var(--text-muted);font-size:12px;}
+
+  /* Table */
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+  table{border-collapse:collapse;width:100%;min-width:1300px;font-size:13px;}
+  thead th{
+    background:#FFF6F5;color:var(--text);font-weight:700;font-size:12px;
+    text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);
+    position:sticky;top:0;white-space:nowrap;
+  }
+  tbody td{
+    border-bottom:1px solid var(--border);padding:8px 10px;vertical-align:top;
+  }
+  tbody tr:hover{background:#FFFBFA;}
+  td .cell-edit{
+    outline:none;min-width:70px;line-height:1.45;white-space:pre-wrap;
+  }
+  td .cell-edit:focus{background:var(--accent-tint);border-radius:5px;}
+  td.tcid{font-weight:700;color:var(--accent-dark);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  select.result-select, select.screentype-select, select.status-select{
+    border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;
+    color:#fff;font-family:inherit;cursor:pointer;
+  }
+  td.action-col{text-align:center;white-space:nowrap;}
+  .icon-btn{
+    border:none;background:none;color:var(--text-muted);cursor:pointer;font-size:14px;
+    padding:2px 6px;
+  }
+  .icon-btn:hover{color:var(--accent-dark);}
+
+  .table-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
+  .empty-state{
+    text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13.5px;
+  }
+
+  /* History tab */
+  .history-item{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+    border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;
+    flex-wrap:wrap;
+  }
+  .history-item .meta{display:flex;flex-direction:column;gap:3px;}
+  .history-item .file-name{font-weight:700;font-size:13.5px;}
+  .history-item .date{font-size:12px;color:var(--text-muted);}
+  .history-mini-bar{display:flex;height:6px;width:160px;border-radius:4px;overflow:hidden;background:#F2EEEC;margin-top:6px;}
+  .history-actions{display:flex;gap:8px;}
+  .type-badge{
+    display:inline-block;color:#fff;font-size:10.5px;font-weight:800;
+    padding:2px 7px;border-radius:5px;margin-right:8px;vertical-align:1px;letter-spacing:.02em;
+  }
+  .hist-filters{display:flex;gap:6px;margin-bottom:16px;}
+  .hist-filter{
+    appearance:none;cursor:pointer;background:#fff;color:var(--text-muted);
+    border:1px solid var(--border);font-weight:600;font-size:12.5px;
+    padding:6px 14px;border-radius:999px;font-family:inherit;
+  }
+  .hist-filter.active{background:var(--accent-tint);color:var(--accent-dark);border-color:var(--accent);}
+
+  .seg-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:100%;}
+  .seg-btn{
+    appearance:none;border:none;background:#fff;cursor:pointer;
+    padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--text-muted);
+    font-family:inherit;transition:background .15s ease,color .15s ease;
+    flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
+  }
+  .seg-btn + .seg-btn{border-left:1px solid var(--border);}
+  .seg-btn.active{background:var(--accent);color:#fff;}
+  .screentype-badge{
+    display:inline-block;color:#fff;font-size:10.5px;font-weight:800;
+    padding:2px 7px;border-radius:5px;letter-spacing:.02em;
+  }
+
+  .tester-manage{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+  .tester-manage label{font-size:11.5px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:8px;}
+  .tester-manage label .sub-txt{display:inline;font-weight:500;margin-left:6px;}
+  .tester-input-row{display:flex;gap:8px;}
+  .tester-input-row input{
+    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;
+    font-family:inherit;flex:1;min-width:140px;
+  }
+  .tester-input-row input:focus{outline:none;border-color:var(--accent);}
+  .tester-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .tester-chip{
+    display:inline-flex;align-items:center;gap:6px;background:var(--accent-tint);
+    color:var(--accent-dark);padding:4px 6px 4px 12px;border-radius:999px;font-size:12.5px;font-weight:600;
+  }
+  .tester-chip button{
+    border:none;background:none;color:var(--accent-dark);cursor:pointer;font-size:12px;
+    font-weight:700;padding:2px 6px;line-height:1;
+  }
+  select.tester-select{
+    border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12.5px;
+    font-family:inherit;cursor:pointer;background:#fff;color:var(--text);min-width:90px;
+  }
+
+  /* TC card list (readable card view instead of a dense table) */
+  .tc-card{
+    border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;
+    background:#fff;transition:border-color .15s ease;position:relative;
+  }
+  .tc-card:hover{border-color:#E9D4D4;}
+  .tc-card.selected{border-color:var(--accent);background:var(--accent-tint);}
+  .tc-card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .tc-select-checkbox{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);}
+  .tc-card-head .tc-id-badge{
+    font-weight:800;color:var(--accent-dark);font-size:14px;font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .tc-screen-input{
+    border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;
+    flex:1;min-width:120px;outline:none;
+  }
+  .tc-screen-input:focus{border-color:var(--accent);background:var(--accent-tint);}
+  .tc-card-head .result-select{margin-left:auto;}
+  .tc-grid-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  @media (max-width:640px){.tc-grid-two{grid-template-columns:1fr;}}
+  .tc-field-block{margin-bottom:12px;}
+  .tc-field-block:last-child{margin-bottom:0;}
+  .tc-field-label{
+    font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:5px;
+    display:block;letter-spacing:.02em;
+  }
+  .tc-editable{
+    border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13.5px;
+    line-height:1.65;white-space:pre-wrap;min-height:22px;outline:none;
+  }
+  .tc-editable:focus{border-color:var(--accent);background:var(--accent-tint);}
+  .tc-card-footer{
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px;
+    padding-top:14px;border-top:1px solid var(--border);
+  }
+  .tc-card-footer .tc-footer-item{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
+  .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap;}
+  .tc-card-footer .tc-editable{flex:1;min-height:auto;padding:6px 10px;font-size:13px;}
+  .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
+  .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  select.tag-select{
+    border:1px solid var(--border);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;
+    font-family:inherit;cursor:pointer;background:#fff;color:var(--text);
+  }
+  select.tag-select.tag-active-constraint{background:#FFF3D6;color:#8A5A00;border-color:#F5DDA3;}
+  select.tag-select.tag-active-integration{background:#EAE6FF;color:#5B3FBF;border-color:#D6CBFA;}
+  .conflict-badge{
+    font-size:10.5px;font-weight:700;color:#fff;background:var(--fatal);
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
+  }
+
+  /* Compact toolbar (upload button + filters + actions) */
+  .toolbar-card{padding:18px 20px;}
+  .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .upload-btn{
+    display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);
+    background:#fff;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13.5px;
+    color:var(--text);cursor:pointer;font-family:inherit;
+    transition:border-color .15s ease,background .15s ease,color .15s ease;white-space:nowrap;
+  }
+  .upload-btn:hover{border-color:var(--accent);background:var(--accent-tint);}
+  .upload-btn.has-file{border-color:var(--accent);background:var(--accent-tint);color:var(--accent-dark);}
+  .toolbar-actions{display:flex;gap:8px;margin-left:auto;}
+  .toolbar-file-chip{margin-top:10px;}
+  .figma-url-row{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+  .figma-url-row label{font-size:11.5px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:6px;}
+  .figma-url-row input{
+    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;
+    font-family:inherit;width:100%;background:#fff;color:var(--text);
+  }
+  .figma-url-row input:focus{outline:none;border-color:var(--accent);}
+  .figma-hint{margin-top:8px;line-height:1.6;}
+
+  /* GitHub 외부 저장 - 단계별 가이드 */
+  .github-step{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--border);}
+  .github-step:first-of-type{border-top:none;padding-top:4px;}
+  .github-step-num{
+    flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--accent-tint);
+    color:var(--accent-dark);font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center;
+  }
+  .github-step-body{flex:1;min-width:0;}
+  .github-step-title{font-weight:700;font-size:13.5px;margin-bottom:4px;}
+  .github-link-btn{
+    display:inline-flex;align-items:center;gap:6px;margin-top:8px;text-decoration:none;
+  }
+  .github-step-body input[type="text"], .github-step-body input[type="password"]{
+    border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;
+    font-family:inherit;width:100%;background:#fff;color:var(--text);margin-top:8px;
+  }
+  .github-step-body input:focus{outline:none;border-color:var(--accent);}
+  .github-connected-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .github-connected-badge{
+    display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;
+    color:var(--pass);background:#EAF7EF;padding:4px 10px;border-radius:999px;
+  }
+  .github-repo-label{font-size:13.5px;font-weight:700;color:var(--text);}
+
+  .details-block{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
+  .details-block summary{
+    cursor:pointer;font-size:12.5px;font-weight:700;color:var(--text-muted);
+    list-style:none;user-select:none;
+  }
+  .details-block summary::-webkit-details-marker{display:none;}
+  .details-block summary::before{content:'▸ ';color:var(--accent);}
+  .details-block[open] summary::before{content:'▾ ';}
+  .details-block[open] summary{color:var(--text);}
+  .details-block .details-body{margin-top:12px;}
+
+  .dist-details{cursor:pointer;}
+  .dist-summary{
+    font-size:15px;font-weight:700;list-style:none;cursor:pointer;user-select:none;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dist-summary::-webkit-details-marker{display:none;}
+  .dist-summary::before{content:'▸';color:var(--accent-dark);font-size:12px;}
+  details[open] .dist-summary::before{content:'▾';}
+  .dist-summary .sub-txt{font-weight:500;}
+
+  .tc-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;}
+  .tc-section-head h2{margin:0;}
+  .tc-count-badge{
+    font-size:12px;font-weight:700;color:var(--accent-dark);background:var(--accent-tint);
+    padding:2px 10px;border-radius:999px;
+  }
+  .tc-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .tc-filter-bar input, .tc-filter-bar select{
+    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;
+    font-family:inherit;background:#fff;color:var(--text);
+  }
+  .tc-filter-bar input{flex:1;min-width:180px;}
+  .tc-filter-bar input:focus, .tc-filter-bar select:focus{outline:none;border-color:var(--accent);}
+  .dup-badge{
+    font-size:10.5px;font-weight:700;color:#8A5A00;background:#FFF3D6;
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
+  }
+
+  /* Undo toast (삭제 되돌리기) */
+  .undo-toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#2B2523;color:#fff;padding:12px 16px;border-radius:10px;
+    display:flex;align-items:center;gap:14px;font-size:13px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:500;
+    opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;
+  }
+  .undo-toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
+  .undo-toast button{
+    appearance:none;border:none;background:none;color:var(--accent);cursor:pointer;
+    font-weight:700;font-size:13px;font-family:inherit;padding:2px 4px;
+  }
+  .undo-toast button:hover{color:#fff;text-decoration:underline;}
+
+  /* Bulk action bar */
+  .bulk-bar{
+    display:none;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--accent-tint);border:1px solid var(--accent);border-radius:10px;
+    padding:10px 14px;margin-bottom:14px;font-size:12.5px;
+  }
+  .bulk-bar.show{display:flex;}
+  .bulk-bar .bulk-count{font-weight:700;color:var(--accent-dark);white-space:nowrap;}
+  .bulk-bar select, .bulk-bar button{font-size:12.5px;}
+  .select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px;color:var(--text-muted);}
+  .select-all-row label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+
+  /* Print / share simple view */
+  .print-overlay{
+    display:none;position:fixed;inset:0;background:rgba(43,37,35,.55);z-index:999;
+    align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;
+  }
+  .print-overlay.show{display:flex;}
+  .print-sheet{
+    background:#fff;max-width:820px;width:100%;border-radius:14px;padding:36px 40px 48px;
+    box-shadow:0 12px 40px rgba(0,0,0,.18);
+  }
+  .print-sheet-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;gap:12px;}
+  .print-sheet h1.print-title{font-size:20px;font-weight:800;margin:0 0 4px;}
+  .print-sheet .print-meta{font-size:12.5px;color:var(--text-muted);}
+  .print-close-controls{display:flex;gap:8px;}
+  .print-flow-block{border-top:1px solid var(--border);padding:16px 0;}
+  .print-flow-block:first-of-type{border-top:none;}
+  .print-flow-title{font-size:14px;font-weight:800;margin-bottom:6px;color:var(--accent-dark);}
+  .print-flow-row{font-size:13px;line-height:1.7;margin-bottom:4px;}
+  .print-flow-row b{font-weight:700;margin-right:4px;}
+  .print-result-tag{
+    display:inline-block;font-size:11px;font-weight:800;color:#fff;padding:2px 9px;
+    border-radius:999px;margin-left:6px;vertical-align:1px;
+  }
+  @media print{
+    body *{visibility:hidden;}
+    .print-overlay, .print-overlay *{visibility:visible;}
+    .print-overlay{position:absolute;inset:auto;background:none;padding:0;display:block !important;}
+    .print-sheet{box-shadow:none;max-width:100%;}
+    .print-close-controls{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <span class="eyebrow">AUTOMATED QA PIPELINE</span>
+    <h1>CVT/UAT 자료 자동 생성</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="gen">CVT 자료 생성</button>
+    <button class="tab-btn" data-tab="uat">UAT 자료 생성</button>
+    <button class="tab-btn" data-tab="hist">이력 관리</button>
+  </div>
+
+  <!-- ===================== TAB 1: 생성 ===================== -->
+  <div class="panel active" id="panel-gen">
+
+    <div class="card toolbar-card">
+      <div class="toolbar-row">
+        <button class="upload-btn" id="uploadBtn" type="button">
+          <span>📄</span><span id="uploadBtnLabel">기획안 업로드</span>
+        </button>
+        <input type="file" id="fileInput" accept="application/pdf,image/png,image/jpeg,image/webp" style="display:none" />
+
+        <div class="toolbar-actions">
+          <button class="primary" id="genBtn" disabled>TC 생성하기</button>
+          <button class="ghost" id="appendBtn" disabled>추가 생성</button>
+        </div>
+      </div>
+      <div id="fileChipWrap" class="toolbar-file-chip"></div>
+      <div id="errorBox"></div>
+      <div id="genNoticeBox"></div>
+
+      <div class="figma-url-row">
+        <label for="figmaUrlInput">피그마 기획안 링크 <span class="sub-txt">(선택 · 참고용)</span></label>
+        <input type="url" id="figmaUrlInput" placeholder="https://www.figma.com/design/..." />
+        <p class="sub-txt figma-hint">
+          피그마 API 제약(CORS)으로 링크만으로는 AI가 화면 내용을 직접 읽을 수 없습니다. 링크는 이력·엑셀에 참고용으로만 저장되고,
+          화면 내용까지 함께 분석하려면 피그마에서 해당 프레임을 <b>PNG/PDF로 내보내기(Export)</b>한 뒤 위 업로드 버튼으로 첨부해주세요
+          (PDF뿐 아니라 PNG/JPG 이미지도 첨부할 수 있습니다).
+        </p>
+      </div>
+
+      <details class="details-block">
+        <summary>고급 설정 · 테스터 관리</summary>
+        <div class="details-body">
+          <div class="tester-manage" style="margin-top:0;padding-top:0;border-top:none;">
+            <label>테스터 관리</label>
+            <div class="tester-input-row">
+              <input type="text" id="testerNameInput" placeholder="이름 입력 후 Enter" />
+              <button class="ghost small" id="addTesterBtn" type="button">+ 추가</button>
+            </div>
+            <div class="tester-chips" id="testerChips"></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card" id="distCard" style="display:none;">
+      <details>
+        <summary class="dist-summary">결과 현황 <span class="sub-txt">(펼쳐서 FO/BO별 확인)</span></summary>
+        <div id="distGroups" style="margin-top:14px;"></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="tc-section-head">
+        <h2>CVT 테스트 케이스</h2>
+        <span class="tc-count-badge" id="tcCountBadge" style="display:none;">0건</span>
+      </div>
+
+      <div class="tc-filter-bar">
+        <input type="text" id="tcSearchInput" placeholder="화면명·카테고리·내용 검색" />
+        <select id="tcFilterType">
+          <option value="ALL">전체 유형</option>
+          <option value="FO">FO</option>
+          <option value="BO">BO</option>
+        </select>
+        <select id="tcFilterResult">
+          <option value="ALL">전체 결과</option>
+          <option value="PASS">PASS</option>
+          <option value="MINOR">MINOR</option>
+          <option value="N/A">N/A</option>
+          <option value="MAJOR">MAJOR</option>
+          <option value="FATAL">FATAL</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+        <select id="tcFilterTester">
+          <option value="ALL">전체 담당자</option>
+        </select>
+      </div>
+
+      <div class="select-all-row">
+        <label><input type="checkbox" id="selectAllTc" /> 전체 선택</label>
+        <span id="conflictSummaryNote" class="sub-txt"></span>
+      </div>
+
+      <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-count" id="bulkCount">0개 선택됨</span>
+        <select id="bulkTesterSelect">
+          <option value="">테스터 재배정...</option>
+        </select>
+        <select id="bulkResultSelect">
+          <option value="">결과값 일괄 변경...</option>
+          <option value="PASS">PASS</option>
+          <option value="MINOR">MINOR</option>
+          <option value="N/A">N/A</option>
+          <option value="MAJOR">MAJOR</option>
+          <option value="FATAL">FATAL</option>
+          <option value="CRITICAL">CRITICAL</option>
+        </select>
+        <select id="bulkStatusSelect">
+          <option value="">진행상태 일괄 변경...</option>
+          <option value="작성중">작성중</option>
+          <option value="검토중">검토중</option>
+          <option value="완료">완료</option>
+        </select>
+        <button class="ghost small" id="bulkClearBtn" type="button">선택 해제</button>
+        <button class="ghost small" id="bulkDeleteBtn" type="button" style="color:#B23434;border-color:#F0C6C6;">선택 삭제</button>
+      </div>
+
+      <div id="tcCardList"></div>
+      <div id="emptyState" class="empty-state">아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'TC 생성하기'를 눌러보세요.</div>
+
+      <div class="table-footer">
+        <button class="ghost small" id="addRowBtn">+ 행 추가</button>
+        <button class="primary" id="exportBtn">엑셀로 내보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 2: UAT 생성 ===================== -->
+  <div class="panel" id="panel-uat">
+
+    <div class="card">
+
+      <div class="seg-toggle" id="uatSourceToggle">
+        <button type="button" class="seg-btn active" data-source="history">이력에서 불러오기</button>
+        <button type="button" class="seg-btn" data-source="upload">엑셀 업로드</button>
+      </div>
+
+      <div id="uatHistorySourceWrap" style="margin-top:14px;">
+        <div class="field-inline" style="width:100%;">
+          <label>이력에서 선택</label>
+          <select id="cvtHistorySelect" style="width:100%;min-width:0;"></select>
+        </div>
+        <div id="uatHistoryEmptyNote" class="sub-txt" style="display:none;margin-top:8px;">아직 내보낸 CVT 이력이 없습니다. 먼저 CVT 자료 생성 탭에서 엑셀로 내보내거나, '엑셀 업로드'를 이용해주세요.</div>
+      </div>
+
+      <div id="uatUploadSourceWrap" style="display:none;margin-top:14px;">
+        <div class="dropzone" id="dropzoneUat">
+          <div class="icon">📊</div>
+          <div class="main-txt">클릭하거나 CVT 엑셀 파일을 끌어다 놓으세요</div>
+          <div class="sub-txt">CVT 자료(.xlsx) 1개 · "CVT 자료 생성" 시트를 자동으로 읽습니다</div>
+          <input type="file" id="fileInputUat" accept=".xlsx,.xls" style="display:none" />
+        </div>
+        <div id="uatFileChipWrap"></div>
+      </div>
+
+      <div class="row">
+        <div class="field-inline" style="justify-content:flex-end;flex:1;">
+          <label>&nbsp;</label>
+          <div style="display:flex;gap:8px;">
+            <button class="primary" id="uatGenBtn" disabled>UAT 흐름 생성하기</button>
+            <button class="ghost" id="uatAppendBtn" disabled>추가 생성</button>
+          </div>
+        </div>
+      </div>
+      <div id="uatErrorBox"></div>
+      <div id="uatNoticeBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="tc-section-head">
+        <h2>사용자 시나리오</h2>
+        <span class="tc-count-badge" id="uatCountBadge" style="display:none;">0건</span>
+        <button class="ghost small" id="uatPrintViewBtn" type="button" style="margin-left:auto;">🖨 인쇄/공유용 보기</button>
+      </div>
+
+      <div class="dist-wrap" id="uatDistWrap" style="display:none;margin-bottom:16px;">
+        <div class="dist-bar" id="uatDistBar"></div>
+        <div class="dist-legend" id="uatDistLegend"></div>
+      </div>
+
+      <div id="uatCardList"></div>
+      <div id="uatEmptyState" class="empty-state">아직 생성된 UAT 흐름이 없습니다. CVT 자료를 불러오고 'UAT 흐름 생성하기'를 눌러보세요.</div>
+
+      <div class="table-footer">
+        <button class="ghost small" id="addUatRowBtn">+ 행 추가</button>
+        <button class="primary" id="exportUatBtn">엑셀로 내보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 3: 이력 관리 ===================== -->
+  <div class="panel" id="panel-hist">
+    <div class="card">
+      <h2>데이터 백업 · 복원</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="primary" id="backupDownloadBtn" type="button">백업 파일 다운로드</button>
+        <button class="ghost" id="backupRestoreBtn" type="button">백업 파일 불러오기</button>
+        <input type="file" id="backupFileInput" accept="application/json" style="display:none" />
+      </div>
+      <div id="backupMsgBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>GitHub에 외부 저장 <span class="sub-txt">(팀과 공유되는 이력 저장소)</span></h2>
+
+      <!-- 아직 연결 안 됨: 3단계 가이드 -->
+      <div id="githubSetupView">
+        <p class="sub-txt" style="line-height:1.7;margin-bottom:6px;">
+          브라우저 저장소는 이 브라우저에서만 보입니다. 아래 3단계로 GitHub 저장소 하나에 연결해두면,
+          팀원 누구나(각자의 GitHub 토큰으로) 같은 이력을 불러올 수 있어요. 한 번만 하면 됩니다.
+        </p>
+
+        <div class="github-step">
+          <div class="github-step-num">1</div>
+          <div class="github-step-body">
+            <div class="github-step-title">토큰 발급받기</div>
+            <div class="sub-txt">버튼을 누르면 GitHub 발급 페이지가 새 창으로 열립니다. 맨 아래 초록색 "Generate token" 버튼만 누르고, 나오는 토큰을 복사해서 아래에 붙여넣으세요.</div>
+            <a class="ghost small github-link-btn" id="githubTokenLink" href="#" target="_blank" rel="noopener">🔑 토큰 발급 페이지 열기 ↗</a>
+            <input type="password" id="githubTokenInput" placeholder="여기에 복사한 토큰(ghp_...)을 붙여넣으세요" />
+          </div>
+        </div>
+
+        <div class="github-step">
+          <div class="github-step-num">2</div>
+          <div class="github-step-body">
+            <div class="github-step-title">저장소 준비하기</div>
+            <div class="sub-txt">이미 쓰는 저장소가 있으면 그 주소를 아래에 붙여넣으세요. 없다면 버튼으로 전용 저장소를 새로 만드세요 (이름 등은 이미 채워져 있어 "Create repository"만 누르면 됩니다).</div>
+            <a class="ghost small github-link-btn" id="githubRepoLink" href="#" target="_blank" rel="noopener">📁 새 저장소 만들기 ↗</a>
+            <input type="text" id="githubRepoInput" placeholder="저장소 주소 붙여넣기 (예: https://github.com/my-org/cvt-uat-history)" />
+          </div>
+        </div>
+
+        <div class="github-step">
+          <div class="github-step-num">3</div>
+          <div class="github-step-body">
+            <div class="github-step-title">연결하기</div>
+            <div class="sub-txt">위 두 칸을 채운 뒤 눌러주세요. 문제가 있으면 바로 알려드립니다.</div>
+            <button class="primary small" id="githubConnectBtn" type="button" style="margin-top:8px;">연결 테스트 후 저장</button>
+          </div>
+        </div>
+
+        <details class="details-block">
+          <summary>고급 설정 (브랜치 · 파일 경로 직접 지정)</summary>
+          <div class="details-body">
+            <div class="row" style="margin-top:0;">
+              <div class="field-inline">
+                <label>브랜치</label>
+                <input type="text" id="githubBranchInput" placeholder="main" style="min-width:100px;" />
+              </div>
+              <div class="field-inline">
+                <label>파일 경로</label>
+                <input type="text" id="githubPathInput" placeholder="cvt-uat-history.json" style="min-width:200px;" />
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- 연결됨: 평소에 쓰는 화면 -->
+      <div id="githubConnectedView" style="display:none;">
+        <div class="github-connected-row">
+          <span class="github-connected-badge">✅ 연결됨</span>
+          <span class="github-repo-label" id="githubRepoLabel"></span>
+          <button class="ghost small" id="githubChangeBtn" type="button" style="margin-left:auto;">연결 변경</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+          <button class="primary small" id="githubLoadBtn" type="button">☁️ 팀 이력 불러오기</button>
+          <button class="primary small" id="githubPushBtn" type="button">☁️ 지금 저장</button>
+        </div>
+        <p class="sub-txt" id="githubLastSyncNote" style="margin-top:10px;"></p>
+      </div>
+
+      <div id="githubStatusBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>내보내기 이력</h2>
+      <div class="hist-filters">
+        <button class="hist-filter active" data-filter="ALL">전체</button>
+        <button class="hist-filter" data-filter="CVT">CVT</button>
+        <button class="hist-filter" data-filter="UAT">UAT</button>
+      </div>
+      <div id="historyList"></div>
+      <div id="historyEmpty" class="empty-state" style="display:none;">아직 내보낸 이력이 없습니다.</div>
+    </div>
+  </div>
+
+  <!-- ===================== 인쇄/공유용 심플 뷰 (UAT) ===================== -->
+  <div class="print-overlay" id="printOverlay">
+    <div class="print-sheet">
+      <div class="print-sheet-header">
+        <div>
+          <h1 class="print-title">UAT 사용자 시나리오</h1>
+          <div class="print-meta" id="printMeta"></div>
+        </div>
+        <div class="print-close-controls">
+          <button class="primary small" id="printNowBtn" type="button">인쇄하기</button>
+          <button class="ghost small" id="printCloseBtn" type="button">닫기</button>
+        </div>
+      </div>
+      <div id="printFlowList"></div>
+    </div>
+  </div>
+
+  <div class="undo-toast" id="undoToast"></div>
+
+</div>
+
+<script>
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// PDF를 우리가 직접 텍스트/이미지로 분해하지 않고, 원본 파일을 그대로 Claude에게 첨부파일(document)로
+// 전달한다. Claude API가 각 페이지를 텍스트+이미지로 함께 변환해 표/다이어그램/스크린샷이 섞인
+// 기획안도 훨씬 안정적으로 이해하므로, "텍스트가 부족하면 스캔본으로 간주" 같은 자체 추정 로직이 필요 없다.
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const result = reader.result || '';
+      const commaIdx = result.indexOf(',');
+      resolve(commaIdx > -1 ? result.slice(commaIdx+1) : result);
+    };
+    reader.onerror = ()=>reject(new Error('파일을 읽지 못했습니다.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// 페이지 수는 생성에는 쓰지 않고, 업로드한 파일이 맞는지 사용자가 눈으로 확인할 수 있도록 표시만 한다.
+// (실패해도 생성 흐름에는 영향 없음)
+async function getPdfPageCount(file){
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    return pdf.numPages;
+  }catch(e){
+    return null;
+  }
+}
+
+const MAX_PDF_BYTES = 32 * 1024 * 1024; // Claude API 첨부파일(PDF/이미지) 최대 용량(32MB)에 맞춤
+const LARGE_PDF_PAGE_THRESHOLD = 40; // 이보다 페이지가 많으면 라운드당 비용/시간을 고려해 라운드 수를 줄임
+
+const COLUMNS = [
+  {key:'tcId', label:'TC ID'},
+  {key:'screenType', label:'화면유형(FO/BO)'},
+  {key:'screen', label:'화면 구분'},
+  {key:'category', label:'시험항목(대분류)'},
+  {key:'subCategory', label:'시험(중분류)'},
+  {key:'procedure', label:'시험절차'},
+  {key:'testDetail', label:'시험 내역'},
+  {key:'expected', label:'기대 결과'},
+  {key:'constraintTag', label:'제약 태그'},
+  {key:'integrationTag', label:'연동시스템'},
+  {key:'tester', label:'테스터'},
+  {key:'testNote', label:'테스트 내역'},
+  {key:'result', label:'결과'},
+  {key:'status', label:'진행상태'}
+];
+const RESULT_OPTIONS = ['PASS','MINOR','N/A','MAJOR','FATAL','CRITICAL'];
+const RESULT_COLOR = {
+  PASS:'var(--pass)', MINOR:'var(--minor)', 'N/A':'var(--na)',
+  MAJOR:'var(--major)', FATAL:'var(--fatal)', CRITICAL:'var(--critical)'
+};
+const SCREEN_TYPE_OPTIONS = ['FO','BO'];
+const STATUS_OPTIONS = ['작성중','검토중','완료'];
+const STATUS_COLOR = { '작성중':'#AFB3B8', '검토중':'#5B7FDE', '완료':'#2E9E5B' };
+const SCREEN_TYPE_COLOR = { FO:'#5B7FDE', BO:'#8B5CF6' };
+
+// 도메인 특화 태그: 하루 1회 제한 액션 / 동일 회원에 결합 불가한(단독 실행 필요) 액션.
+// 같은 테스터(=보통 같은 테스트 계정/회원을 사용)에게 이런 태그가 붙은 TC가 여러 건 배정되면
+// 실제 실행 시 충돌(예: 하루 제한 액션을 이미 다른 TC에서 써버림)이 날 수 있어 경고 대상으로 삼는다.
+const CONSTRAINT_TAG_OPTIONS = ['없음','일일1회제한','단독실행필요'];
+const CONSTRAINT_TAG_ICON = { '없음':'', '일일1회제한':'⏱ ', '단독실행필요':'⚠ ' };
+const INTEGRATION_TAG_OPTIONS = ['없음','쿠폰','요금제','명의이전','기타연동'];
+
+const UAT_RESULT_OPTIONS = ['정상','오류','확인전'];
+const UAT_RESULT_COLOR = {
+  '정상':'var(--pass)', '오류':'var(--critical)', '확인전':'var(--na)'
+};
+
+let tcData = [];
+let uatData = [];
+let currentFile = null;
+let currentFilePdfBase64 = '';
+let currentFileMediaType = ''; // 'application/pdf' | 'image/png' | 'image/jpeg' | 'image/webp'
+let currentFilePageCount = null;
+let currentUatFile = null;
+let lastUatSourceFileName = '';
+let historyList = [];
+let historyFilter = 'ALL';
+let testerList = [];
+let tcSearchQuery = '';
+let tcFilterType = 'ALL';
+let tcFilterResult = 'ALL';
+let tcFilterTester = 'ALL';
+let selectedTcIds = new Set(); // 일괄 수정을 위해 선택된 tcData 인덱스가 아닌 tcId(행이 재배치돼도 안전)
+let figmaUrl = '';
+
+/* ---------- 삭제 되돌리기(실행취소) 공통 토스트 ---------- */
+let undoToastTimer = null;
+function showUndoToast(message, onUndo){
+  clearTimeout(undoToastTimer);
+  const el = document.getElementById('undoToast');
+  el.innerHTML = `<span>${escapeHtml(message)}</span><button type="button">되돌리기</button>`;
+  el.querySelector('button').addEventListener('click', ()=>{
+    onUndo();
+    hideUndoToast();
+  });
+  el.classList.add('show');
+  undoToastTimer = setTimeout(hideUndoToast, 8000);
+}
+function hideUndoToast(){
+  document.getElementById('undoToast').classList.remove('show');
+  clearTimeout(undoToastTimer);
+}
+// 원래 위치(원본 배열 기준 인덱스)에 정확히 되돌리기 위해, 삭제된 항목을 {index, row} 형태로 기록해두고
+// 오름차순으로 다시 splice 해 넣는다 (먼저 지워진 낮은 인덱스부터 되돌리면 이후 인덱스도 그대로 맞음).
+function restoreRemovedItems(targetArray, removedItems){
+  removedItems.slice().sort((a,b)=>a.index-b.index).forEach(it=>{
+    targetArray.splice(it.index, 0, it.row);
+  });
+}
+
+/* ---------- TC filter bar ---------- */
+document.getElementById('tcSearchInput').addEventListener('input', e=>{
+  tcSearchQuery = e.target.value.trim().toLowerCase();
+  renderTable();
+});
+document.getElementById('tcFilterType').addEventListener('change', e=>{
+  tcFilterType = e.target.value;
+  renderTable();
+});
+document.getElementById('tcFilterResult').addEventListener('change', e=>{
+  tcFilterResult = e.target.value;
+  renderTable();
+});
+document.getElementById('tcFilterTester').addEventListener('change', e=>{
+  tcFilterTester = e.target.value;
+  renderTable();
+});
+
+/* ---------- Tabs ---------- */
+const TAB_PANEL_MAP = {gen:'panel-gen', uat:'panel-uat', hist:'panel-hist'};
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(TAB_PANEL_MAP[btn.dataset.tab]).classList.add('active');
+    if(btn.dataset.tab==='hist') renderHistory();
+    if(btn.dataset.tab==='uat') renderCvtHistoryOptions();
+  });
+});
+
+/* ---------- Upload (PDF 또는 이미지 - 피그마에서 내보낸 PNG/JPG도 첨부 가능) ---------- */
+const uploadBtn = document.getElementById('uploadBtn');
+const fileInput = document.getElementById('fileInput');
+const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+uploadBtn.addEventListener('click', ()=>fileInput.click());
+fileInput.addEventListener('change', e=>{
+  if(e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+document.getElementById('figmaUrlInput').addEventListener('input', e=>{
+  figmaUrl = e.target.value.trim();
+});
+
+async function handleFile(file){
+  const isPdf = file.type === 'application/pdf';
+  const isImage = ACCEPTED_IMAGE_TYPES.includes(file.type);
+  if(!isPdf && !isImage){
+    showError('PDF 또는 이미지(PNG/JPG/WEBP) 파일만 업로드할 수 있습니다.');
+    return;
+  }
+  if(file.size > MAX_PDF_BYTES){
+    showError(`파일 용량이 너무 큽니다 (${(file.size/1024/1024).toFixed(1)}MB). 32MB 이하 파일로 시도해주세요.`);
+    return;
+  }
+  currentFile = file;
+  currentFilePdfBase64 = '';
+  currentFileMediaType = file.type;
+  currentFilePageCount = null;
+  uploadBtn.disabled = true;
+  uploadBtn.classList.add('has-file');
+  document.getElementById('uploadBtnLabel').textContent = isPdf ? 'PDF 준비 중...' : '이미지 준비 중...';
+  document.getElementById('fileChipWrap').innerHTML = '';
+  showError('');
+  showGenNotice('');
+
+  try{
+    // 우리가 텍스트/이미지를 따로 뽑지 않고 원본 파일을 그대로 첨부해서 보낸다 (표/그림 포함 인식 정확도를 위함).
+    currentFilePdfBase64 = await fileToBase64(file);
+    currentFilePageCount = isPdf ? await getPdfPageCount(file) : null;
+
+    document.getElementById('uploadBtnLabel').textContent = '기획안 변경';
+    const sizeMb = (file.size/1024/1024).toFixed(1);
+    const pageInfo = currentFilePageCount ? ` · 총 ${currentFilePageCount}페이지` : '';
+    document.getElementById('fileChipWrap').innerHTML =
+      `<div class="file-chip">${isPdf ? '📎' : '🖼'} ${escapeHtml(file.name)} <span class="sub-txt" style="color:inherit;">(${sizeMb}MB${pageInfo})</span> <button id="removeFile">✕</button></div>`;
+    document.getElementById('removeFile').addEventListener('click', ()=>{
+      currentFile = null;
+      currentFilePdfBase64 = '';
+      currentFileMediaType = '';
+      currentFilePageCount = null;
+      uploadBtn.classList.remove('has-file');
+      document.getElementById('uploadBtnLabel').textContent = '기획안 업로드';
+      document.getElementById('fileChipWrap').innerHTML = '';
+      showGenNotice('');
+      updateButtons();
+    });
+
+    if(currentFilePageCount && currentFilePageCount > LARGE_PDF_PAGE_THRESHOLD){
+      showGenNotice(`페이지가 많은 문서(${currentFilePageCount}페이지)라 라운드당 처리 시간과 비용이 늘어날 수 있어, 한 번에 생성하는 라운드 수를 자동으로 줄였습니다. 부족하면 '추가 생성'으로 이어서 만들 수 있습니다.`);
+    }
+  }catch(err){
+    showError('파일을 처리하지 못했습니다: ' + (err.message || '알 수 없는 오류'));
+    currentFile = null;
+    currentFilePdfBase64 = '';
+    currentFileMediaType = '';
+    currentFilePageCount = null;
+    uploadBtn.classList.remove('has-file');
+    document.getElementById('uploadBtnLabel').textContent = '기획안 업로드';
+  }finally{
+    uploadBtn.disabled = false;
+    updateButtons();
+  }
+}
+
+function updateButtons(){
+  const ready = !!currentFile && !!currentFilePdfBase64;
+  document.getElementById('genBtn').disabled = !ready;
+  document.getElementById('appendBtn').disabled = !(ready && tcData.length>0);
+}
+
+/* ---------- Screen type toggle (FO/BO) ---------- */
+/* ---------- Tester management (multiple testers) ---------- */
+function nextTesterFor(rowIndex){
+  return testerList.length ? testerList[rowIndex % testerList.length] : '';
+}
+function renderTesterChips(){
+  const wrap = document.getElementById('testerChips');
+  wrap.innerHTML = testerList.map((t,i)=>
+    `<span class="tester-chip">${escapeHtml(t)}<button type="button" data-tdel="${i}">✕</button></span>`
+  ).join('');
+  wrap.querySelectorAll('[data-tdel]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      testerList.splice(+btn.dataset.tdel, 1);
+      renderTesterChips();
+      renderTable();
+      await saveTesters();
+    });
+  });
+}
+async function addTesterFromInput(){
+  const input = document.getElementById('testerNameInput');
+  const name = input.value.trim();
+  if(!name) return;
+  if(!testerList.includes(name)) testerList.push(name);
+  input.value = '';
+  renderTesterChips();
+  renderTable();
+  await saveTesters();
+}
+document.getElementById('addTesterBtn').addEventListener('click', addTesterFromInput);
+document.getElementById('testerNameInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addTesterFromInput(); }
+});
+async function loadTesters(){
+  try{
+    const raw = localStorage.getItem('cvt_testers');
+    testerList = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    testerList = [];
+  }
+}
+async function saveTesters(){
+  try{
+    localStorage.setItem('cvt_testers', JSON.stringify(testerList));
+  }catch(e){ /* 브라우저 저장소를 쓸 수 없는 환경(프라이빗 모드 등)이면 조용히 무시 */ }
+}
+
+/* ---------- UAT source toggle (기존 CVT 이력 불러오기 / 엑셀 업로드) ---------- */
+let uatSource = 'history';
+document.querySelectorAll('#uatSourceToggle .seg-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#uatSourceToggle .seg-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    uatSource = btn.dataset.source;
+    document.getElementById('uatHistorySourceWrap').style.display = uatSource==='history' ? 'block' : 'none';
+    document.getElementById('uatUploadSourceWrap').style.display = uatSource==='upload' ? 'block' : 'none';
+    showUatError('');
+    updateUatButtons();
+  });
+});
+
+function renderCvtHistoryOptions(){
+  const sel = document.getElementById('cvtHistorySelect');
+  const emptyNote = document.getElementById('uatHistoryEmptyNote');
+  const cvtEntries = historyList
+    .map((h, idx)=>({...h, idx}))
+    .filter(h=>h.type==='CVT');
+
+  if(!cvtEntries.length){
+    sel.innerHTML = '';
+    sel.disabled = true;
+    emptyNote.style.display = 'block';
+  }else{
+    emptyNote.style.display = 'none';
+    sel.disabled = false;
+    sel.innerHTML = cvtEntries.map(h=>
+      `<option value="${h.idx}">${escapeHtml(h.date)} · ${escapeHtml(h.fileName)} · ${h.count}건</option>`
+    ).join('');
+  }
+  updateUatButtons();
+}
+document.getElementById('cvtHistorySelect').addEventListener('change', updateUatButtons);
+
+/* ---------- Upload (UAT source: CVT excel) ---------- */
+const dropzoneUat = document.getElementById('dropzoneUat');
+const fileInputUat = document.getElementById('fileInputUat');
+dropzoneUat.addEventListener('click', ()=>fileInputUat.click());
+['dragover'].forEach(evt=>dropzoneUat.addEventListener(evt, e=>{e.preventDefault();dropzoneUat.classList.add('drag');}));
+['dragleave','drop'].forEach(evt=>dropzoneUat.addEventListener(evt, e=>{e.preventDefault();dropzoneUat.classList.remove('drag');}));
+dropzoneUat.addEventListener('drop', e=>{
+  const f = e.dataTransfer.files[0];
+  if(f) handleUatFile(f);
+});
+fileInputUat.addEventListener('change', e=>{
+  if(e.target.files[0]) handleUatFile(e.target.files[0]);
+});
+
+function handleUatFile(file){
+  if(!/\.xlsx?$/i.test(file.name)){
+    showUatError('CVT 자료 엑셀(.xlsx) 파일만 업로드할 수 있습니다.');
+    return;
+  }
+  currentUatFile = file;
+  document.getElementById('uatFileChipWrap').innerHTML =
+    `<div class="file-chip">📎 ${escapeHtml(file.name)} <button id="removeUatFile">✕</button></div>`;
+  document.getElementById('removeUatFile').addEventListener('click', ()=>{
+    currentUatFile = null;
+    document.getElementById('uatFileChipWrap').innerHTML = '';
+    updateUatButtons();
+  });
+  updateUatButtons();
+}
+
+function updateUatButtons(){
+  const hasSource = uatSource === 'history'
+    ? (!document.getElementById('cvtHistorySelect').disabled && document.getElementById('cvtHistorySelect').value !== '')
+    : !!currentUatFile;
+  document.getElementById('uatGenBtn').disabled = !hasSource;
+  document.getElementById('uatAppendBtn').disabled = !(hasSource && uatData.length>0);
+}
+
+function showError(msg){
+  document.getElementById('errorBox').innerHTML = msg ? `<div class="error-box">${escapeHtml(msg)}</div>` : '';
+}
+function showGenNotice(msg){
+  document.getElementById('genNoticeBox').innerHTML = msg ? `<div class="notice-box">${escapeHtml(msg)}</div>` : '';
+}
+function showUatError(msg){
+  document.getElementById('uatErrorBox').innerHTML = msg ? `<div class="error-box">${escapeHtml(msg)}</div>` : '';
+}
+function showUatNotice(msg){
+  document.getElementById('uatNoticeBox').innerHTML = msg ? `<div class="notice-box">${escapeHtml(msg)}</div>` : '';
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- Readability formatting (display only; stored value stays single-line for safe export/JSON) ---------- */
+function formatSteps(text){
+  if(!text) return '';
+  return String(text).replace(/\s*(\d+\))\s*/g, '\n$1 ').replace(/^\n/, '').trim();
+}
+function formatSentences(text){
+  if(!text) return '';
+  return String(text).replace(/([.!?])\s+/g, '$1\n').trim();
+}
+
+/* ---------- Robust JSON array parsing for AI responses ---------- */
+function extractJsonObjects(text){
+  const objs = [];
+  let depth = 0, startIdx = -1, inString = false, prevChar = '';
+  for(let i=0; i<text.length; i++){
+    const ch = text[i];
+    if(inString){
+      if(ch === '"' && prevChar !== '\\') inString = false;
+    }else{
+      if(ch === '"'){ inString = true; }
+      else if(ch === '{'){
+        if(depth === 0) startIdx = i;
+        depth++;
+      }else if(ch === '}'){
+        depth--;
+        if(depth === 0 && startIdx !== -1){
+          objs.push(text.slice(startIdx, i+1));
+          startIdx = -1;
+        }
+      }
+    }
+    prevChar = ch;
+  }
+  return objs;
+}
+
+function parseJsonArraySafe(rawText){
+  let t = rawText.trim();
+  t = t.replace(/^```json/i, '').replace(/^```/, '').replace(/```\s*$/,'').trim();
+  // AI 응답에 실제 줄바꿈이 문자열 안에 섞여 들어오는 경우 JSON 파싱이 깨지므로 공백으로 정리
+  t = t.replace(/[\r\n]+/g, ' ');
+
+  const start = t.indexOf('[');
+  if(start === -1) throw new Error('생성된 결과에서 JSON 배열을 찾지 못했습니다. 다시 시도해주세요.');
+  const scope = t.slice(start);
+
+  // 1차: 배열 전체를 표준 방식으로 파싱 시도 (트레일링 콤마는 보정)
+  const end = scope.lastIndexOf(']');
+  if(end > -1){
+    const candidate = scope.slice(0, end+1).replace(/,\s*([\]}])/g, '$1');
+    try{ return JSON.parse(candidate); }catch(e){ /* 실패 시 2차 방식으로 */ }
+  }
+
+  // 2차: 항목(객체) 단위로 개별 파싱 - 응답이 중간에 잘렸거나 특정 항목의 따옴표 등이
+  // 깨져 있어도, 멀쩡한 나머지 항목까지 통째로 버려지지 않도록 함
+  const objs = extractJsonObjects(scope);
+  const parsedItems = [];
+  objs.forEach(o=>{
+    try{
+      parsedItems.push(JSON.parse(o.replace(/,\s*}/g, '}')));
+    }catch(e){ /* 이 항목만 건너뜀 */ }
+  });
+
+  if(parsedItems.length === 0){
+    throw new Error('생성된 결과를 해석하지 못했습니다. 다시 시도해주세요.');
+  }
+  return parsedItems;
+}
+
+/* ---------- Excel -> rows (CVT excel parsed for UAT generation) ---------- */
+function excelFileToRows(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const sheetName = wb.SheetNames.includes('CVT 자료 생성') ? 'CVT 자료 생성' : wb.SheetNames[0];
+        const ws = wb.Sheets[sheetName];
+        const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        resolve(aoa);
+      }catch(err){
+        reject(new Error('엑셀 시트를 읽지 못했습니다.'));
+      }
+    };
+    reader.onerror = ()=>reject(new Error('파일을 읽지 못했습니다.'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* ---------- Generate TCs via Claude ---------- */
+/* ---------- Generate ONE batch (single API call, always appends to tcData) ---------- */
+/* ---------- Generate a batch of a SINGLE screen type (FO or BO) — dedicated call for clarity + speed ---------- */
+/* ---------- fetch with retry for transient network failures ("Failed to fetch") ---------- */
+async function fetchWithRetry(url, options, retries=3, delayMs=1200){
+  for(let attempt=0; attempt<=retries; attempt++){
+    try{
+      return await fetch(url, options);
+    }catch(networkErr){
+      if(attempt < retries){
+        await new Promise(res=>setTimeout(res, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw new Error('네트워크 요청에 실패했습니다 (연결이 불안정하거나 응답이 없습니다). 잠시 후 다시 시도해주세요.');
+}
+
+async function generateTypedBatch(typeLabel, count, attachmentBase64, attachmentMediaType, existingScreens){
+  const typeGuide = typeLabel === 'BO'
+    ? '이번 요청은 BO(백오피스/관리자 화면) 전용입니다. 기획안에 백오피스/관리자 관련 내용이 명시되어 있지 않더라도, 관련된 사용자 기능을 관리자가 조회·등록/수정·권한관리·로그확인 하는 관점으로 반드시 유추해서 작성하세요. "BO 내용이 없어서 생략"하는 것은 허용되지 않습니다. FO(일반 사용자 화면) 내용은 절대 섞지 마세요.'
+    : '이번 요청은 FO(일반 사용자 화면) 전용입니다. 기획안에서 일반 사용자가 앱/웹에서 직접 사용하는 화면·기능만 분석하세요. BO(관리자/백오피스) 내용은 절대 섞지 마세요.';
+
+  const isImage = attachmentMediaType !== 'application/pdf';
+  const attachDesc = isImage ? '첨부된 기획안/화면 이미지를' : '첨부된 기획안 PDF 문서를 처음부터 끝까지';
+
+  const promptText =
+`당신은 소프트웨어 QA 전문가입니다. ${attachDesc} 자세히 읽고 (본문 텍스트뿐 아니라 표, 다이어그램, 화면 스크린샷/목업 이미지까지 모두 포함해서) 분석하여 CVT(Compatibility Verification Test) 테스트 케이스를 만드세요.
+
+${typeGuide}
+
+반드시 정확히 ${count}개의 테스트케이스를 생성하세요.
+
+반드시 순수 JSON 배열만 출력하세요. 설명, 코드블록 표시(\`\`\`), 다른 텍스트를 절대 포함하지 마세요.
+JSON 문자열 값 안에는 큰따옴표(")를 절대 사용하지 마세요. 화면 문구를 인용할 때는 작은따옴표(')나 「」를 사용하세요. JSON 문법을 깨뜨리지 않는 것이 가장 중요합니다.
+
+각 항목은 아래 필드만 가지면 됩니다 (tcId·화면유형·테스터 등은 시스템이 자동으로 채우니 작성하지 마세요):
+- screen: 화면 구분 (기획안에 등장하는 화면/메뉴명)
+- category: 시험항목 대분류
+- subCategory: 시험 중분류
+- procedure: 시험절차. 줄바꿈 없이 한 줄로, 전제조건(사전 상태)부터 시작해 "1) ... 2) ... 3) ... 4) ..." 형태로 4~6단계까지 구체적으로 서술하세요. 각 단계에 입력값 예시나 진입 경로를 포함하세요.
+- testDetail: 시험 내역. 줄바꿈 없이, 확인해야 할 세부 항목과 예외/경계 케이스(예: 빈 값, 잘못된 형식, 권한 없음 등)를 포함해 2~3문장으로 구체적으로 작성하세요.
+- expected: 기대 결과. 줄바꿈 없이, 실제 화면에 노출되는 문구/상태 변화/데이터 반영 여부를 구체적으로 서술하세요.
+- constraintTag: 이 TC 실행에 "하루 1회만 실행 가능한 액션"이 포함되면 "일일1회제한", 같은 테스트 계정으로 다른 TC와 동시에/같은 날 묶어 실행하면 안 되는(예: 명의이전처럼 계정 상태를 바꿔버리는) 액션이면 "단독실행필요", 둘 다 아니면 "없음"으로 표기하세요.
+- integrationTag: 이 TC가 연동하는 외부/부가 시스템이 있으면 "쿠폰", "요금제", "명의이전" 중 해당하는 값으로, 그 외 연동 시스템이면 "기타연동", 연동 시스템이 없으면 "없음"으로 표기하세요.
+
+이미 다룬 화면: ${existingScreens}
+(이미 다룬 화면/기능은 가급적 피하고 다른 화면/기능을 다루세요.)`;
+
+  const content = [
+    isImage
+      ? {type:'image', source:{type:'base64', media_type: attachmentMediaType, data: attachmentBase64}}
+      : {type:'document', source:{type:'base64', media_type:'application/pdf', data: attachmentBase64}},
+    {type:'text', text: promptText}
+  ];
+
+  const response = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:1000,
+      messages:[{
+        role:'user',
+        content: content
+      }]
+    })
+  });
+
+  if(!response.ok){
+    throw new Error(`${typeLabel} 생성 API 요청이 실패했습니다 (${response.status})`);
+  }
+  const data = await response.json();
+  const textBlocks = (data.content || []).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+
+  let parsed;
+  try{
+    parsed = parseJsonArraySafe(textBlocks);
+  }catch(e){
+    throw new Error(`${typeLabel} ` + (e.message || '생성된 결과를 해석하지 못했습니다.'));
+  }
+  if(!Array.isArray(parsed) || parsed.length===0){
+    throw new Error(`${typeLabel} 테스트 케이스를 생성하지 못했습니다.`);
+  }
+
+  return parsed.map(item=>({
+    screenType: typeLabel,
+    screen: item.screen || '',
+    category: item.category || '',
+    subCategory: item.subCategory || '',
+    procedure: item.procedure || '',
+    testDetail: item.testDetail || '',
+    expected: item.expected || '',
+    constraintTag: CONSTRAINT_TAG_OPTIONS.includes(item.constraintTag) ? item.constraintTag : '없음',
+    integrationTag: INTEGRATION_TAG_OPTIONS.includes(item.integrationTag) ? item.integrationTag : '없음',
+    tester: '',
+    testNote: '',
+    result: 'N/A',
+    status: '작성중'
+  }));
+}
+
+/* ---------- Run generation: FO/BO를 순차로 요청 (동시에 큰 PDF를 두 번 올리지 않아 네트워크 안정성 우선) ---------- */
+const ROUNDS_PER_CLICK = 4;
+const PER_ROUND_TYPE_COUNT = 3;
+
+async function runGeneration(startFresh){
+  if(!currentFile || !currentFilePdfBase64) return;
+  const btn = startFresh ? document.getElementById('genBtn') : document.getElementById('appendBtn');
+  const otherBtn = startFresh ? document.getElementById('appendBtn') : document.getElementById('genBtn');
+  btn.disabled = true; otherBtn.disabled = true;
+  const originalLabel = btn.textContent;
+  showError('');
+
+  if(startFresh){
+    tcData = [];
+    selectedTcIds.clear();
+    renderTable();
+  }
+
+  const startCount = tcData.length;
+  const attachmentBase64 = currentFilePdfBase64;
+  const attachmentMediaType = currentFileMediaType;
+  // 페이지가 많은 문서는 매 라운드마다 파일 전체를 다시 첨부해야 해서 비용/시간 부담이 커지므로 라운드를 줄인다
+  const rounds = (currentFilePageCount && currentFilePageCount > LARGE_PDF_PAGE_THRESHOLD) ? 2 : ROUNDS_PER_CLICK;
+  const roundErrors = [];
+
+  for(let round=0; round<rounds; round++){
+    const existingScreens = Array.from(new Set(tcData.map(r=>r.screen).filter(Boolean))).join(', ') || '없음';
+    let boRows = [], foRows = [];
+
+    btn.innerHTML = `<span class="spinner"></span>생성 중 (${tcData.length - startCount}개 · ${round+1}/${rounds}라운드 · BO)...`;
+    try{
+      boRows = await generateTypedBatch('BO', PER_ROUND_TYPE_COUNT, attachmentBase64, attachmentMediaType, existingScreens);
+    }catch(err){
+      roundErrors.push(`[${round+1}라운드 BO] ` + (err.message || '실패'));
+    }
+
+    btn.innerHTML = `<span class="spinner"></span>생성 중 (${tcData.length - startCount}개 · ${round+1}/${rounds}라운드 · FO)...`;
+    try{
+      foRows = await generateTypedBatch('FO', PER_ROUND_TYPE_COUNT, attachmentBase64, attachmentMediaType, existingScreens);
+    }catch(err){
+      roundErrors.push(`[${round+1}라운드 FO] ` + (err.message || '실패'));
+    }
+
+    // 보기 좋게 BO/FO를 번갈아 배치
+    const merged = [];
+    const maxLen = Math.max(boRows.length, foRows.length);
+    for(let i=0; i<maxLen; i++){
+      if(boRows[i]) merged.push(boRows[i]);
+      if(foRows[i]) merged.push(foRows[i]);
+    }
+
+    const baseIndex = tcData.length;
+    merged.forEach((row, i)=>{
+      row.tcId = 'TC-' + String(baseIndex + i + 1).padStart(3,'0');
+      row.tester = testerList.length ? nextTesterFor(baseIndex + i) : '';
+    });
+
+    if(merged.length){
+      tcData = tcData.concat(merged);
+      renderTable();
+    }
+
+    // 이번 라운드에서 새로 다룰 화면을 하나도 못 찾았다면(FO/BO 모두 0건), 더 뽑아낼 내용이 없다고 보고 조기 종료
+    if(merged.length === 0 && round > 0) break;
+  }
+
+  const madeCount = tcData.length - startCount;
+  if(roundErrors.length){
+    showError(madeCount
+      ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 '추가 생성'으로 이어서 만들 수 있습니다.`
+      : (roundErrors[0] || '알 수 없는 오류가 발생했습니다.'));
+  }
+
+  btn.textContent = originalLabel;
+  updateButtons();
+}
+
+function nextTcId(){
+  const n = tcData.length + 1;
+  return 'TC-' + String(n).padStart(3,'0');
+}
+
+document.getElementById('genBtn').addEventListener('click', ()=>runGeneration(true));
+document.getElementById('appendBtn').addEventListener('click', ()=>runGeneration(false));
+
+/* ---------- Generate UAT scenarios via Claude ---------- */
+async function generateUAT(isAppend){
+  const hasSource = uatSource === 'history'
+    ? (!document.getElementById('cvtHistorySelect').disabled && document.getElementById('cvtHistorySelect').value !== '')
+    : !!currentUatFile;
+  if(!hasSource) return;
+
+  const btn = isAppend ? document.getElementById('uatAppendBtn') : document.getElementById('uatGenBtn');
+  const otherBtn = isAppend ? document.getElementById('uatGenBtn') : document.getElementById('uatAppendBtn');
+  btn.disabled = true; otherBtn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>생성 중...';
+  showUatError('');
+  showUatNotice('');
+
+  try{
+    let allRows = [];
+    let sourceFileName = '';
+
+    if(uatSource === 'history'){
+      const histIdx = parseInt(document.getElementById('cvtHistorySelect').value, 10);
+      const entry = historyList[histIdx];
+      if(!entry || !Array.isArray(entry.snapshot)){
+        throw new Error('선택한 CVT 이력을 불러오지 못했습니다. 다시 선택해주세요.');
+      }
+      sourceFileName = entry.fileName;
+      allRows = entry.snapshot.map(r=>({
+        screenType: String(r.screenType||'').trim(),
+        screen: r.screen || '',
+        category: r.category || '',
+        sub: r.subCategory || '',
+        detail: r.testDetail || '',
+        expected: r.expected || ''
+      }));
+    }else{
+      const aoa = await excelFileToRows(currentUatFile);
+      if(!aoa || aoa.length < 2){
+        throw new Error('엑셀에서 CVT 테스트 케이스를 찾지 못했습니다.');
+      }
+      sourceFileName = currentUatFile.name;
+      const header = aoa[0].map(h=>String(h).trim());
+      const idx = {
+        screenType: header.indexOf('화면유형(FO/BO)'),
+        screen: header.indexOf('화면 구분'),
+        category: header.indexOf('시험항목(대분류)'),
+        sub: header.indexOf('시험(중분류)'),
+        detail: header.indexOf('시험 내역'),
+        expected: header.indexOf('기대 결과')
+      };
+      allRows = aoa.slice(1)
+        .filter(r=>r && r.some(c=>String(c).trim()!==''))
+        .map(r=>({
+          screenType: idx.screenType>-1 ? String(r[idx.screenType]||'').trim() : '',
+          screen: idx.screen>-1 ? r[idx.screen] : '',
+          category: idx.category>-1 ? r[idx.category] : '',
+          sub: idx.sub>-1 ? r[idx.sub] : '',
+          detail: idx.detail>-1 ? r[idx.detail] : '',
+          expected: idx.expected>-1 ? r[idx.expected] : ''
+        }));
+    }
+
+    if(!allRows.length){
+      throw new Error('CVT 테스트 케이스 데이터를 찾지 못했습니다. "CVT 자료 생성" 시트 형식을 확인해주세요.');
+    }
+    lastUatSourceFileName = sourceFileName;
+
+    // UAT는 원래 사업 담당자가 보는 '사용자(FO)' 흐름이 우선이지만,
+    // 업로드한 CVT에 FO가 하나도 없고 BO만 있다면 에러로 막지 않고 BO(운영자) 흐름으로 대체 생성한다.
+    const foRows = allRows.filter(r=>r.screenType !== 'BO');
+    const boRows = allRows.filter(r=>r.screenType === 'BO');
+    const cvtRows = foRows.length ? foRows : boRows;
+    const sourceIsBo = !foRows.length && boRows.length > 0;
+
+    if(sourceIsBo){
+      showUatNotice('업로드한 CVT 자료에 FO(사용자) 화면이 없어, BO(백오피스/운영자) 화면 기준으로 흐름을 생성합니다.');
+    }else{
+      showUatNotice('');
+    }
+
+    const cvtSummary = cvtRows.map((r,i)=>
+      `${i+1}. [${r.screen}] ${r.category}/${r.sub} - ${r.detail} (기대: ${r.expected})`
+    ).join('\n');
+
+    const existingFlows = uatData.map(r=>r.flow).join(', ') || '없음';
+
+    const audienceDesc = sourceIsBo
+      ? '운영자/관리자가 백오피스 화면을 실제로 사용하듯'
+      : '사업 담당자가 실제 서비스를 사용하듯';
+
+    const promptText =
+`당신은 IT 서비스의 비전문 사업 담당자를 위해 UAT(사용자 인수 테스트) 자료를 준비하는 PM입니다.
+아래는 QA팀이 만든 CVT 테스트 케이스 목록입니다. 기술적인 세부 내용은 걷어내고, ${audienceDesc} 화면을 따라가며 확인할 수 있는 아주 간단한 흐름 체크리스트로 재구성하세요.
+
+[CVT 테스트 케이스 목록]
+${cvtSummary}
+
+반드시 순수 JSON 배열만 출력하세요. 설명, 코드블록 표시(\`\`\`), 다른 텍스트를 절대 포함하지 마세요.
+JSON 문자열 값 안에는 큰따옴표(")를 절대 사용하지 마세요. 화면 문구를 인용할 때는 작은따옴표(')나 「」를 사용하세요.
+각 항목은 아래 필드를 모두 가져야 합니다:
+- flow: 화면 흐름 (예: "로그인 > 홈")
+- scenario: ${sourceIsBo ? '운영자' : '사용자'} 시나리오를 한 문장으로 (줄바꿈 없이, 실제 행동 순서로 서술)
+- checkpoint: 확인 포인트 (줄바꿈 없이 한 문장, ${sourceIsBo ? '운영자' : '사업 담당자'}가 눈으로 확인할 핵심 포인트)
+- result: "확인전"
+- note: ""
+
+비슷한 테스트 케이스는 하나의 흐름으로 묶고, 전체 서비스 흐름 순서를 따라 최대 4개의 시나리오로 정리하세요. 각 필드는 간결하게 작성하세요.
+이미 만들어진 흐름: ${existingFlows}
+${isAppend ? '(위에서 다루지 않은 다른 화면 흐름을 우선 다루세요.)' : ''}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        messages:[{ role:'user', content:[{type:'text', text: promptText}] }]
+      })
+    });
+
+    if(!response.ok){
+      throw new Error('API 요청이 실패했습니다 (' + response.status + ')');
+    }
+    const data = await response.json();
+    const textBlocks = (data.content || []).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+
+    let parsed;
+    try{
+      parsed = parseJsonArraySafe(textBlocks);
+    }catch(e){
+      throw new Error(e.message || '생성된 결과를 해석하지 못했습니다. 다시 시도해주세요.');
+    }
+    if(!Array.isArray(parsed) || parsed.length===0){
+      throw new Error('UAT 시나리오를 생성하지 못했습니다. 다시 시도해주세요.');
+    }
+
+    const newRows = parsed.map(item=>({
+      flow: item.flow || '',
+      scenario: item.scenario || '',
+      checkpoint: item.checkpoint || '',
+      result: UAT_RESULT_OPTIONS.includes(item.result) ? item.result : '확인전',
+      note: item.note || ''
+    }));
+
+    uatData = isAppend ? uatData.concat(newRows) : newRows;
+    renderUatTable();
+  }catch(err){
+    showUatError(err.message || '알 수 없는 오류가 발생했습니다.');
+  }finally{
+    btn.textContent = originalLabel;
+    updateUatButtons();
+  }
+}
+
+document.getElementById('uatGenBtn').addEventListener('click', ()=>generateUAT(false));
+document.getElementById('uatAppendBtn').addEventListener('click', ()=>generateUAT(true));
+
+/* ---------- 배정 충돌 검사: 같은 테스터에게 제약 태그(일일1회제한/단독실행필요)가 붙은 TC가 2건 이상 배정되면 경고 ---------- */
+function computeConflictTesters(){
+  const counts = {};
+  tcData.forEach(r=>{
+    if(!r.tester) return;
+    if(r.constraintTag === '일일1회제한' || r.constraintTag === '단독실행필요'){
+      counts[r.tester] = (counts[r.tester]||0) + 1;
+    }
+  });
+  return Object.entries(counts).filter(([,c])=>c>1).map(([t])=>t);
+}
+
+/* ---------- Table render ---------- */
+function renderTable(){
+  const list = document.getElementById('tcCardList');
+  list.innerHTML = '';
+
+  const countBadge = document.getElementById('tcCountBadge');
+
+  // 담당자 필터 옵션 갱신 (등록된 테스터 + 현재 데이터에 쓰인 담당자)
+  const testerFilterSel = document.getElementById('tcFilterTester');
+  const usedTesters = Array.from(new Set(tcData.map(r=>r.tester).filter(Boolean)));
+  const testerOptionsForFilter = Array.from(new Set([...testerList, ...usedTesters]));
+  const prevTesterFilterVal = testerFilterSel.value;
+  testerFilterSel.innerHTML = `<option value="ALL">전체 담당자</option>` +
+    testerOptionsForFilter.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  testerFilterSel.value = testerOptionsForFilter.includes(prevTesterFilterVal) ? prevTesterFilterVal : 'ALL';
+  tcFilterTester = testerFilterSel.value;
+
+  // 일괄 재배정 드롭다운 옵션도 함께 갱신
+  const bulkTesterSel = document.getElementById('bulkTesterSelect');
+  bulkTesterSel.innerHTML = `<option value="">테스터 재배정...</option>` +
+    testerOptionsForFilter.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+
+  // 유사/중복 TC 감지: 화면명+대분류가 같은 케이스가 2개 이상이면 배지 표시
+  const dupKeyCount = {};
+  tcData.forEach(r=>{
+    const key = `${(r.screen||'').trim().toLowerCase()}|${(r.category||'').trim().toLowerCase()}`;
+    if(key.trim() !== '|') dupKeyCount[key] = (dupKeyCount[key]||0) + 1;
+  });
+
+  // 같은 회원(테스터)에게 결합 불가한 제약 조합이 배정된 경우 경고 대상 테스터 목록
+  const conflictTesters = computeConflictTesters();
+  const conflictNote = document.getElementById('conflictSummaryNote');
+  conflictNote.textContent = conflictTesters.length
+    ? `⚠ ${conflictTesters.join(', ')} 님에게 일일제한/단독실행 TC가 2건 이상 배정되어 실행 충돌 가능성이 있습니다.`
+    : '';
+
+  // 검색/필터 적용 (원본 인덱스는 그대로 유지해야 편집이 올바른 행에 반영됨)
+  const filtered = tcData
+    .map((row, idx)=>({row, idx}))
+    .filter(({row})=>{
+      if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
+      if(tcFilterResult !== 'ALL' && row.result !== tcFilterResult) return false;
+      if(tcFilterTester !== 'ALL' && row.tester !== tcFilterTester) return false;
+      if(tcSearchQuery){
+        const hay = [row.screen, row.category, row.subCategory, row.procedure, row.testDetail, row.expected]
+          .join(' ').toLowerCase();
+        if(!hay.includes(tcSearchQuery)) return false;
+      }
+      return true;
+    });
+
+  if(!tcData.length){
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'TC 생성하기'를 눌러보세요.";
+    countBadge.style.display = 'none';
+  }else if(!filtered.length){
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('emptyState').textContent = '검색/필터 조건에 맞는 테스트 케이스가 없습니다.';
+    countBadge.style.display = 'inline-block';
+    countBadge.textContent = `0 / ${tcData.length}건`;
+  }else{
+    document.getElementById('emptyState').style.display = 'none';
+    countBadge.style.display = 'inline-block';
+    countBadge.textContent = filtered.length === tcData.length ? `${tcData.length}건` : `${filtered.length} / ${tcData.length}건`;
+  }
+
+  // 화면에 없는(필터링된) 행에 대한 선택 상태는 남겨두되, 삭제된 tcId는 정리
+  const allTcIds = new Set(tcData.map(r=>r.tcId));
+  selectedTcIds.forEach(id=>{ if(!allTcIds.has(id)) selectedTcIds.delete(id); });
+
+  filtered.forEach(({row, idx})=>{
+    const card = document.createElement('div');
+    const isSelected = selectedTcIds.has(row.tcId);
+    card.className = 'tc-card' + (isSelected ? ' selected' : '');
+
+    const testerOptions = testerList.length
+      ? (()=>{
+          const options = Array.from(new Set([...testerList, row.tester].filter(Boolean)));
+          return `<select class="tester-select" data-idx="${idx}">
+            <option value="" ${!row.tester?'selected':''}>-</option>
+            ${options.map(o=>`<option value="${escapeHtml(o)}" ${o===row.tester?'selected':''}>${escapeHtml(o)}</option>`).join('')}
+          </select>`;
+        })()
+      : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tester">${escapeHtml(row.tester)}</div>`;
+
+    const dupKey = `${(row.screen||'').trim().toLowerCase()}|${(row.category||'').trim().toLowerCase()}`;
+    const isDup = dupKeyCount[dupKey] > 1;
+    const status = STATUS_OPTIONS.includes(row.status) ? row.status : '작성중';
+    const constraintTag = CONSTRAINT_TAG_OPTIONS.includes(row.constraintTag) ? row.constraintTag : '없음';
+    const integrationTag = INTEGRATION_TAG_OPTIONS.includes(row.integrationTag) ? row.integrationTag : '없음';
+    const rowHasConflict = row.tester && conflictTesters.includes(row.tester) && constraintTag !== '없음';
+
+    card.innerHTML = `
+      <div class="tc-card-head">
+        <input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" />
+        <span class="tc-id-badge">${escapeHtml(row.tcId)}</span>
+        <select class="screentype-select" data-idx="${idx}" style="background:${SCREEN_TYPE_COLOR[row.screenType]||SCREEN_TYPE_COLOR.FO}">
+          ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
+        </select>
+        <div class="cell-edit tc-screen-input" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
+        ${isDup ? '<span class="dup-badge" title="화면명·대분류가 같은 TC가 더 있습니다">⚠ 유사 TC</span>' : ''}
+        ${rowHasConflict ? `<span class="conflict-badge" title="${escapeHtml(row.tester)} 님에게 제약 TC가 2건 이상 배정됨">⚠ 배정 충돌</span>` : ''}
+        <select class="status-select" data-idx="${idx}" style="background:${STATUS_COLOR[status]}">
+          ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
+        </select>
+        <select class="result-select" data-idx="${idx}" style="background:${RESULT_COLOR[row.result]}">
+          ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===row.result?'selected':''}>${o}</option>`).join('')}
+        </select>
+        <button class="icon-btn" data-del="${idx}" title="삭제">✕</button>
+      </div>
+
+      <div class="tag-row">
+        <select class="tag-select constraint-tag-select ${constraintTag!=='없음'?'tag-active-constraint':''}" data-idx="${idx}" title="제약 태그: 하루 1회 제한 액션 / 동일 회원과 결합 불가한 단독 실행 필요 액션">
+          ${CONSTRAINT_TAG_OPTIONS.map(o=>`<option value="${o}" ${o===constraintTag?'selected':''}>${CONSTRAINT_TAG_ICON[o]||''}${o}</option>`).join('')}
+        </select>
+        <select class="tag-select integration-tag-select ${integrationTag!=='없음'?'tag-active-integration':''}" data-idx="${idx}" title="연동 시스템 구분">
+          ${INTEGRATION_TAG_OPTIONS.map(o=>`<option value="${o}" ${o===integrationTag?'selected':''}>${o==='없음'?'연동없음':o}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="tc-grid-two">
+        <div>
+          <label class="tc-field-label">시험항목(대분류)</label>
+          <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="category">${escapeHtml(row.category)}</div>
+        </div>
+        <div>
+          <label class="tc-field-label">시험(중분류)</label>
+          <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory)}</div>
+        </div>
+      </div>
+
+      <div class="tc-field-block">
+        <label class="tc-field-label">시험절차</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="procedure">${escapeHtml(formatSteps(row.procedure))}</div>
+      </div>
+      <div class="tc-field-block">
+        <label class="tc-field-label">시험 내역</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testDetail">${escapeHtml(formatSentences(row.testDetail))}</div>
+      </div>
+      <div class="tc-field-block">
+        <label class="tc-field-label">기대 결과</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="expected">${escapeHtml(formatSentences(row.expected))}</div>
+      </div>
+
+      <div class="tc-card-footer">
+        <div class="tc-footer-item">
+          <label>테스터</label>
+          ${testerOptions}
+        </div>
+        <div class="tc-footer-item">
+          <label>테스트 내역</label>
+          <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote">${escapeHtml(row.testNote)}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.cell-edit').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const idx = +el.dataset.idx, key = el.dataset.key;
+      tcData[idx][key] = el.textContent;
+    });
+  });
+  list.querySelectorAll('.result-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].result = sel.value;
+      sel.style.background = RESULT_COLOR[sel.value];
+      renderDistribution();
+    });
+  });
+  list.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].status = sel.value;
+      sel.style.background = STATUS_COLOR[sel.value];
+    });
+  });
+  list.querySelectorAll('.screentype-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].screenType = sel.value;
+      sel.style.background = SCREEN_TYPE_COLOR[sel.value];
+      renderDistribution();
+    });
+  });
+  list.querySelectorAll('.tester-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].tester = sel.value;
+      renderTable();
+    });
+  });
+  list.querySelectorAll('.constraint-tag-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].constraintTag = sel.value;
+      renderTable();
+    });
+  });
+  list.querySelectorAll('.integration-tag-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.idx;
+      tcData[idx].integrationTag = sel.value;
+      sel.classList.toggle('tag-active-integration', sel.value !== '없음');
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = +btn.dataset.del;
+      const removedRow = tcData[idx];
+      selectedTcIds.delete(removedRow.tcId);
+      tcData.splice(idx, 1);
+      renderTable();
+      renderDistribution();
+      showUndoToast(`'${removedRow.screen || removedRow.tcId}' TC를 삭제했습니다.`, ()=>{
+        restoreRemovedItems(tcData, [{index: idx, row: removedRow}]);
+        renderTable();
+        renderDistribution();
+      });
+    });
+  });
+  list.querySelectorAll('[data-selidx]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const idx = +cb.dataset.selidx;
+      const id = tcData[idx].tcId;
+      if(cb.checked) selectedTcIds.add(id); else selectedTcIds.delete(id);
+      renderTable();
+    });
+  });
+
+  updateButtons();
+  renderDistribution();
+  renderBulkBar();
+
+  // 전체 선택 체크박스 상태 동기화 (필터에 걸린 항목 기준)
+  const selectAllCb = document.getElementById('selectAllTc');
+  if(filtered.length){
+    const selectedInView = filtered.filter(({row})=>selectedTcIds.has(row.tcId)).length;
+    selectAllCb.checked = selectedInView === filtered.length;
+    selectAllCb.indeterminate = selectedInView > 0 && selectedInView < filtered.length;
+  }else{
+    selectAllCb.checked = false;
+    selectAllCb.indeterminate = false;
+  }
+  selectAllCb.dataset.viewIds = JSON.stringify(filtered.map(({row})=>row.tcId));
+}
+
+document.getElementById('selectAllTc').addEventListener('change', (e)=>{
+  const viewIds = JSON.parse(e.target.dataset.viewIds || '[]');
+  if(e.target.checked){
+    viewIds.forEach(id=>selectedTcIds.add(id));
+  }else{
+    viewIds.forEach(id=>selectedTcIds.delete(id));
+  }
+  renderTable();
+});
+
+/* ---------- 일괄 수정 도구모음 ---------- */
+function renderBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const count = selectedTcIds.size;
+  document.getElementById('bulkCount').textContent = `${count}개 선택됨`;
+  bar.classList.toggle('show', count > 0);
+}
+
+document.getElementById('bulkTesterSelect').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  if(!val || !selectedTcIds.size) return;
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.tester = val; });
+  e.target.value = '';
+  renderTable();
+});
+document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  if(!val || !selectedTcIds.size) return;
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.result = val; });
+  e.target.value = '';
+  renderTable();
+  renderDistribution();
+});
+document.getElementById('bulkStatusSelect').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  if(!val || !selectedTcIds.size) return;
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.status = val; });
+  e.target.value = '';
+  renderTable();
+});
+document.getElementById('bulkClearBtn').addEventListener('click', ()=>{
+  selectedTcIds.clear();
+  renderTable();
+});
+document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
+  if(!selectedTcIds.size) return;
+  const removed = [];
+  tcData.forEach((r, i)=>{ if(selectedTcIds.has(r.tcId)) removed.push({index: i, row: r}); });
+  tcData = tcData.filter(r=>!selectedTcIds.has(r.tcId));
+  selectedTcIds.clear();
+  renderTable();
+  renderDistribution();
+  showUndoToast(`${removed.length}개 TC를 삭제했습니다.`, ()=>{
+    restoreRemovedItems(tcData, removed);
+    renderTable();
+    renderDistribution();
+  });
+});
+
+document.getElementById('addRowBtn').addEventListener('click', ()=>{
+  tcData.push({
+    tcId: nextTcId(), screenType: 'FO', screen:'', category:'', subCategory:'', procedure:'',
+    testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: nextTesterFor(tcData.length),
+    testNote:'', result:'N/A', status:'작성중'
+  });
+  renderTable();
+});
+
+/* ---------- Card render (UAT) ---------- */
+function renderUatTable(){
+  const list = document.getElementById('uatCardList');
+  list.innerHTML = '';
+  document.getElementById('uatEmptyState').style.display = uatData.length ? 'none' : 'block';
+
+  const countBadge = document.getElementById('uatCountBadge');
+  if(uatData.length){
+    countBadge.style.display = 'inline-block';
+    countBadge.textContent = `${uatData.length}건`;
+  }else{
+    countBadge.style.display = 'none';
+  }
+
+  uatData.forEach((row, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'tc-card';
+    card.innerHTML = `
+      <div class="tc-card-head">
+        <span class="tc-id-badge">No.${idx+1}</span>
+        <div class="cell-edit tc-screen-input" contenteditable="true" data-uidx="${idx}" data-ukey="flow">${escapeHtml(row.flow)}</div>
+        <select class="result-select" data-uidx="${idx}" style="background:${UAT_RESULT_COLOR[row.result]}">
+          ${UAT_RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===row.result?'selected':''}>${o}</option>`).join('')}
+        </select>
+        <button class="icon-btn" data-udel="${idx}" title="삭제">✕</button>
+      </div>
+
+      <div class="tc-field-block">
+        <label class="tc-field-label">사용자 시나리오</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-uidx="${idx}" data-ukey="scenario">${escapeHtml(row.scenario)}</div>
+      </div>
+      <div class="tc-field-block">
+        <label class="tc-field-label">확인 포인트</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-uidx="${idx}" data-ukey="checkpoint">${escapeHtml(row.checkpoint)}</div>
+      </div>
+
+      <div class="tc-card-footer">
+        <div class="tc-footer-item">
+          <label>비고</label>
+          <div class="cell-edit tc-editable" contenteditable="true" data-uidx="${idx}" data-ukey="note">${escapeHtml(row.note)}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.cell-edit').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const idx = +el.dataset.uidx, key = el.dataset.ukey;
+      uatData[idx][key] = el.textContent;
+    });
+  });
+  list.querySelectorAll('.result-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = +sel.dataset.uidx;
+      uatData[idx].result = sel.value;
+      sel.style.background = UAT_RESULT_COLOR[sel.value];
+      renderUatDistribution();
+    });
+  });
+  list.querySelectorAll('[data-udel]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = +btn.dataset.udel;
+      const removedRow = uatData[idx];
+      uatData.splice(idx, 1);
+      renderUatTable();
+      showUndoToast(`'${removedRow.flow || 'No.'+(idx+1)}' 시나리오를 삭제했습니다.`, ()=>{
+        restoreRemovedItems(uatData, [{index: idx, row: removedRow}]);
+        renderUatTable();
+      });
+    });
+  });
+
+  updateUatButtons();
+  renderUatDistribution();
+}
+
+function renderUatDistribution(){
+  const wrap = document.getElementById('uatDistWrap');
+  if(!uatData.length){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const counts = {};
+  UAT_RESULT_OPTIONS.forEach(o=>counts[o]=0);
+  uatData.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
+  const total = uatData.length;
+
+  document.getElementById('uatDistBar').innerHTML = UAT_RESULT_OPTIONS.map(o=>{
+    const pct = total ? (counts[o]/total*100) : 0;
+    return pct>0 ? `<span style="width:${pct}%;background:${UAT_RESULT_COLOR[o]}" title="${o}: ${counts[o]}"></span>` : '';
+  }).join('');
+
+  document.getElementById('uatDistLegend').innerHTML = UAT_RESULT_OPTIONS.map(o=>
+    `<div class="item"><span class="dot" style="background:${UAT_RESULT_COLOR[o]}"></span>${o} ${counts[o]}</div>`
+  ).join('');
+}
+
+document.getElementById('addUatRowBtn').addEventListener('click', ()=>{
+  uatData.push({flow:'', scenario:'', checkpoint:'', result:'확인전', note:''});
+  renderUatTable();
+});
+
+/* ---------- 인쇄/공유용 심플 뷰 (UAT) ---------- */
+function renderPrintView(){
+  const meta = document.getElementById('printMeta');
+  meta.textContent = `${lastUatSourceFileName ? lastUatSourceFileName + ' · ' : ''}${formatDate()} · 총 ${uatData.length}건`;
+
+  const list = document.getElementById('printFlowList');
+  if(!uatData.length){
+    list.innerHTML = '<p class="sub-txt">표시할 UAT 시나리오가 없습니다.</p>';
+    return;
+  }
+  list.innerHTML = uatData.map((row,i)=>`
+    <div class="print-flow-block">
+      <div class="print-flow-title">${i+1}. ${escapeHtml(row.flow || '(흐름 미지정)')}
+        <span class="print-result-tag" style="background:${UAT_RESULT_COLOR[row.result]||UAT_RESULT_COLOR['확인전']}">${escapeHtml(row.result || '확인전')}</span>
+      </div>
+      <div class="print-flow-row"><b>시나리오</b>${escapeHtml(row.scenario || '-')}</div>
+      <div class="print-flow-row"><b>확인 포인트</b>${escapeHtml(row.checkpoint || '-')}</div>
+      ${row.note ? `<div class="print-flow-row"><b>비고</b>${escapeHtml(row.note)}</div>` : ''}
+    </div>
+  `).join('');
+}
+document.getElementById('uatPrintViewBtn').addEventListener('click', ()=>{
+  renderPrintView();
+  document.getElementById('printOverlay').classList.add('show');
+});
+document.getElementById('printCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('printOverlay').classList.remove('show');
+});
+document.getElementById('printNowBtn').addEventListener('click', ()=>{
+  window.print();
+});
+document.getElementById('printOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'printOverlay') document.getElementById('printOverlay').classList.remove('show');
+});
+
+/* ---------- Distribution bar ---------- */
+function buildDistBlock(label, rows){
+  const counts = {};
+  RESULT_OPTIONS.forEach(o=>counts[o]=0);
+  rows.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
+  const total = rows.length;
+
+  const bar = total
+    ? RESULT_OPTIONS.map(o=>{
+        const pct = counts[o]/total*100;
+        return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}" title="${o}: ${counts[o]}"></span>` : '';
+      }).join('')
+    : '';
+
+  const legend = total
+    ? RESULT_OPTIONS.map(o=>
+        `<div class="item"><span class="dot" style="background:${RESULT_COLOR[o]}"></span>${o} ${counts[o]}</div>`
+      ).join('')
+    : '<span class="dist-empty">데이터 없음</span>';
+
+  return `<div class="dist-group">
+    <div class="dist-group-title">${label} <span class="count-badge">${total}건</span></div>
+    <div class="dist-wrap"><div class="dist-bar">${bar}</div></div>
+    <div class="dist-legend">${legend}</div>
+  </div>`;
+}
+
+function renderDistribution(){
+  const card = document.getElementById('distCard');
+  if(!tcData.length){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  const foRows = tcData.filter(r=>r.screenType !== 'BO');
+  const boRows = tcData.filter(r=>r.screenType === 'BO');
+
+  document.getElementById('distGroups').innerHTML =
+    buildDistBlock('전체', tcData) +
+    buildDistBlock('FO', foRows) +
+    buildDistBlock('BO', boRows);
+}
+
+/* ---------- Export helpers ---------- */
+function formatDate(){
+  const now = new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '
+    +String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+function summarizeCounts(options, counts){
+  return options.filter(o=>counts[o]).map(o=>`${o} ${counts[o]}`).join(', ') || '-';
+}
+function buildHistorySheet(list){
+  const header = ['생성일시','구분','원본 파일명','건수','결과 요약','피그마 링크'];
+  const rows = list.map(h=>[h.date, h.type, h.fileName, h.count, h.summary, h.figmaUrl || '']);
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = [{wch:18},{wch:8},{wch:26},{wch:8},{wch:34},{wch:40}];
+  return ws;
+}
+
+/* ---------- Export CVT to Excel ---------- */
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
+  showError('');
+
+  const headerRow = COLUMNS.map(c=>c.label);
+  const dataRows = tcData.map(row=>COLUMNS.map(c=>{
+    if(c.key === 'procedure') return formatSteps(row[c.key]);
+    if(c.key === 'testDetail' || c.key === 'expected') return formatSentences(row[c.key]);
+    return row[c.key];
+  }));
+  const ws1 = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+  ws1['!cols'] = [
+    {wch:9},{wch:12},{wch:14},{wch:16},{wch:16},{wch:30},{wch:26},{wch:26},{wch:12},{wch:12},{wch:10},{wch:20},{wch:10},{wch:10}
+  ];
+
+  const counts = {};
+  RESULT_OPTIONS.forEach(o=>counts[o]=0);
+  tcData.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
+
+  const dateStr = formatDate();
+  const historyEntry = {
+    date: dateStr,
+    type: 'CVT',
+    fileName: currentFile ? currentFile.name : '(수동 입력)',
+    figmaUrl: figmaUrl || '',
+    count: tcData.length,
+    counts: counts,
+    summary: summarizeCounts(RESULT_OPTIONS, counts),
+    snapshot: JSON.parse(JSON.stringify(tcData))
+  };
+  historyList = [historyEntry, ...historyList];
+
+  const ws2 = buildHistorySheet(historyList);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'CVT 자료 생성');
+  XLSX.utils.book_append_sheet(wb, ws2, '이력 관리');
+  XLSX.writeFile(wb, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}.xlsx`);
+
+  await saveHistory();
+  renderHistory();
+  renderCvtHistoryOptions();
+});
+
+/* ---------- Export UAT to Excel ---------- */
+document.getElementById('exportUatBtn').addEventListener('click', async ()=>{
+  if(!uatData.length){ showUatError('내보낼 UAT 시나리오가 없습니다.'); return; }
+  showUatError('');
+
+  const uatHeader = ['순번','화면 흐름','사용자 시나리오','확인 포인트','결과','비고'];
+  const uatRows = uatData.map((r,i)=>[i+1, r.flow, r.scenario, r.checkpoint, r.result, r.note]);
+  const ws1 = XLSX.utils.aoa_to_sheet([uatHeader, ...uatRows]);
+  ws1['!cols'] = [{wch:6},{wch:18},{wch:40},{wch:34},{wch:10},{wch:20}];
+
+  const counts = {};
+  UAT_RESULT_OPTIONS.forEach(o=>counts[o]=0);
+  uatData.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
+
+  const dateStr = formatDate();
+  const historyEntry = {
+    date: dateStr,
+    type: 'UAT',
+    fileName: lastUatSourceFileName || (currentUatFile ? currentUatFile.name : '(수동 입력)'),
+    count: uatData.length,
+    counts: counts,
+    summary: summarizeCounts(UAT_RESULT_OPTIONS, counts),
+    snapshot: JSON.parse(JSON.stringify(uatData))
+  };
+  historyList = [historyEntry, ...historyList];
+
+  const ws2 = buildHistorySheet(historyList);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'UAT 자료 생성');
+  XLSX.utils.book_append_sheet(wb, ws2, '이력 관리');
+  XLSX.writeFile(wb, `UAT_자료_${dateStr.replace(/[: ]/g,'_')}.xlsx`);
+
+  await saveHistory();
+  renderHistory();
+});
+
+/* ---------- History (기본은 이 브라우저에만 저장되는 localStorage. 팀과 공유하려면
+   아래 GitHub 연동을 설정하면 GitHub 저장소의 JSON 파일에도 함께 저장/불러오기 가능) ---------- */
+async function loadHistory(){
+  try{
+    const raw = localStorage.getItem('cvt_uat_history');
+    historyList = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    historyList = [];
+  }
+}
+async function saveHistory(){
+  try{
+    localStorage.setItem('cvt_uat_history', JSON.stringify(historyList));
+  }catch(e){ /* 브라우저 저장소를 쓸 수 없는 환경(프라이빗 모드 등)이면 조용히 무시 */ }
+}
+
+function renderHistory(){
+  const wrap = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const filtered = historyFilter==='ALL' ? historyList : historyList.filter(h=>h.type===historyFilter);
+
+  if(!filtered.length){
+    wrap.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  wrap.innerHTML = filtered.map(h=>{
+    const idx = historyList.indexOf(h);
+    const options = h.type==='UAT' ? UAT_RESULT_OPTIONS : RESULT_OPTIONS;
+    const colorMap = h.type==='UAT' ? UAT_RESULT_COLOR : RESULT_COLOR;
+    const total = h.count || 1;
+    const bar = options.map(o=>{
+      const pct = (h.counts[o]||0)/total*100;
+      return pct>0 ? `<span style="width:${pct}%;background:${colorMap[o]}"></span>` : '';
+    }).join('');
+    const badgeColor = h.type==='UAT' ? '#5B7FDE' : 'var(--accent)';
+    const figmaLink = h.figmaUrl
+      ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">🔗 피그마 기획안 링크</a></div>`
+      : '';
+    return `<div class="history-item">
+      <div class="meta">
+        <div class="file-name"><span class="type-badge" style="background:${badgeColor}">${h.type}</span>${escapeHtml(h.fileName)}</div>
+        <div class="date">${escapeHtml(h.date)} · ${h.count}건 · ${escapeHtml(h.summary)}</div>
+        ${figmaLink}
+        <div class="history-mini-bar">${bar}</div>
+      </div>
+      <div class="history-actions">
+        <button class="ghost small" data-load="${idx}">불러오기</button>
+        <button class="ghost small" data-remove="${idx}">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-load]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const entry = historyList[+btn.dataset.load];
+      if(entry.type==='UAT'){
+        uatData = JSON.parse(JSON.stringify(entry.snapshot));
+        renderUatTable();
+        document.querySelector('.tab-btn[data-tab="uat"]').click();
+      }else{
+        tcData = JSON.parse(JSON.stringify(entry.snapshot));
+        selectedTcIds.clear();
+        renderTable();
+        document.querySelector('.tab-btn[data-tab="gen"]').click();
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      historyList.splice(+btn.dataset.remove, 1);
+      await saveHistory();
+      renderHistory();
+    });
+  });
+}
+
+document.querySelectorAll('.hist-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.hist-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    historyFilter = btn.dataset.filter;
+    renderHistory();
+  });
+});
+
+/* ---------- Init ---------- */
+/* ---------- Backup / Restore (to carry data into a fresh chat / artifact) ---------- */
+function showBackupMsg(msg, isError){
+  const box = document.getElementById('backupMsgBox');
+  box.innerHTML = msg ? `<div class="${isError ? 'error-box' : 'notice-box'}">${escapeHtml(msg)}</div>` : '';
+}
+
+document.getElementById('backupDownloadBtn').addEventListener('click', ()=>{
+  const backup = {
+    exportedAt: formatDate(),
+    historyList: historyList,
+    testerList: testerList
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CVT_UAT_백업_${formatDate().replace(/[: ]/g,'_')}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showBackupMsg('백업 파일을 다운로드했습니다. 새 채팅에서 도구를 다시 만든 뒤, 이 파일을 "백업 파일 불러오기"로 복원하세요.', false);
+});
+
+document.getElementById('backupRestoreBtn').addEventListener('click', ()=>{
+  document.getElementById('backupFileInput').click();
+});
+
+document.getElementById('backupFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  showBackupMsg('');
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if(!Array.isArray(parsed.historyList)){
+      throw new Error('올바른 백업 파일이 아닙니다.');
+    }
+    historyList = parsed.historyList;
+    testerList = Array.isArray(parsed.testerList) ? parsed.testerList : [];
+    await saveHistory();
+    await saveTesters();
+    renderHistory();
+    renderTesterChips();
+    renderCvtHistoryOptions();
+    showBackupMsg(`복원 완료: 이력 ${historyList.length}건, 테스터 ${testerList.length}명을 불러왔습니다.`, false);
+  }catch(err){
+    showBackupMsg('백업 파일을 읽지 못했습니다. 파일을 확인해주세요.', true);
+  }
+  e.target.value = '';
+});
+
+/* ---------- GitHub 외부 저장 (팀과 공유되는 이력 저장소) ----------
+   GitHub REST API는 브라우저 직접 호출을 위한 CORS를 지원하므로(Access-Control-Allow-Origin: *),
+   별도 서버 없이 이 정적 HTML에서 바로 Contents API를 호출해 저장소의 JSON 파일을 읽고 쓸 수 있다.
+   토큰은 이 브라우저의 localStorage에만 저장되고, 요청은 브라우저에서 api.github.com으로 직접 나간다.
+   사용성을 위해 "설정 폼"과 "평소 쓰는 화면"을 분리하고, 브랜치/파일 경로는 기본값으로 숨겨둔다. */
+let githubConfig = { token:'', owner:'', repo:'', branch:'main', path:'cvt-uat-history.json', connected:false, lastSyncAt:'' };
+let githubFileSha = null; // 마지막으로 불러오거나 저장한 파일의 sha (충돌 감지 및 다음 저장에 필요)
+
+function utf8ToBase64(str){
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function base64ToUtf8(b64){
+  const binary = atob(b64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+function showGithubStatus(msg, isError){
+  const box = document.getElementById('githubStatusBox');
+  box.innerHTML = msg ? `<div class="${isError ? 'error-box' : 'notice-box'}">${escapeHtml(msg)}</div>` : '';
+}
+
+// 저장소 입력칸은 전체 URL("https://github.com/owner/repo"), "github.com/owner/repo", "owner/repo" 등
+// 어떤 형태로 붙여넣어도 인식하도록 느슨하게 파싱한다.
+function parseGithubRepoInput(raw){
+  if(!raw) return null;
+  let s = raw.trim().replace(/^https?:\/\//i, '').replace(/^github\.com\//i, '')
+    .replace(/\.git$/i, '').replace(/\/+$/,'');
+  const parts = s.split('/').map(p=>p.trim()).filter(Boolean);
+  if(parts.length < 2) return null;
+  return { owner: parts[0], repo: parts[1] };
+}
+
+function githubTokenUrl(){
+  return 'https://github.com/settings/tokens/new?scopes=repo&description=' + encodeURIComponent('CVT-UAT 이력공유');
+}
+function githubNewRepoUrl(){
+  return 'https://github.com/new?name=cvt-uat-history&visibility=private&description=' + encodeURIComponent('CVT/UAT 이력 저장소');
+}
+
+function renderGithubView(){
+  const setupView = document.getElementById('githubSetupView');
+  const connectedView = document.getElementById('githubConnectedView');
+  document.getElementById('githubTokenLink').href = githubTokenUrl();
+  document.getElementById('githubRepoLink').href = githubNewRepoUrl();
+
+  if(githubConfig.connected && githubConfig.owner && githubConfig.repo){
+    setupView.style.display = 'none';
+    connectedView.style.display = 'block';
+    document.getElementById('githubRepoLabel').textContent = `${githubConfig.owner}/${githubConfig.repo}`;
+    document.getElementById('githubLastSyncNote').textContent = githubConfig.lastSyncAt
+      ? `마지막 동기화: ${githubConfig.lastSyncAt}`
+      : '아직 동기화한 적이 없습니다. "팀 이력 불러오기" 또는 "지금 저장"을 눌러보세요.';
+  }else{
+    setupView.style.display = 'block';
+    connectedView.style.display = 'none';
+    document.getElementById('githubTokenInput').value = githubConfig.token || '';
+    document.getElementById('githubRepoInput').value = (githubConfig.owner && githubConfig.repo) ? `${githubConfig.owner}/${githubConfig.repo}` : '';
+    document.getElementById('githubBranchInput').value = githubConfig.branch || 'main';
+    document.getElementById('githubPathInput').value = githubConfig.path || 'cvt-uat-history.json';
+  }
+}
+
+function loadGithubConfig(){
+  try{
+    const raw = localStorage.getItem('cvt_github_config');
+    if(raw) githubConfig = { ...githubConfig, ...JSON.parse(raw) };
+  }catch(e){ /* ignore */ }
+  renderGithubView();
+}
+function saveGithubConfigToStorage(){
+  try{ localStorage.setItem('cvt_github_config', JSON.stringify(githubConfig)); }catch(e){ /* ignore */ }
+}
+
+async function githubApiRequest(method, path, body){
+  const res = await fetch(`https://api.github.com${path}`, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${githubConfig.token}`,
+      'Accept': 'application/vnd.github+json',
+      ...(body ? {'Content-Type': 'application/json'} : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  let data = null;
+  try{ data = await res.json(); }catch(e){ /* 본문이 없을 수 있음 */ }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function githubErrorMessage(status, data){
+  const detail = data && data.message ? data.message : '';
+  if(status === 401) return `토큰이 올바르지 않습니다. 위 "토큰 발급 페이지"에서 새로 발급받아 다시 붙여넣어주세요. ${detail}`;
+  if(status === 403) return `권한이 없거나 요청이 너무 잦습니다. 토큰에 repo 권한이 있는지 확인해주세요. ${detail}`;
+  if(status === 404) return `저장소를 찾을 수 없습니다. 주소를 확인하거나 위 "새 저장소 만들기"로 먼저 만들어주세요. ${detail}`;
+  return `GitHub 요청에 실패했습니다 (${status}) ${detail}`;
+}
+
+/* 3단계: 연결 테스트 후 저장 */
+document.getElementById('githubConnectBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('githubConnectBtn');
+  const token = document.getElementById('githubTokenInput').value.trim();
+  const repoParsed = parseGithubRepoInput(document.getElementById('githubRepoInput').value);
+  const branch = document.getElementById('githubBranchInput').value.trim() || 'main';
+  const path = document.getElementById('githubPathInput').value.trim() || 'cvt-uat-history.json';
+
+  if(!token){ showGithubStatus('1단계에서 토큰을 붙여넣어주세요.', true); return; }
+  if(!repoParsed){ showGithubStatus('2단계 저장소 주소를 인식하지 못했습니다. 예: https://github.com/my-org/my-repo', true); return; }
+
+  githubConfig = { ...githubConfig, token, owner: repoParsed.owner, repo: repoParsed.repo, branch, path, connected: false };
+  githubFileSha = null;
+
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#fff;"></span>연결 확인 중...';
+  showGithubStatus('', false);
+  try{
+    const repoCheck = await githubApiRequest('GET', `/repos/${githubConfig.owner}/${githubConfig.repo}`);
+    if(!repoCheck.ok){ throw new Error(githubErrorMessage(repoCheck.status, repoCheck.data)); }
+
+    githubConfig.connected = true;
+    saveGithubConfigToStorage();
+    renderGithubView();
+
+    // 이미 저장된 이력 파일이 있는지 확인해서, 있으면 불러오도록 자연스럽게 안내
+    const fileCheck = await githubApiRequest(
+      'GET', `/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${encodeURIComponent(githubConfig.path)}?ref=${encodeURIComponent(githubConfig.branch)}`
+    );
+    if(fileCheck.ok){
+      githubFileSha = fileCheck.data.sha;
+      showGithubStatus('✅ 연결되었습니다. 이 저장소에 기존 이력이 있습니다 — "팀 이력 불러오기"를 눌러 가져오세요.', false);
+    }else{
+      showGithubStatus('✅ 연결되었습니다. 새 저장소네요 — "지금 저장"을 누르면 파일이 새로 만들어집니다.', false);
+    }
+  }catch(err){
+    showGithubStatus(err.message || '연결에 실패했습니다.', true);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+});
+
+document.getElementById('githubChangeBtn').addEventListener('click', ()=>{
+  githubConfig.connected = false;
+  saveGithubConfigToStorage();
+  showGithubStatus('', false);
+  renderGithubView();
+});
+
+async function githubLoadHistory(){
+  if(historyList.length || testerList.length){
+    if(!confirm('GitHub에 저장된 내용으로 현재 이력·테스터 목록을 덮어씁니다. 계속할까요?')) return;
+  }
+  showGithubStatus('GitHub에서 불러오는 중...', false);
+  try{
+    const { ok, status, data } = await githubApiRequest(
+      'GET', `/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${encodeURIComponent(githubConfig.path)}?ref=${encodeURIComponent(githubConfig.branch)}`
+    );
+    if(status === 404){
+      showGithubStatus('저장소에 아직 저장된 파일이 없습니다. "지금 저장"을 누르면 새로 만들어집니다.', false);
+      githubFileSha = null;
+      return;
+    }
+    if(status === 401 || status === 404){ githubConfig.connected = false; saveGithubConfigToStorage(); renderGithubView(); }
+    if(!ok){ throw new Error(githubErrorMessage(status, data)); }
+
+    const parsed = JSON.parse(base64ToUtf8(data.content));
+    historyList = Array.isArray(parsed.historyList) ? parsed.historyList : [];
+    testerList = Array.isArray(parsed.testerList) ? parsed.testerList : [];
+    githubFileSha = data.sha;
+    await saveHistory();
+    await saveTesters();
+    renderHistory();
+    renderTesterChips();
+    renderCvtHistoryOptions();
+    githubConfig.lastSyncAt = formatDate();
+    saveGithubConfigToStorage();
+    renderGithubView();
+    showGithubStatus(`불러오기 완료: 이력 ${historyList.length}건, 테스터 ${testerList.length}명.`, false);
+  }catch(err){
+    if(String(err.message||'').includes('토큰이 올바르지')){ githubConfig.connected = false; saveGithubConfigToStorage(); renderGithubView(); }
+    showGithubStatus('불러오기 실패: ' + (err.message || '알 수 없는 오류'), true);
+  }
+}
+
+async function githubSaveHistory(){
+  showGithubStatus('GitHub에 저장하는 중...', false);
+  try{
+    if(!githubFileSha){
+      const check = await githubApiRequest(
+        'GET', `/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${encodeURIComponent(githubConfig.path)}?ref=${encodeURIComponent(githubConfig.branch)}`
+      );
+      if(check.ok) githubFileSha = check.data.sha;
+      else if(check.status !== 404) throw new Error(githubErrorMessage(check.status, check.data));
+    }
+
+    const payload = { historyList, testerList, savedAt: formatDate() };
+    const body = {
+      message: `CVT/UAT 이력 업데이트 (${formatDate()})`,
+      content: utf8ToBase64(JSON.stringify(payload, null, 2)),
+      branch: githubConfig.branch
+    };
+    if(githubFileSha) body.sha = githubFileSha;
+
+    const { ok, status, data } = await githubApiRequest(
+      'PUT', `/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${encodeURIComponent(githubConfig.path)}`, body
+    );
+
+    if(status === 409){
+      showGithubStatus('다른 사람이 먼저 저장해서 충돌이 발생했습니다. "팀 이력 불러오기"로 최신 내용을 받은 뒤 다시 저장해주세요.', true);
+      githubFileSha = null;
+      return;
+    }
+    if(!ok){ throw new Error(githubErrorMessage(status, data)); }
+
+    githubFileSha = data.content ? data.content.sha : githubFileSha;
+    githubConfig.lastSyncAt = formatDate();
+    saveGithubConfigToStorage();
+    renderGithubView();
+    showGithubStatus(`저장 완료: 이력 ${historyList.length}건, 테스터 ${testerList.length}명을 GitHub에 반영했습니다.`, false);
+  }catch(err){
+    if(String(err.message||'').includes('토큰이 올바르지')){ githubConfig.connected = false; saveGithubConfigToStorage(); renderGithubView(); }
+    showGithubStatus('저장 실패: ' + (err.message || '알 수 없는 오류'), true);
+  }
+}
+
+document.getElementById('githubLoadBtn').addEventListener('click', githubLoadHistory);
+document.getElementById('githubPushBtn').addEventListener('click', githubSaveHistory);
+
+(async function init(){
+  await loadHistory();
+  await loadTesters();
+  loadGithubConfig();
+  renderTesterChips();
+  renderTable();
+  renderUatTable();
+  renderCvtHistoryOptions();
+})();
+</script>
+</body>
+</html>
