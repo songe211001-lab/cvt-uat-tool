@@ -403,28 +403,30 @@
     <h1>CVT/UAT 자료 자동 생성</h1>
   </div>
 
-  <div class="card" id="apiKeyCard" style="margin-bottom:20px;">
-    <h2>Claude 연결 설정 <span class="sub-txt" style="font-weight:400;">(TC/UAT 자료 생성에 필요합니다)</span></h2>
+  <details class="card" id="apiKeyCard" style="margin-bottom:20px;">
+    <summary class="dist-summary">Claude 연결 설정 <span class="sub-txt" style="font-weight:400;">(TC/UAT 자료 생성에 필요합니다)</span></summary>
 
-    <div class="seg-toggle" id="connectionModeToggle" style="margin-bottom:10px;">
-      <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="proxy"><span>🌐</span><span>팀 프록시 서버 사용</span></button>
-      <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="direct"><span>🔑</span><span>내 API 키 직접 입력</span></button>
+    <div class="details-body" style="margin-top:14px;">
+      <div class="seg-toggle" id="connectionModeToggle" style="margin-bottom:10px;">
+        <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="proxy"><span>🌐</span><span>팀 프록시 서버 사용</span></button>
+        <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="direct"><span>🔑</span><span>내 API 키 직접 입력</span></button>
+      </div>
+
+      <div id="connProxyWrap" class="github-step-row" style="border-top:none;padding-top:0;flex-wrap:wrap;">
+        <input type="text" id="proxyUrlInput" placeholder="프록시 서버 주소 (예: https://xxx.workers.dev)" style="flex:1 1 240px;" />
+        <input type="password" id="proxySecretInput" placeholder="접속 비밀번호 (팀에서 공유받은 값)" style="flex:1 1 160px;" />
+        <button class="primary small" id="connSaveBtn" type="button">저장</button>
+      </div>
+
+      <div id="connDirectWrap" class="github-step-row" style="border-top:none;padding-top:0;display:none;">
+        <input type="password" id="claudeApiKeyInput" placeholder="발급받은 API 키(sk-ant-...) 붙여넣기" />
+        <a class="github-link-btn" id="claudeApiKeyLink" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">🔑 키 발급 ↗</a>
+        <button class="primary small" id="claudeApiKeySaveBtn" type="button">저장</button>
+      </div>
+
+      <p class="sub-txt" id="claudeApiKeyStatus" style="margin-top:6px;"></p>
     </div>
-
-    <div id="connProxyWrap" class="github-step-row" style="border-top:none;padding-top:0;flex-wrap:wrap;">
-      <input type="text" id="proxyUrlInput" placeholder="프록시 서버 주소 (예: https://xxx.workers.dev)" style="flex:1 1 240px;" />
-      <input type="password" id="proxySecretInput" placeholder="접속 비밀번호 (팀에서 공유받은 값)" style="flex:1 1 160px;" />
-      <button class="primary small" id="connSaveBtn" type="button">저장</button>
-    </div>
-
-    <div id="connDirectWrap" class="github-step-row" style="border-top:none;padding-top:0;display:none;">
-      <input type="password" id="claudeApiKeyInput" placeholder="발급받은 API 키(sk-ant-...) 붙여넣기" />
-      <a class="github-link-btn" id="claudeApiKeyLink" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">🔑 키 발급 ↗</a>
-      <button class="primary small" id="claudeApiKeySaveBtn" type="button">저장</button>
-    </div>
-
-    <p class="sub-txt" id="claudeApiKeyStatus" style="margin-top:6px;"></p>
-  </div>
+  </details>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="gen">CVT 자료 생성</button>
@@ -725,6 +727,11 @@
           <button class="primary small" id="githubPushBtn" type="button" title="지금 화면의 이력·테스터 목록을 GitHub 저장소에 올려 다른 팀원도 볼 수 있게 합니다.">☁️ 지금 저장</button>
           <span class="sub-txt" id="githubLastSyncNote" style="align-self:center;"></span>
         </div>
+        <label class="sub-txt" style="display:flex;align-items:center;gap:6px;margin-top:10px;cursor:pointer;">
+          <input type="checkbox" id="githubAutoSyncToggle" />
+          작성 중 이력·테스터 목록이 바뀌면 자동으로 GitHub에 저장 ("지금 저장"을 직접 누르지 않아도 됩니다)
+        </label>
+        <p class="sub-txt" id="githubAutoSyncStatus" style="margin-top:4px;"></p>
       </div>
 
       <div id="githubStatusBox"></div>
@@ -1037,6 +1044,7 @@ function renderTesterChips(){
       renderTesterChips();
       renderTable();
       await saveTesters();
+      scheduleGithubAutoSync();
     });
   });
 }
@@ -1049,6 +1057,7 @@ async function addTesterFromInput(){
   renderTesterChips();
   renderTable();
   await saveTesters();
+  scheduleGithubAutoSync();
 }
 document.getElementById('addTesterBtn').addEventListener('click', addTesterFromInput);
 document.getElementById('testerNameInput').addEventListener('keydown', e=>{
@@ -1173,6 +1182,7 @@ function renderUatTesterChips(){
       renderUatTesterChips();
       renderUatTable();
       await saveUatTesters();
+      scheduleGithubAutoSync();
     });
   });
 }
@@ -1185,6 +1195,7 @@ async function addUatTesterFromInput(){
   renderUatTesterChips();
   renderUatTable();
   await saveUatTesters();
+  scheduleGithubAutoSync();
 }
 document.getElementById('addTesterBtnUat').addEventListener('click', addUatTesterFromInput);
 document.getElementById('testerNameInputUat').addEventListener('keydown', e=>{
@@ -1485,6 +1496,7 @@ async function runGeneration(startFresh){
   if(!currentFile || !currentFilePdfBase64) return;
   if(!hasClaudeConnectionConfigured()){
     showError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 프록시 서버 또는 API 키를 입력하고 저장해주세요.');
+    document.getElementById('apiKeyCard').open = true;
     document.getElementById('apiKeyCard').scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
@@ -1575,6 +1587,7 @@ async function generateUAT(isAppend){
   if(!hasSource) return;
   if(!hasClaudeConnectionConfigured()){
     showUatError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 프록시 서버 또는 API 키를 입력하고 저장해주세요.');
+    document.getElementById('apiKeyCard').open = true;
     document.getElementById('apiKeyCard').scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
@@ -2492,6 +2505,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   await saveHistory();
   renderHistory();
   renderCvtHistoryOptions();
+  scheduleGithubAutoSync();
 });
 
 /* ---------- Export UAT to Excel ---------- */
@@ -2528,6 +2542,7 @@ document.getElementById('exportUatBtn').addEventListener('click', async ()=>{
 
   await saveHistory();
   renderHistory();
+  scheduleGithubAutoSync();
 });
 
 /* ---------- 작업 중인 TC/UAT 임시 저장 (새로고침·창 닫기로 인한 작업 손실 방지) ----------
@@ -2660,10 +2675,12 @@ function renderHistory(){
       historyList.splice(idx, 1);
       await saveHistory();
       renderHistory();
+      scheduleGithubAutoSync();
       showUndoToast(`'${removedEntry.fileName}' 이력을 삭제했습니다.`, async ()=>{
         restoreRemovedItems(historyList, [{index: idx, row: removedEntry}]);
         await saveHistory();
         renderHistory();
+        scheduleGithubAutoSync();
       });
     });
   });
@@ -2729,6 +2746,7 @@ document.getElementById('backupFileInput').addEventListener('change', async (e)=
     renderUatTesterChips();
     renderCvtHistoryOptions();
     showBackupMsg(`복원 완료: 이력 ${historyList.length}건, CVT 테스터 ${testerList.length}명, UAT 테스터 ${uatTesterList.length}명을 불러왔습니다.`, false);
+    scheduleGithubAutoSync();
   }catch(err){
     showBackupMsg('백업 파일을 읽지 못했습니다. 파일을 확인해주세요.', true);
   }
@@ -2740,7 +2758,9 @@ document.getElementById('backupFileInput').addEventListener('change', async (e)=
    별도 서버 없이 이 정적 HTML에서 바로 Contents API를 호출해 저장소의 JSON 파일을 읽고 쓸 수 있다.
    토큰은 이 브라우저의 localStorage에만 저장되고, 요청은 브라우저에서 api.github.com으로 직접 나간다.
    사용성을 위해 "설정 폼"과 "평소 쓰는 화면"을 분리하고, 브랜치/파일 경로는 기본값으로 숨겨둔다. */
-let githubConfig = { token:'', owner:'', repo:'', branch:'main', path:'cvt-uat-history.json', connected:false, lastSyncAt:'' };
+let githubConfig = { token:'', owner:'', repo:'', branch:'main', path:'cvt-uat-history.json', connected:false, lastSyncAt:'', autoSync:true };
+let githubAutoSyncTimer = null;
+let githubSaveInProgress = false;
 let githubFileSha = null; // 마지막으로 불러오거나 저장한 파일의 sha (충돌 감지 및 다음 저장에 필요)
 
 function utf8ToBase64(str){
@@ -2792,6 +2812,7 @@ function renderGithubView(){
     document.getElementById('githubLastSyncNote').textContent = githubConfig.lastSyncAt
       ? `마지막 동기화: ${githubConfig.lastSyncAt}`
       : '아직 동기화한 적이 없습니다. "팀 이력 불러오기" 또는 "지금 저장"을 눌러보세요.';
+    document.getElementById('githubAutoSyncToggle').checked = !!githubConfig.autoSync;
   }else{
     setupView.style.display = 'block';
     connectedView.style.display = 'none';
@@ -2926,8 +2947,33 @@ async function githubLoadHistory(){
   }
 }
 
-async function githubSaveHistory(){
-  showGithubStatus('GitHub에 저장하는 중...', false);
+function showGithubAutoSyncStatus(message, isError){
+  const el = document.getElementById('githubAutoSyncStatus');
+  if(!el) return;
+  el.textContent = message;
+  el.style.color = isError ? '#B23434' : '';
+}
+
+/* 작성 중 이력·테스터 목록이 바뀔 때마다 몇 초 뒤 자동으로 GitHub에 반영한다.
+   매 변경마다 바로 커밋하면 너무 잦은 요청/커밋이 생기므로, 마지막 변경 후
+   조용한 시간이 좀 지나면 한 번만 저장하도록 디바운스한다. */
+function scheduleGithubAutoSync(){
+  if(!githubConfig.connected || !githubConfig.autoSync) return;
+  clearTimeout(githubAutoSyncTimer);
+  showGithubAutoSyncStatus('🔄 변경사항이 있어 잠시 후 자동으로 GitHub에 저장합니다...', false);
+  githubAutoSyncTimer = setTimeout(()=>{
+    githubSaveHistory(true);
+  }, 4000);
+}
+
+async function githubSaveHistory(isAuto){
+  if(githubSaveInProgress){
+    // 이미 저장 중이면 이번 요청은 건너뛰고, 자동 동기화는 다음 변경 때 다시 예약된다.
+    return;
+  }
+  githubSaveInProgress = true;
+  if(isAuto){ showGithubAutoSyncStatus('☁️ 자동 동기화 중...', false); }
+  else{ showGithubStatus('GitHub에 저장하는 중...', false); }
   try{
     if(!githubFileSha){
       const check = await githubApiRequest(
@@ -2939,7 +2985,7 @@ async function githubSaveHistory(){
 
     const payload = { historyList, testerList, uatTesterList, savedAt: formatDate() };
     const body = {
-      message: `CVT/UAT 이력 업데이트 (${formatDate()})`,
+      message: isAuto ? `CVT/UAT 이력 자동 동기화 (${formatDate()})` : `CVT/UAT 이력 업데이트 (${formatDate()})`,
       content: utf8ToBase64(JSON.stringify(payload, null, 2)),
       branch: githubConfig.branch
     };
@@ -2950,8 +2996,12 @@ async function githubSaveHistory(){
     );
 
     if(status === 409){
-      showGithubStatus('다른 사람이 먼저 저장해서 충돌이 발생했습니다. "팀 이력 불러오기"로 최신 내용을 받은 뒤 다시 저장해주세요.', true);
       githubFileSha = null;
+      if(isAuto){
+        showGithubAutoSyncStatus('⚠️ 다른 팀원이 먼저 저장해서 자동 동기화가 밀렸습니다. "팀 이력 불러오기"로 최신 내용을 받아주세요.', true);
+      }else{
+        showGithubStatus('다른 사람이 먼저 저장해서 충돌이 발생했습니다. "팀 이력 불러오기"로 최신 내용을 받은 뒤 다시 저장해주세요.', true);
+      }
       return;
     }
     if(!ok){ throw new Error(githubErrorMessage(status, data)); }
@@ -2960,19 +3010,42 @@ async function githubSaveHistory(){
     githubConfig.lastSyncAt = formatDate();
     saveGithubConfigToStorage();
     renderGithubView();
-    showGithubStatus(`저장 완료: 이력 ${historyList.length}건, CVT 테스터 ${testerList.length}명, UAT 테스터 ${uatTesterList.length}명을 GitHub에 반영했습니다.`, false);
+    if(isAuto){
+      showGithubAutoSyncStatus(`✅ 자동 동기화 완료 (${formatDate()}) — 이력 ${historyList.length}건`, false);
+    }else{
+      showGithubStatus(`저장 완료: 이력 ${historyList.length}건, CVT 테스터 ${testerList.length}명, UAT 테스터 ${uatTesterList.length}명을 GitHub에 반영했습니다.`, false);
+    }
   }catch(err){
     if(String(err.message||'').includes('토큰이 올바르지')){ githubConfig.connected = false; saveGithubConfigToStorage(); renderGithubView(); }
-    showGithubStatus('저장 실패: ' + (err.message || '알 수 없는 오류'), true);
+    if(isAuto){
+      showGithubAutoSyncStatus('⚠️ 자동 동기화 실패: ' + (err.message || '알 수 없는 오류'), true);
+    }else{
+      showGithubStatus('저장 실패: ' + (err.message || '알 수 없는 오류'), true);
+    }
+  }finally{
+    githubSaveInProgress = false;
   }
 }
 
 document.getElementById('githubLoadBtn').addEventListener('click', githubLoadHistory);
-document.getElementById('githubPushBtn').addEventListener('click', githubSaveHistory);
+document.getElementById('githubPushBtn').addEventListener('click', ()=>githubSaveHistory(false));
+document.getElementById('githubAutoSyncToggle').addEventListener('change', (e)=>{
+  githubConfig.autoSync = e.target.checked;
+  saveGithubConfigToStorage();
+  if(githubConfig.autoSync){
+    showGithubAutoSyncStatus('✅ 자동 동기화가 켜졌습니다. 이후 변경사항부터 자동으로 저장됩니다.', false);
+  }else{
+    clearTimeout(githubAutoSyncTimer);
+    showGithubAutoSyncStatus('자동 동기화가 꺼졌습니다. "지금 저장"을 눌러야 반영됩니다.', false);
+  }
+});
 
 (async function init(){
   loadClaudeApiKey();
   renderClaudeApiKeyStatus();
+  // 이미 연결 설정(프록시 또는 개인 키)이 되어있으면 접어서 화면을 작게 시작하고,
+  // 아직 설정 전이면 처음 쓰는 사람이 바로 보이도록 펼쳐둔다.
+  document.getElementById('apiKeyCard').open = !hasClaudeConnectionConfigured();
   await loadHistory();
   await loadTesters();
   await loadUatTesters();
