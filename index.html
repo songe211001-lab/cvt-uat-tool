@@ -344,7 +344,7 @@
   .toolbar-card{padding:18px 20px;}
   .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   /* 화면 폭에 따라 유동적으로 줄어드는 이력 선택 박스 — 좁은 화면에서 줄바꿈되면 한 줄 전체를 채운다 */
-  #uatHistorySourceWrap{width:clamp(80px, 12vw, 100px);flex:0 1 auto;}
+  #uatHistorySourceWrap{width:clamp(160px, 26vw, 280px);flex:1 1 auto;}
   @media (max-width:520px){
     #uatHistorySourceWrap{width:100%;flex:1 1 100%;}
   }
@@ -472,18 +472,7 @@
     <summary class="dist-summary">Claude 연결 설정 <span class="sub-txt" style="font-weight:400;">(TC/UAT 자료 생성에 필요합니다)</span></summary>
 
     <div class="details-body" style="margin-top:14px;">
-      <div class="seg-toggle" id="connectionModeToggle" style="margin-bottom:10px;">
-        <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="proxy"><span>🌐</span><span>팀 프록시 서버 사용</span></button>
-        <button type="button" class="seg-btn upload-btn conn-mode-btn" data-mode="direct"><span>🔑</span><span>내 API 키 직접 입력</span></button>
-      </div>
-
-      <div id="connProxyWrap" class="github-step-row" style="border-top:none;padding-top:0;flex-wrap:wrap;">
-        <input type="text" id="proxyUrlInput" placeholder="프록시 서버 주소 (예: https://xxx.workers.dev)" style="flex:1 1 240px;" />
-        <input type="password" id="proxySecretInput" placeholder="접속 비밀번호 (팀에서 공유받은 값)" style="flex:1 1 160px;" />
-        <button class="primary small" id="connSaveBtn" type="button">저장</button>
-      </div>
-
-      <div id="connDirectWrap" class="github-step-row" style="border-top:none;padding-top:0;display:none;">
+      <div id="connDirectWrap" class="github-step-row" style="border-top:none;padding-top:0;">
         <input type="password" id="claudeApiKeyInput" placeholder="발급받은 API 키(sk-ant-...) 붙여넣기" />
         <a class="github-link-btn" id="claudeApiKeyLink" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">🔑 키 발급 ↗</a>
         <button class="primary small" id="claudeApiKeySaveBtn" type="button">저장</button>
@@ -916,9 +905,6 @@ let currentFilePageCount = null;
 let currentUatFile = null;
 let lastUatSourceFileName = '';
 let claudeApiKey = '';
-let connectionMode = 'direct'; // 'proxy' (팀 프록시 서버) | 'direct' (개인 API 키 직접 입력)
-let proxyUrl = '';
-let proxySecret = '';
 let historyList = [];
 let historyFilter = 'ALL';
 let testerList = [];
@@ -1133,84 +1119,31 @@ document.getElementById('testerNameInput').addEventListener('keydown', e=>{
   if(e.key === 'Enter'){ e.preventDefault(); addTesterFromInput(); }
 });
 /* ---------- Claude 연결 설정 (localStorage에만 저장, 파일 소스에는 남기지 않음) ----------
-   두 가지 방식 중 하나를 팀/개인 상황에 맞게 고른다.
-   - proxy : 회사에서 운영하는 중계 서버(예: Cloudflare Worker)를 통해 호출. 실제 Anthropic API 키는
-             서버에만 있고 브라우저에는 절대 노출되지 않는다. 팀원은 서버 주소 + 공유 접속 비밀번호만 입력.
-   - direct: 브라우저에서 Anthropic API를 바로 호출. 개인이 발급받은 API 키가 이 브라우저에만 저장된다. */
+   브라우저에서 Anthropic API를 바로 호출한다. 개인이 발급받은 API 키가 이 브라우저에만 저장된다. */
 function loadClaudeApiKey(){
   try{ claudeApiKey = localStorage.getItem('cvt_claude_api_key') || ''; }
   catch(e){ claudeApiKey = ''; }
-  try{ connectionMode = localStorage.getItem('cvt_connection_mode') || 'direct'; }
-  catch(e){ connectionMode = 'direct'; }
-  try{ proxyUrl = localStorage.getItem('cvt_proxy_url') || ''; }
-  catch(e){ proxyUrl = ''; }
-  try{ proxySecret = localStorage.getItem('cvt_proxy_secret') || ''; }
-  catch(e){ proxySecret = ''; }
 }
 function renderClaudeApiKeyStatus(){
   const status = document.getElementById('claudeApiKeyStatus');
   const input = document.getElementById('claudeApiKeyInput');
-  const proxyUrlInput = document.getElementById('proxyUrlInput');
-  const proxySecretInput = document.getElementById('proxySecretInput');
-
-  document.querySelectorAll('#connectionModeToggle .conn-mode-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.mode === connectionMode);
-  });
-  document.getElementById('connProxyWrap').style.display = connectionMode === 'proxy' ? 'flex' : 'none';
-  document.getElementById('connDirectWrap').style.display = connectionMode === 'direct' ? 'flex' : 'none';
 
   input.value = claudeApiKey;
-  proxyUrlInput.value = proxyUrl;
-  proxySecretInput.value = proxySecret;
 
-  if(connectionMode === 'proxy'){
-    status.textContent = proxyUrl
-      ? '✅ 팀 프록시 서버가 설정되어 있습니다. (개인 API 키를 입력할 필요가 없습니다)'
-      : '⚠️ 프록시 서버 주소를 입력하지 않으면 TC/UAT 생성이 동작하지 않습니다.';
-  }else{
-    status.textContent = claudeApiKey
-      ? '✅ 이 브라우저에 API 키가 저장되어 있습니다. (다른 사람과 파일을 공유해도 키는 포함되지 않습니다)'
-      : '⚠️ API 키를 입력하지 않으면 TC/UAT 생성이 동작하지 않습니다.';
-  }
+  status.textContent = claudeApiKey
+    ? '✅ 이 브라우저에 API 키가 저장되어 있습니다. (다른 사람과 파일을 공유해도 키는 포함되지 않습니다)'
+    : '⚠️ API 키를 입력하지 않으면 TC/UAT 생성이 동작하지 않습니다.';
 }
-document.querySelectorAll('#connectionModeToggle .conn-mode-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    connectionMode = btn.dataset.mode;
-    try{ localStorage.setItem('cvt_connection_mode', connectionMode); }catch(e){ /* ignore */ }
-    renderClaudeApiKeyStatus();
-  });
-});
 document.getElementById('claudeApiKeySaveBtn').addEventListener('click', ()=>{
   claudeApiKey = document.getElementById('claudeApiKeyInput').value.trim();
   try{ localStorage.setItem('cvt_claude_api_key', claudeApiKey); }catch(e){ /* ignore */ }
   renderClaudeApiKeyStatus();
 });
-document.getElementById('connSaveBtn').addEventListener('click', ()=>{
-  proxyUrl = document.getElementById('proxyUrlInput').value.trim().replace(/\/+$/, '');
-  proxySecret = document.getElementById('proxySecretInput').value.trim();
-  try{
-    localStorage.setItem('cvt_proxy_url', proxyUrl);
-    localStorage.setItem('cvt_proxy_secret', proxySecret);
-  }catch(e){ /* ignore */ }
-  renderClaudeApiKeyStatus();
-});
 function hasClaudeConnectionConfigured(){
-  return connectionMode === 'proxy' ? !!proxyUrl : !!claudeApiKey;
+  return !!claudeApiKey;
 }
-/* 연결 방식에 따라 Claude Messages API 호출 대상 URL/헤더를 만들어준다.
-   - proxy : 회사 중계 서버로 보낸다. 실제 anthropic 인증 헤더는 서버가 붙이므로 여기서는
-             팀 접속 비밀번호만 Authorization 헤더에 실어 보낸다.
-   - direct: 지금까지처럼 브라우저에서 Anthropic API를 직접 호출한다. */
+/* 브라우저에서 Anthropic API를 직접 호출하기 위한 Claude Messages API 호출 대상 URL/헤더. */
 function claudeRequestTarget(){
-  if(connectionMode === 'proxy'){
-    return {
-      url: proxyUrl,
-      headers: {
-        'Content-Type':'application/json',
-        'Authorization': 'Bearer ' + proxySecret
-      }
-    };
-  }
   return {
     url: 'https://api.anthropic.com/v1/messages',
     headers: {
@@ -1564,7 +1497,7 @@ const PER_ROUND_TYPE_COUNT = 3;
 async function runGeneration(startFresh){
   if(!currentFile || !currentFilePdfBase64) return;
   if(!hasClaudeConnectionConfigured()){
-    showError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 프록시 서버 또는 API 키를 입력하고 저장해주세요.');
+    showError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 API 키를 입력하고 저장해주세요.');
     document.getElementById('apiKeyCard').open = true;
     document.getElementById('apiKeyCard').scrollIntoView({behavior:'smooth', block:'center'});
     return;
@@ -1655,7 +1588,7 @@ async function generateUAT(isAppend){
     : !!currentUatFile;
   if(!hasSource) return;
   if(!hasClaudeConnectionConfigured()){
-    showUatError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 프록시 서버 또는 API 키를 입력하고 저장해주세요.');
+    showUatError('Claude 연결 설정이 되어있지 않습니다. 상단의 "Claude 연결 설정" 영역에서 API 키를 입력하고 저장해주세요.');
     document.getElementById('apiKeyCard').open = true;
     document.getElementById('apiKeyCard').scrollIntoView({behavior:'smooth', block:'center'});
     return;
@@ -3131,7 +3064,7 @@ document.getElementById('githubAutoSyncToggle').addEventListener('change', (e)=>
   loadClaudeApiKey();
   renderClaudeApiKeyStatus();
   // 연결 설정 여부와 상관없이 항상 접힌 상태로 시작해 화면을 작게 유지한다.
-  // (키/프록시가 없어서 생성이 막히는 순간에는 아래 가드에서 자동으로 펼쳐서 보여준다.)
+  // (키가 없어서 생성이 막히는 순간에는 아래 가드에서 자동으로 펼쳐서 보여준다.)
   document.getElementById('apiKeyCard').open = false;
   await loadHistory();
   await loadTesters();
