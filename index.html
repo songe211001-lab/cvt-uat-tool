@@ -9,26 +9,82 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
-    --accent:#FC6969;
-    --accent-dark:#E24E4E;
-    --accent-tint:#FFECEC;
-    --bg:#FFFBFA;
-    --surface:#FFFFFF;
-    --border:#F0E3E1;
-    --text:#2B2523;
-    --text-muted:#9B928D;
-    --pass:#2E9E5B;
-    --minor:#F2B705;
-    --na:#AFB3B8;
-    --major:#F2790F;
-    --fatal:#FC6969;
-    --critical:#8B1E3F;
-    --radius:12px;
+    /* ── 알닷 컨셉 디자인 시스템(design.md) — base palette ───────────── */
+    --coral-500: oklch(0.704 0.180 23);   /* 브랜드 포인트 컬러 #fc6969 */
+    --coral-600: oklch(0.602 0.180 25.9); /* pressed */
+    --coral-700: oklch(0.556 0.178 27.9);
+    --coral-50:  oklch(0.965 0.021 18.9);
+
+    --grey-900: oklch(0.234 0.030 254);
+    --grey-800: oklch(0.342 0.030 253);
+    --grey-700: oklch(0.452 0.028 253);
+    --grey-600: oklch(0.555 0.022 253);
+    --grey-500: oklch(0.652 0.020 252);
+    --grey-400: oklch(0.752 0.016 251);
+    --grey-300: oklch(0.840 0.012 248);
+    --grey-200: oklch(0.913 0.008 247);
+    --grey-150: oklch(0.918 0.007 247);
+    --grey-100: oklch(0.957 0.005 247);
+    --grey-50:  oklch(0.978 0.003 247);
+    --white:    oklch(1.000 0.000 0);
+
+    --yellow-500: oklch(0.853 0.156 86);
+    --orange-500: oklch(0.748 0.183 56);
+    --orange-400: oklch(0.828 0.108 52);
+    --red-500:    oklch(0.628 0.218 22);
+    --green-500:  oklch(0.493 0.143 154);
+    --navy-900:   oklch(0.155 0.060 261);
+
+    --fg-tertiary:   oklch(0.155 0.060 261 / 0.58);
+    --fg-quaternary: oklch(0.155 0.060 261 / 0.28);
+    --line-subtle:   oklch(0.000 0.000 0 / 0.08);
+    --press-overlay: oklch(0.000 0.000 0 / 0.26);
+
+    /* ── spacing / rounded / font scale ──────────────────────────────── */
+    --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+    --space-5:20px; --space-6:24px; --space-7:28px; --space-8:32px;
+    --space-10:40px; --space-12:48px; --space-16:64px; --space-20:80px;
+
+    --radius-xs:4px; --radius-s:8px; --radius-m:12px; --radius-l:14px;
+    --radius-xl:16px; --radius-2xl:20px; --radius-3xl:24px; --radius-4xl:32px;
+    --radius-full:999px; --radius-badge:6px;
+
+    --font-sans:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+      "SF Pro Text","SF Pro","Apple SD Gothic Neo","Noto Sans KR", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+
+    /* ── 이 도구가 기존에 쓰던 변수명 — 위 팔레트로 재매핑(하위 호환) ── */
+    --accent: var(--coral-500);
+    --accent-dark: var(--coral-600);
+    --accent-tint: var(--coral-50);
+    --bg: var(--grey-50);
+    --surface: var(--white);
+    --border: var(--grey-200);
+    --text: var(--grey-900);
+    --text-muted: var(--fg-tertiary);
+    --radius: var(--radius-xl);
+
+    /* QA 결과 상태색 — 알닷 세맨틱 팔레트(danger/success/warning)에 맞춰 재정의.
+       critical은 문서에 없는 단계라 red-500과 같은 색상(hue 22)에서 더 짙게 확장했다. */
+    --pass: var(--green-500);
+    --minor: var(--orange-400);
+    --na: var(--grey-400);
+    --major: var(--orange-500);
+    --fatal: var(--red-500);
+    --critical: oklch(0.320 0.150 22);
+
+    /* error-box/warn-box용 washed 톤 — design.md의 badge wash 공식(밝은 배경 + 짙은 텍스트)을 재사용 */
+    --red-wash: oklch(0.940 0.040 18);
+    --red-wash-text: oklch(0.420 0.200 22);
+    --orange-wash: oklch(0.940 0.045 56);
+    --orange-wash-text: oklch(0.450 0.150 56);
+
+    --disabled-opacity: 0.30; /* design.md: disabled는 부분 회색 처리 대신 컴포넌트 전체에 opacity 적용 */
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+    font-family:var(--font-sans);
     background:var(--bg);
     color:var(--text);
     -webkit-font-smoothing:antialiased;
@@ -44,8 +100,8 @@
     padding:4px 10px;border-radius:999px;margin-bottom:10px;
   }
   .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);}
-  h1{font-size:26px;font-weight:800;margin:0 0 4px;letter-spacing:-0.02em;}
-  .subtitle{font-size:14px;color:var(--text-muted);margin:0;}
+  h1{font-size:28px;font-weight:700;line-height:1.30;margin:0 0 4px;letter-spacing:-0.02em;}
+  .subtitle{font-size:15px;line-height:1.5;letter-spacing:-0.005em;color:var(--text-muted);margin:0;}
 
   /* Tabs */
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;}
@@ -85,7 +141,7 @@
   .field-inline{display:flex;flex-direction:column;gap:4px;}
   .field-inline label{font-size:11.5px;color:var(--text-muted);font-weight:600;}
   .field-inline input, .field-inline select{
-    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:7px 10px;font-size:13px;
     font-family:inherit;min-width:150px;background:#fff;color:var(--text);
   }
   .field-inline input:focus, .field-inline select:focus{outline:none;border-color:var(--accent);}
@@ -93,19 +149,19 @@
   button.primary{
     appearance:none;border:none;cursor:pointer;
     background:var(--accent);color:#fff;font-weight:700;font-size:13.5px;
-    padding:9px 18px;border-radius:9px;transition:background .15s ease, transform .1s ease;
+    padding:9px 18px;border-radius:var(--radius-l);transition:background .15s ease, transform .1s ease;
     font-family:inherit;
   }
   button.primary:hover{background:var(--accent-dark);}
-  button.primary:disabled{background:#E9D9D9;cursor:not-allowed;}
+  button.primary:disabled{opacity:var(--disabled-opacity);cursor:not-allowed;}
   button.ghost{
     appearance:none;cursor:pointer;background:#fff;color:var(--text);
     border:1px solid var(--border);font-weight:600;font-size:13.5px;
-    padding:9px 16px;border-radius:9px;font-family:inherit;
+    padding:9px 16px;border-radius:var(--radius-l);font-family:inherit;
   }
   button.ghost:hover{border-color:var(--accent);color:var(--accent-dark);}
-  button.ghost:disabled{opacity:.45;cursor:not-allowed;}
-  button.small{padding:5px 10px;font-size:12px;border-radius:7px;}
+  button.ghost:disabled{opacity:var(--disabled-opacity);cursor:not-allowed;}
+  button.small{padding:5px 10px;font-size:12px;border-radius:var(--radius-s);}
 
   .spinner{
     width:14px;height:14px;border:2px solid rgba(255,255,255,.4);
@@ -115,21 +171,22 @@
   @keyframes spin{to{transform:rotate(360deg);}}
 
   .error-box{
-    background:#FFF1F1;border:1px solid #FBC7C7;color:#B23434;
-    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+    background:var(--red-wash);border:1px solid var(--red-500);color:var(--red-wash-text);
+    font-size:12.5px;padding:9px 12px;border-radius:var(--radius-s);margin-top:12px;
   }
   .notice-box{
+    /* 알림(정보) 색은 알닷 팔레트에 없는 파랑 — 브랜드 강조색(coral)과 겹치지 않도록 그대로 유지 */
     background:#F1F4FF;border:1px solid #D6DEFB;color:#3B4A9E;
-    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+    font-size:12.5px;padding:9px 12px;border-radius:var(--radius-s);margin-top:12px;
   }
   .warn-box{
-    background:#FFF8EA;border:1px solid #F5DDA3;color:#8A5A00;
-    font-size:12.5px;padding:9px 12px;border-radius:8px;margin-top:12px;
+    background:var(--orange-wash);border:1px solid var(--orange-500);color:var(--orange-wash-text);
+    font-size:12.5px;padding:9px 12px;border-radius:var(--radius-s);margin-top:12px;
   }
 
   /* Status distribution bar */
   .dist-wrap{margin-bottom:8px;}
-  .dist-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:#F2EEEC;}
+  .dist-bar{display:flex;height:10px;border-radius:var(--radius-badge);overflow:hidden;background:var(--grey-200);}
   .dist-bar span{height:100%;}
   .dist-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-muted);}
   .dist-legend .item{display:flex;align-items:center;gap:5px;}
@@ -144,24 +201,24 @@
   .dist-empty{color:var(--text-muted);font-size:12px;}
 
   /* Table */
-  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:10px;}
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-m);}
   table{border-collapse:collapse;width:100%;min-width:1300px;font-size:13px;}
   thead th{
-    background:#FFF6F5;color:var(--text);font-weight:700;font-size:12px;
+    background:var(--accent-tint);color:var(--text);font-weight:700;font-size:12px;
     text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);
     position:sticky;top:0;white-space:nowrap;
   }
   tbody td{
     border-bottom:1px solid var(--border);padding:8px 10px;vertical-align:top;
   }
-  tbody tr:hover{background:#FFFBFA;}
+  tbody tr:hover{background:var(--bg);}
   td .cell-edit{
     outline:none;min-width:70px;line-height:1.45;white-space:pre-wrap;
   }
   td .cell-edit:focus{background:var(--accent-tint);border-radius:5px;}
   td.tcid{font-weight:700;color:var(--accent-dark);white-space:nowrap;font-variant-numeric:tabular-nums;}
   select.result-select, select.screentype-select, select.status-select{
-    border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;
+    border:none;border-radius:var(--radius-s);padding:4px 8px;font-size:12px;font-weight:700;
     color:#fff;font-family:inherit;cursor:pointer;
   }
   td.action-col{text-align:center;white-space:nowrap;}
@@ -179,17 +236,17 @@
   /* History tab */
   .history-item{
     display:flex;justify-content:space-between;align-items:center;gap:16px;
-    border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:14px 16px;margin-bottom:10px;
     flex-wrap:wrap;
   }
   .history-item .meta{display:flex;flex-direction:column;gap:3px;}
   .history-item .file-name{font-weight:700;font-size:13.5px;}
   .history-item .date{font-size:12px;color:var(--text-muted);}
-  .history-mini-bar{display:flex;height:6px;width:160px;border-radius:4px;overflow:hidden;background:#F2EEEC;margin-top:6px;}
+  .history-mini-bar{display:flex;height:6px;width:160px;border-radius:var(--radius-xs);overflow:hidden;background:var(--grey-200);margin-top:6px;}
   .history-actions{display:flex;gap:8px;}
   .type-badge{
     display:inline-block;color:#fff;font-size:10.5px;font-weight:800;
-    padding:2px 7px;border-radius:5px;margin-right:8px;vertical-align:1px;letter-spacing:.02em;
+    padding:2px 7px;border-radius:var(--radius-badge);margin-right:8px;vertical-align:1px;letter-spacing:.02em;
   }
   .hist-filters{display:flex;gap:6px;margin-bottom:16px;}
   .hist-filter{
@@ -203,7 +260,7 @@
   .seg-btn.upload-btn.active{border-color:var(--accent);background:var(--accent-tint);color:var(--accent-dark);}
   .screentype-badge{
     display:inline-block;color:#fff;font-size:10.5px;font-weight:800;
-    padding:2px 7px;border-radius:5px;letter-spacing:.02em;
+    padding:2px 7px;border-radius:var(--radius-badge);letter-spacing:.02em;
   }
 
   .tester-manage{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
@@ -211,7 +268,7 @@
   .tester-manage label .sub-txt{display:inline;font-weight:500;margin-left:6px;}
   .tester-input-row{display:flex;gap:8px;}
   .tester-input-row input{
-    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:7px 10px;font-size:13px;
     font-family:inherit;flex:1;min-width:140px;
   }
   .tester-input-row input:focus{outline:none;border-color:var(--accent);}
@@ -225,16 +282,16 @@
     font-weight:700;padding:2px 6px;line-height:1;
   }
   select.tester-select{
-    border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12.5px;
+    border:1px solid var(--border);border-radius:var(--radius-s);padding:4px 8px;font-size:12.5px;
     font-family:inherit;cursor:pointer;background:#fff;color:var(--text);min-width:90px;
   }
 
   /* TC card list (readable card view instead of a dense table) */
   .tc-card{
-    border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:16px 18px;margin-bottom:14px;
     background:#fff;transition:border-color .15s ease;position:relative;
   }
-  .tc-card:hover{border-color:#E9D4D4;}
+  .tc-card:hover{border-color:oklch(0.850 0.030 23);}
   .tc-card.selected{border-color:var(--accent);background:var(--accent-tint);}
   .tc-card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
   .tc-select-checkbox{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);}
@@ -243,7 +300,7 @@
     white-space:nowrap;
   }
   .tc-screen-input{
-    border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;font-weight:700;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:6px 10px;font-size:14px;font-weight:700;
     flex:1;min-width:120px;outline:none;
   }
   .tc-screen-input:focus{border-color:var(--accent);background:var(--accent-tint);}
@@ -257,7 +314,7 @@
     display:block;letter-spacing:.02em;
   }
   .tc-editable{
-    border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13.5px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:9px 11px;font-size:13.5px;
     line-height:1.65;white-space:pre-wrap;min-height:22px;outline:none;
   }
   .tc-editable:focus{border-color:var(--accent);background:var(--accent-tint);}
@@ -273,14 +330,14 @@
   .row-tester-tag{white-space:nowrap;flex-shrink:0;}
   .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
   select.tag-select{
-    border:1px solid var(--border);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;
+    border:1px solid var(--border);border-radius:var(--radius-s);padding:5px 9px;font-size:12px;font-weight:700;
     font-family:inherit;cursor:pointer;background:#fff;color:var(--text);
   }
-  select.tag-select.tag-active-constraint{background:#FFF3D6;color:#8A5A00;border-color:#F5DDA3;}
+  select.tag-select.tag-active-constraint{background:var(--orange-wash);color:var(--orange-wash-text);border-color:var(--orange-500);}
   select.tag-select.tag-active-integration{background:#EAE6FF;color:#5B3FBF;border-color:#D6CBFA;}
   .conflict-badge{
-    font-size:10.5px;font-weight:700;color:#2B2523;background:var(--fatal);
-    padding:2px 8px;border-radius:999px;white-space:nowrap;
+    font-size:10.5px;font-weight:700;color:#fff;background:var(--fatal);
+    padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;
   }
 
   /* Compact toolbar (upload button + filters + actions) */
@@ -293,7 +350,7 @@
   }
   .upload-btn{
     display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);
-    background:#fff;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13.5px;
+    background:#fff;border-radius:var(--radius-l);padding:9px 16px;font-weight:700;font-size:13.5px;
     color:var(--text);cursor:pointer;font-family:inherit;
     transition:border-color .15s ease,background .15s ease,color .15s ease;white-space:nowrap;
   }
@@ -312,12 +369,12 @@
   .github-link-btn{
     display:inline-flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;
     font-family:inherit;font-weight:600;font-size:12px;color:var(--text);
-    background:#fff;border:1px solid var(--border);padding:5px 10px;border-radius:7px;
+    background:#fff;border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius-s);
     cursor:pointer;
   }
   .github-link-btn:hover{border-color:var(--accent);color:var(--accent-dark);}
   .github-step-row input[type="text"], .github-step-row input[type="password"]{
-    flex:1;min-width:170px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;
+    flex:1;min-width:170px;border:1px solid var(--border);border-radius:var(--radius-m);padding:7px 10px;font-size:12.5px;
     font-family:inherit;background:#fff;color:var(--text);
   }
   .github-step-row input:focus{outline:none;border-color:var(--accent);}
@@ -357,20 +414,20 @@
   }
   .tc-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
   .tc-filter-bar input, .tc-filter-bar select{
-    border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:7px 10px;font-size:12.5px;
     font-family:inherit;background:#fff;color:var(--text);
   }
   .tc-filter-bar input{flex:1;min-width:180px;}
   .tc-filter-bar input:focus, .tc-filter-bar select:focus{outline:none;border-color:var(--accent);}
   .dup-badge{
-    font-size:10.5px;font-weight:700;color:#8A5A00;background:#FFF3D6;
-    padding:2px 8px;border-radius:999px;white-space:nowrap;
+    font-size:10.5px;font-weight:700;color:var(--orange-wash-text);background:var(--orange-wash);
+    padding:2px 8px;border-radius:var(--radius-full);white-space:nowrap;
   }
 
   /* Undo toast (삭제 되돌리기) */
   .undo-toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:#2B2523;color:#fff;padding:12px 16px;border-radius:10px;
+    background:var(--grey-900);color:#fff;padding:12px 16px;border-radius:var(--radius-m);
     display:flex;align-items:center;gap:14px;font-size:13px;
     box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:500;
     opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;
@@ -385,7 +442,7 @@
   /* Bulk action bar */
   .bulk-bar{
     display:none;align-items:center;gap:10px;flex-wrap:wrap;
-    background:var(--accent-tint);border:1px solid var(--accent);border-radius:10px;
+    background:var(--accent-tint);border:1px solid var(--accent);border-radius:var(--radius-m);
     padding:10px 14px;margin-bottom:14px;font-size:12.5px;
   }
   .bulk-bar.show{display:flex;}
@@ -539,7 +596,7 @@
           <option value="완료">완료</option>
         </select>
         <button class="ghost small" id="bulkClearBtn" type="button">선택 해제</button>
-        <button class="ghost small" id="bulkDeleteBtn" type="button" style="color:#B23434;border-color:#F0C6C6;">선택 삭제</button>
+        <button class="ghost small" id="bulkDeleteBtn" type="button" style="color:var(--red-wash-text);border-color:oklch(0.628 0.218 22 / 0.45);">선택 삭제</button>
       </div>
 
       <div id="tcCardList"></div>
@@ -657,7 +714,7 @@
           <option value="완료">완료</option>
         </select>
         <button class="ghost small" id="uatBulkClearBtn" type="button">선택 해제</button>
-        <button class="ghost small" id="uatBulkDeleteBtn" type="button" style="color:#B23434;border-color:#F0C6C6;">선택 삭제</button>
+        <button class="ghost small" id="uatBulkDeleteBtn" type="button" style="color:var(--red-wash-text);border-color:oklch(0.628 0.218 22 / 0.45);">선택 삭제</button>
       </div>
 
       <div id="uatCardList"></div>
@@ -822,17 +879,21 @@ const RESULT_COLOR = {
   PASS:'var(--pass)', MINOR:'var(--minor)', 'N/A':'var(--na)',
   MAJOR:'var(--major)', FATAL:'var(--fatal)', CRITICAL:'var(--critical)'
 };
-// 배경색 대비 흰 글자의 명암비가 WCAG 최소 기준(3:1)에 못 미치는 색(MINOR/N/A/MAJOR/FATAL)은
-// 어두운 글자로, 충분히 어두운 CRITICAL만 흰 글자를 유지한다.
+// 알닷 팔레트(oklch) 재적용 후 배경별로 다시 계산한 명암비 기준.
+// MINOR(orange-400)·N/A(grey-400)·MAJOR(orange-500)는 밝은 배경이라 어두운 글자가 낫고,
+// PASS(green-500)·FATAL(red-500)·CRITICAL은 배경이 짙어져 흰 글자가 대비가 더 좋다.
+// 단, FATAL(red-500)은 흰 글자로도 대비가 3.9:1 정도라 완전한 WCAG AA(4.5:1)는 아니다 —
+// design.md도 coral 포인트 컬러와 danger red의 색상 근접을 known gap으로 남겨둔 부분이다.
 const RESULT_TEXT_COLOR = {
-  PASS:'#2B2523', MINOR:'#2B2523', 'N/A':'#2B2523',
-  MAJOR:'#2B2523', FATAL:'#2B2523', CRITICAL:'#fff'
+  PASS:'#fff', MINOR:'var(--text)', 'N/A':'var(--text)',
+  MAJOR:'var(--text)', FATAL:'#fff', CRITICAL:'#fff'
 };
 const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['작성중','검토중','완료'];
-const STATUS_COLOR = { '작성중':'#AFB3B8', '검토중':'#5B7FDE', '완료':'#2E9E5B' };
-// 세 상태 모두 흰 글자보다 어두운 글자일 때 대비가 더 좋아 통일한다 (특히 '작성중'은 흰 글자 시 2.1:1로 심각하게 낮음).
-const STATUS_TEXT_COLOR = { '작성중':'#2B2523', '검토중':'#2B2523', '완료':'#2B2523' };
+const STATUS_COLOR = { '작성중':'var(--na)', '검토중':'#5B7FDE', '완료':'var(--pass)' };
+// '작성중'(grey-400)·'검토중'(파랑, 알닷 팔레트에 없는 상태색이라 기존 값 유지)은 밝은 배경이라
+// 어두운 글자가 대비가 좋고, '완료'(green-500)는 배경이 짙어져 흰 글자가 대비가 더 좋다(2.7:1 → 5.7:1).
+const STATUS_TEXT_COLOR = { '작성중':'var(--text)', '검토중':'var(--text)', '완료':'#fff' };
 const SCREEN_TYPE_COLOR = { FO:'#5B7FDE', BO:'#8B5CF6' };
 
 // 도메인 특화 태그: 하루 1회 제한 액션 / 동일 회원에 결합 불가한(단독 실행 필요) 액션.
@@ -2661,7 +2722,7 @@ function renderHistory(){
     }).join('');
     const badgeColor = h.type==='UAT' ? '#5B7FDE' : 'var(--accent)';
     // var(--accent)(코랄핑크) 위 흰 글자는 명암비가 2.85:1로 기준(3:1) 미달이라 CVT 배지만 어두운 글자를 쓴다.
-    const badgeTextColor = h.type==='UAT' ? '#fff' : '#2B2523';
+    const badgeTextColor = h.type==='UAT' ? '#fff' : 'var(--text)';
     const figmaLink = h.figmaUrl
       ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">🔗 피그마 기획안 링크</a></div>`
       : '';
@@ -2977,7 +3038,7 @@ function showGithubAutoSyncStatus(message, isError){
   const el = document.getElementById('githubAutoSyncStatus');
   if(!el) return;
   el.textContent = message;
-  el.style.color = isError ? '#B23434' : '';
+  el.style.color = isError ? 'var(--red-wash-text)' : '';
 }
 
 /* 작성 중 이력·테스터 목록이 바뀔 때마다 몇 초 뒤 자동으로 GitHub에 반영한다.
