@@ -3481,9 +3481,20 @@ document.getElementById('backupFileInput').addEventListener('change', async (e)=
     if(!Array.isArray(parsed.historyList)){
       throw new Error('올바른 백업 파일이 아닙니다.');
     }
-    historyList = parsed.historyList;
-    testerList = Array.isArray(parsed.testerList) ? parsed.testerList : [];
-    uatTesterList = Array.isArray(parsed.uatTesterList) ? parsed.uatTesterList : [];
+    // 백업 불러오기는 기존 이력/테스터를 지우지 않고 위에 "차곡차곡" 쌓는다.
+    // (동일한 구분+원본 파일명+내용의 이력은 upsertHistoryEntry가 중복으로 보고 갱신만 함)
+    const beforeCount = historyList.length;
+    const incoming = parsed.historyList;
+    // incoming을 뒤에서부터 upsert해야, 각 항목이 맨 앞으로 올라가는 upsertHistoryEntry 특성상
+    // 최종적으로 incoming 내부의 원래 순서(최신이 먼저)가 그대로 유지된다.
+    incoming.slice().reverse().forEach(entry => upsertHistoryEntry(entry));
+    const addedCount = historyList.length - beforeCount;
+
+    const incomingTesters = Array.isArray(parsed.testerList) ? parsed.testerList : [];
+    const incomingUatTesters = Array.isArray(parsed.uatTesterList) ? parsed.uatTesterList : [];
+    testerList = Array.from(new Set([...testerList, ...incomingTesters]));
+    uatTesterList = Array.from(new Set([...uatTesterList, ...incomingUatTesters]));
+
     await saveHistory();
     await saveTesters();
     await saveUatTesters();
@@ -3491,7 +3502,7 @@ document.getElementById('backupFileInput').addEventListener('change', async (e)=
     renderTesterChips();
     renderUatTesterChips();
     renderCvtHistoryOptions();
-    showBackupMsg(`복원 완료: 이력 ${historyList.length}건, CVT 테스터 ${testerList.length}명, UAT 테스터 ${uatTesterList.length}명을 불러왔습니다.`, false);
+    showBackupMsg(`추가 완료: 이력 ${incoming.length}건 중 ${addedCount}건을 새로 쌓았습니다(중복 ${incoming.length - addedCount}건은 갱신). 현재 전체 이력 ${historyList.length}건, CVT 테스터 ${testerList.length}명, UAT 테스터 ${uatTesterList.length}명.`, false);
     scheduleGithubAutoSync();
   }catch(err){
     showBackupMsg('백업 파일을 읽지 못했습니다. 파일을 확인해주세요.', true);
