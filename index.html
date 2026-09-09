@@ -340,7 +340,6 @@
   .tc-card-footer .tc-editable{flex:1;min-height:auto;padding:6px 10px;font-size:13px;}
   .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
   .row-toggle-btn{font-size:12px;color:var(--text-muted);flex-shrink:0;}
-  .row-tester-tag{white-space:nowrap;flex-shrink:0;}
   .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
   select.tag-select{
     border:1px solid var(--border);border-radius:var(--radius-s);padding:5px 9px;font-size:12px;font-weight:700;
@@ -369,7 +368,12 @@
   }
   .upload-btn:hover{border-color:var(--accent);background:var(--accent-tint);}
   .upload-btn.has-file{border-color:var(--accent);background:var(--accent-tint);color:var(--accent-dark);}
-  .toolbar-actions{display:flex;gap:8px;margin-left:auto;}
+  .toolbar-actions{display:flex;gap:8px;margin-left:auto;align-items:center;}
+  .gen-tester-select{
+    border:1px solid var(--border);border-radius:var(--radius-m);padding:8px 10px;font-size:12.5px;
+    font-family:inherit;background:#fff;color:var(--text);max-width:140px;cursor:pointer;
+  }
+  .gen-tester-select:focus{outline:none;border-color:var(--accent);}
   .toolbar-file-chip{margin-top:10px;}
 
   /* GitHub 외부 저장 - 한 줄짜리 단계 가이드(콤팩트) */
@@ -545,6 +549,9 @@
         </div>
 
         <div class="toolbar-actions">
+          <select id="genTesterSelect" class="gen-tester-select" title="테스터를 지정하면 이번에 생성되는 TC 전체가 그 테스터로 바로 배정됩니다. 비워두면 등록된 테스터에게 순환 배정됩니다.">
+            <option value="">자동 배정</option>
+          </select>
           <button class="primary" id="genBtn" disabled>TC 생성하기</button>
           <button class="ghost" id="appendBtn" disabled>TC 추가 생성</button>
         </div>
@@ -667,6 +674,9 @@
         </div>
 
         <div class="toolbar-actions">
+          <select id="uatGenTesterSelect" class="gen-tester-select" title="테스터를 지정하면 이번에 생성되는 UAT 전체가 그 테스터로 바로 배정됩니다. 비워두면 등록된 테스터에게 순환 배정됩니다.">
+            <option value="">자동 배정</option>
+          </select>
           <button class="primary" id="uatGenBtn" disabled>TC 생성하기</button>
           <button class="ghost" id="uatAppendBtn" disabled>TC 추가 생성</button>
         </div>
@@ -1511,6 +1521,14 @@ function renderTesterChips(){
       scheduleGithubAutoSync();
     });
   });
+  // 생성 전 "테스터 지정" 드롭다운도 등록된 테스터 목록과 함께 갱신 (선택값은 유지)
+  const genSel = document.getElementById('genTesterSelect');
+  if(genSel){
+    const prevVal = genSel.value;
+    genSel.innerHTML = `<option value="">자동 배정</option>` +
+      testerList.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    genSel.value = testerList.includes(prevVal) ? prevVal : '';
+  }
 }
 async function addTesterFromInput(){
   const input = document.getElementById('testerNameInput');
@@ -1651,6 +1669,14 @@ function renderUatTesterChips(){
       scheduleGithubAutoSync();
     });
   });
+  // 생성 전 "테스터 지정" 드롭다운도 등록된 테스터 목록과 함께 갱신 (선택값은 유지)
+  const genSel = document.getElementById('uatGenTesterSelect');
+  if(genSel){
+    const prevVal = genSel.value;
+    genSel.innerHTML = `<option value="">자동 배정</option>` +
+      uatTesterList.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    genSel.value = uatTesterList.includes(prevVal) ? prevVal : '';
+  }
 }
 async function addUatTesterFromInput(){
   const input = document.getElementById('testerNameInputUat');
@@ -1992,6 +2018,9 @@ async function runGeneration(startFresh){
   const startCount = tcData.length;
   const totalChunks = currentFileChunks.length;
   const roundErrors = [];
+  // 생성 전 "테스터 지정" 드롭다운에서 테스터를 골랐다면, 이번 생성으로 만들어지는 TC 전체를
+  // 자동 순환 배정 대신 그 테스터 한 명에게 바로 배정한다.
+  const forcedTester = document.getElementById('genTesterSelect').value;
 
   // 큰 PDF는 여러 조각(청크)으로 분할되어 있으므로, 조각을 순서대로 첨부해가며 생성한다.
   // existingScreens는 매 라운드 tcData 전체에서 다시 계산하므로, 조각이 바뀌어도
@@ -2044,7 +2073,7 @@ async function runGeneration(startFresh){
       const baseIndex = tcData.length;
       merged.forEach((row, i)=>{
         row.tcId = 'TC-' + String(baseIndex + i + 1).padStart(3,'0');
-        row.tester = testerList.length ? nextTesterFor(baseIndex + i) : '';
+        row.tester = forcedTester || (testerList.length ? nextTesterFor(baseIndex + i) : '');
       });
 
       if(merged.length){
@@ -2095,6 +2124,9 @@ async function generateUAT(isAppend){
   btn.disabled = true; otherBtn.disabled = true;
   const originalLabel = btn.textContent;
   btn.innerHTML = '<span class="spinner"></span>생성 중...';
+  // 생성 전 "테스터 지정" 드롭다운에서 테스터를 골랐다면, 이번 생성으로 만들어지는 UAT 전체를
+  // 자동 순환 배정 대신 그 테스터 한 명에게 바로 배정한다.
+  const forcedUatTester = document.getElementById('uatGenTesterSelect').value;
   showUatError('');
   showUatNotice('');
 
@@ -2225,7 +2257,7 @@ ${isAppend ? '(위에서 다루지 않은 다른 화면 흐름을 우선 다루�
       checkpoint: item.checkpoint || '',
       result: 'N/A',
       status: '작성중',
-      tester: uatTesterList.length ? nextTesterForUat(baseUatIndex + i) : '',
+      tester: forcedUatTester || (uatTesterList.length ? nextTesterForUat(baseUatIndex + i) : ''),
       note: item.note || ''
     }));
 
@@ -2359,7 +2391,7 @@ function renderTable(){
         <div class="cell-edit tc-screen-input" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
         ${isDup ? '<span class="dup-badge" title="화면명·대분류가 같은 TC가 더 있습니다">⚠ 유사 TC</span>' : ''}
         ${rowHasConflict ? `<span class="conflict-badge" title="${escapeHtml(row.tester)} 님에게 제약 TC가 2건 이상 배정됨">⚠ 배정 충돌</span>` : ''}
-        <span class="row-tester-tag sub-txt" title="담당자">👤 ${escapeHtml(row.tester || '미배정')}</span>
+        ${testerOptions}
         <select class="status-select" data-idx="${idx}" style="background:${STATUS_COLOR[status]};color:${STATUS_TEXT_COLOR[status]}">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
         </select>
@@ -2404,10 +2436,6 @@ function renderTable(){
       </div>
 
       <div class="tc-card-footer">
-        <div class="tc-footer-item">
-          <label>테스터</label>
-          ${testerOptions}
-        </div>
         <div class="tc-footer-item">
           <label>테스트 내역</label>
           <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote">${escapeHtml(row.testNote)}</div>
@@ -2679,7 +2707,7 @@ function renderUatTable(){
         <input type="checkbox" class="tc-select-checkbox" data-seluid="${row.uid}" ${isSelected?'checked':''} title="선택" />
         <span class="tc-id-badge">No.${idx+1}</span>
         <div class="cell-edit tc-screen-input" contenteditable="true" data-uidx="${idx}" data-ukey="flow">${escapeHtml(row.flow)}</div>
-        <span class="row-tester-tag sub-txt" title="담당자">👤 ${escapeHtml(row.tester || '미배정')}</span>
+        ${testerOptions}
         <select class="status-select" data-uidx="${idx}" style="background:${STATUS_COLOR[status]};color:${STATUS_TEXT_COLOR[status]}">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
         </select>
@@ -2700,10 +2728,6 @@ function renderUatTable(){
       </div>
 
       <div class="tc-card-footer">
-        <div class="tc-footer-item">
-          <label>테스터</label>
-          ${testerOptions}
-        </div>
         <div class="tc-footer-item">
           <label>비고</label>
           <div class="cell-edit tc-editable" contenteditable="true" data-uidx="${idx}" data-ukey="note">${escapeHtml(row.note)}</div>
