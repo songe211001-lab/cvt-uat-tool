@@ -388,10 +388,25 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   /* 업로드 방식: 겉모양은 체크박스, 동작은 라디오(한 번에 하나) */
   .mode-choice{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
   .mode-option{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
-  /* 체크박스·모드 라디오: 디자인 시스템 .ad-check와 같은 값 */
-  input[type="checkbox"], .mode-option input[type="radio"]{width:17px;height:17px;margin:0;flex-shrink:0;accent-color:var(--primary);cursor:pointer;}
+  /* 모드 라디오: 디자인 시스템 .ad-check와 같은 값 */
+  .mode-option input[type="radio"]{width:17px;height:17px;margin:0;flex-shrink:0;accent-color:var(--primary);cursor:pointer;}
+  /* 체크박스: 브라우저·다크 모드에 따라 꺼진 칸이 검게 보이지 않도록 직접 그린다(꺼짐·비활성은 흰 바탕) */
+  input[type="checkbox"]{
+    appearance:none;-webkit-appearance:none;position:relative;display:inline-block;vertical-align:middle;
+    box-sizing:border-box;width:17px;height:17px;margin:0;flex-shrink:0;cursor:pointer;
+    border:1.5px solid var(--grey-400);border-radius:var(--radius-xs);background:var(--panel);
+  }
+  input[type="checkbox"]:hover:not(:disabled){border-color:var(--primary);}
+  input[type="checkbox"]:checked, input[type="checkbox"]:indeterminate{background:var(--primary);border-color:var(--primary);}
+  input[type="checkbox"]:checked::after{
+    content:"";position:absolute;left:4.5px;top:1px;width:4px;height:8px;
+    border:solid var(--on-primary);border-width:0 2px 2px 0;transform:rotate(45deg);
+  }
+  input[type="checkbox"]:indeterminate::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:2px;background:var(--on-primary);}
+  input[type="checkbox"]:disabled{background:var(--panel);border-color:var(--line);cursor:not-allowed;}
+  input[type="checkbox"]:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .mode-option input[type="radio"]:checked + span{color:var(--primary-dark);}
-  #claudeApiKeyStatus:empty, #figmaTokenStatus:empty{display:none;}
+  #claudeApiKeyStatus:empty{display:none;}
   .figma-screen-name{word-break:break-all;line-height:1.3;}
   .screentype-badge{
     display:inline-block;color:var(--on-primary);font-size:10.5px;font-weight:800;
@@ -667,18 +682,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <div id="uploadModeSettingsFile"></div>
 
       <div id="uploadModeSettingsFigma" style="display:none;">
-        <details class="details-block" id="figmaTokenCard">
-          <summary class="dist-summary">Figma 연결 설정</summary>
-
-          <div class="details-body">
-            <div class="github-step-row" style="border-top:none;padding-top:0;">
-              <input type="password" class="ad-input" id="figmaTokenInput" aria-label="Figma Personal Access Token" autocomplete="off" spellcheck="false" placeholder="figd_…" />
-              <a class="ad-btn ad-btn--sm" id="figmaTokenLink" href="https://www.figma.com/developers/api#access-tokens" target="_blank" rel="noopener">토큰 발급 ↗</a>
-              <button class="ad-btn ad-btn--sm" id="figmaTokenSaveBtn" type="button">저장</button>
-            </div>
-            <p class="sub-txt" id="figmaTokenStatus" style="margin-top:6px;"></p>
-          </div>
-        </details>
+        <p class="sub-txt" style="margin-top:10px;">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</p>
       </div>
 
       <div id="errorBox" role="alert"></div>
@@ -696,6 +700,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <button class="ad-btn ad-btn--sm" id="addTesterBtn" type="button">+ 추가</button>
         </div>
         <div class="tester-chips" id="testerChips"></div>
+      </div>
+    </div>
+
+    <div class="card ad-card ad-panel" id="tcStatsCard" hidden>
+      <div class="tc-section-head">
+        <h2 class="ad-title">TC 통계</h2>
+      </div>
+      <div class="dist-wrap" id="distWrap" style="display:none;">
+        <div id="distGroups"></div>
       </div>
     </div>
 
@@ -725,15 +738,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <select class="ad-select" id="tcFilterTester" aria-label="담당자 필터">
           <option value="ALL">전체 담당자</option>
         </select>
-      </div>
-
-      <div class="dist-wrap" id="distWrap" style="display:none;margin-bottom:16px;">
-        <div class="dist-bar" id="distBar"></div>
-        <div class="dist-legend" id="distLegend"></div>
-        <details class="details-block" id="distFoBoDetails" style="margin-top:6px;">
-          <summary>FO/BO별로 보기</summary>
-          <div class="details-body" id="distGroups"></div>
-        </details>
       </div>
 
       <div class="select-all-row">
@@ -1033,7 +1037,6 @@ let figmaUrl = '';
 
 /* ---------- 피그마 URL로 기획안 가져오기 (파일 업로드의 대안 경로) ---------- */
 let uploadMode = 'file'; // 'file' | 'figma'
-let figmaToken = '';
 let figmaFileKey = '';
 let figmaFileName = '';
 
@@ -1276,23 +1279,6 @@ document.querySelectorAll('#uploadModeToggle [data-upmode]').forEach(r=>{
   r.addEventListener('change', ()=>{ if(r.checked) activateUploadMode(r.dataset.upmode); });
 });
 
-/* ---------- Figma 연결 설정 (Personal Access Token, localStorage에만 저장) ---------- */
-function loadFigmaToken(){
-  try{ figmaToken = localStorage.getItem('cvt_figma_token') || ''; }
-  catch(e){ figmaToken = ''; }
-}
-function renderFigmaTokenStatus(){
-  document.getElementById('figmaTokenInput').value = figmaToken;
-  document.getElementById('figmaTokenStatus').textContent = figmaToken
-    ? '이 브라우저에 Figma 토큰이 저장되어 있습니다.'
-    : '';
-}
-document.getElementById('figmaTokenSaveBtn').addEventListener('click', ()=>{
-  figmaToken = document.getElementById('figmaTokenInput').value.trim();
-  try{ localStorage.setItem('cvt_figma_token', figmaToken); }catch(e){ /* ignore */ }
-  renderFigmaTokenStatus();
-});
-
 // 피그마 링크에서 파일 키와 노드 ID(선택된 화면/프레임)를 뽑아낸다.
 // 지원 형태: https://www.figma.com/design/:fileKey/... , https://www.figma.com/file/:fileKey/...
 // node-id 쿼리파라미터는 "35763-151994" 형태로 오므로 Figma API가 쓰는 "35763:151994" 형태로 바꿔준다.
@@ -1309,25 +1295,98 @@ function parseFigmaUrl(url){
   return { fileKey, nodeId };
 }
 
-// 조회한 노드에서 "화면"으로 볼 수 있는 후보(FRAME/COMPONENT)를 모은다.
-// 섹션/그룹/캔버스처럼 화면을 묶어놓기만 한 컨테이너는 한 단계씩 더 들어가서 찾는다(최대 3단계).
-const FIGMA_SCREEN_NODE_TYPES = ['FRAME', 'COMPONENT', 'COMPONENT_SET'];
-const FIGMA_CONTAINER_NODE_TYPES = ['SECTION', 'GROUP', 'CANVAS'];
-function collectFrameCandidates(doc){
-  if(!doc) return [];
-  if(FIGMA_SCREEN_NODE_TYPES.includes(doc.type)) return [doc];
-  const results = [];
-  (function walk(node, depth){
-    if(!node || !Array.isArray(node.children)) return;
-    node.children.forEach(child=>{
-      if(FIGMA_SCREEN_NODE_TYPES.includes(child.type)){
-        results.push(child);
-      }else if(depth > 0 && FIGMA_CONTAINER_NODE_TYPES.includes(child.type)){
-        walk(child, depth - 1);
-      }
-    });
-  })(doc, 3);
-  return results;
+/* ---------- Figma 커넥터 (claude.ai에 연결된 "Figma", 아티팩트의 mcp 기능) ----------
+   아티팩트는 api.figma.com으로 직접 요청하지 못하므로(보안 정책), 보는 사람의 Figma 커넥터로 가져온다.
+   1) use_figma(읽기 전용 스크립트)로 화면 목록만 받는다. get_metadata는 큰 보드에서 응답이 잘려서 쓰지 않는다.
+   2) 화면마다 get_screenshot(base64)으로 이미지를 받는다. 이미지 주소로 다시 받는 방식은 같은 이유로 막힌다. */
+const FIGMA_SERVER = 'Figma';
+const FIGMA_SCREENSHOT_MAX = 2000; // 긴 변 픽셀. 화면 글자를 읽을 수 있으면서 첨부 용량을 넘지 않게
+// 선택한 노드에서 화면 후보를 고른다(Figma 안에서 실행, 읽기만 한다).
+//  - 프레임 하나를 고르면 그 화면. 단 안에 320px 이상 프레임이 2개 이상 있으면 화면을 모아 둔 "보드"로 보고 그 프레임들을 쓴다.
+//  - 섹션·그룹·페이지를 고르면 안쪽 프레임을 3단계까지 찾는다.
+function figmaListScreensCode(nodeId){
+  return `const SCREEN = ['FRAME', 'COMPONENT', 'COMPONENT_SET'];
+const CONTAINER = ['SECTION', 'GROUP', 'CANVAS'];
+const root = await figma.getNodeByIdAsync(${JSON.stringify(nodeId)});
+if (!root) return { error: 'not_found' };
+const info = n => ({ id: n.id, name: n.name, x: n.absoluteBoundingBox ? n.absoluteBoundingBox.x : 0, y: n.absoluteBoundingBox ? n.absoluteBoundingBox.y : 0 });
+let screens = [];
+if (SCREEN.includes(root.type)) {
+  const kids = ('children' in root) ? root.children.filter(c => c.visible && SCREEN.includes(c.type) && c.width >= 320 && c.height >= 320) : [];
+  screens = kids.length >= 2 ? kids.map(info) : [info(root)];
+} else {
+  (function walk(n, depth) {
+    if (!('children' in n)) return;
+    for (const c of n.children) {
+      if (!c.visible) continue;
+      if (SCREEN.includes(c.type)) screens.push(info(c));
+      else if (depth > 0 && CONTAINER.includes(c.type)) walk(c, depth - 1);
+    }
+  })(root, 3);
+}
+screens.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+return { name: root.name, screens: screens.map(({ id, name }) => ({ id, name })) };`;
+}
+// 화면 안의 글자(텍스트 레이어)를 위→아래, 같은 줄은 " | "로 이어 읽는다(Figma 안에서 실행, 읽기만 한다).
+// 이미지를 보낼 수 없는 화면(limits에 images 없음)에서는 이 글자만으로 생성하고, 보낼 수 있으면 이미지와 함께 보낸다.
+const FIGMA_TEXT_MAX = 12000;
+function figmaScreenTextCode(nodeId){
+  return `const root = await figma.getNodeByIdAsync(${JSON.stringify(nodeId)});
+if (!root) return { error: 'not_found' };
+const out = [];
+(function walk(n) {
+  if (n.visible === false) return;
+  if (n.type === 'TEXT') {
+    const t = n.characters.replace(/\\s+/g, ' ').trim();
+    const b = n.absoluteBoundingBox;
+    if (t) out.push({ t, x: b ? b.x : 0, y: b ? b.y : 0 });
+    return;
+  }
+  if ('children' in n) for (const c of n.children) walk(c);
+})(root);
+out.sort((a, b) => (Math.round(a.y / 10) - Math.round(b.y / 10)) || (a.x - b.x));
+const lines = [];
+let cur = null;
+for (const o of out) {
+  const row = Math.round(o.y / 10);
+  if (cur && cur.row === row) cur.parts.push(o.t); else { cur = { row, parts: [o.t] }; lines.push(cur); }
+}
+const text = lines.map(l => l.parts.join(' | ')).join('\\n');
+return { text: text.slice(0, ${FIGMA_TEXT_MAX}), truncated: text.length > ${FIGMA_TEXT_MAX} };`;
+}
+// 커넥터 오류 코드 → 사람이 할 일을 담은 문구
+function figmaErrorMessage(err){
+  const map = {
+    server_not_connected: 'claude.ai 설정 > 커넥터에서 Figma를 추가한 뒤 다시 가져와주세요.',
+    needs_reauth: 'Figma 연결이 만료됐어요. claude.ai 설정 > 커넥터에서 Figma를 다시 연결해주세요.',
+    selection_required: 'Figma 커넥터가 여러 개 연결돼 있어요. 화면에 뜨는 선택 창에서 하나를 골라주세요.',
+    not_in_manifest: '이 페이지에서 Figma 사용을 허용하지 않으셨어요. 아티팩트의 권한 메뉴에서 Figma를 허용한 뒤 다시 가져와주세요.',
+    blocked_by_policy: '조직 정책으로 이 페이지에서 Figma 도구를 쓸 수 없어요. 화면을 PNG로 내보내 "기획안 업로드"로 올려주세요.',
+    approval_required: '조직 정책상 승인이 필요한 도구예요. 화면을 PNG로 내보내 "기획안 업로드"로 올려주세요.',
+    server_unavailable: 'Figma가 잠시 응답하지 않아요. 잠시 뒤 다시 가져와주세요.',
+    not_granted: '이 화면에서는 Figma 커넥터를 쓸 수 없어요. 화면을 PNG로 내보내 "기획안 업로드"로 올려주세요.',
+    capability_disabled: '이 화면에서는 Figma 커넥터를 쓸 수 없어요. 화면을 PNG로 내보내 "기획안 업로드"로 올려주세요.'
+  };
+  const code = err && err.code;
+  if(code && map[code]) return map[code];
+  if(code === 'tool_error') return `Figma가 요청을 처리하지 못했어요(${err.message || '오류'}). 링크와 파일 접근 권한을 확인해주세요.`;
+  return (err && err.message) || '알 수 없는 오류가 났어요.';
+}
+function base64ToBlob(b64, type){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type });
+}
+// 같은 이름의 화면이 여럿이면 "이름 (2)"처럼 구분한다(화면별 중복 방지 기준이 화면명이라서)
+function uniqueScreenNames(names){
+  const seen = new Map();
+  return names.map(n=>{
+    const base = n || '(이름 없음)';
+    const k = (seen.get(base) || 0) + 1;
+    seen.set(base, k);
+    return k === 1 ? base : `${base} (${k})`;
+  });
 }
 
 document.getElementById('figmaFetchBtn').addEventListener('click', importFigmaScreens);
@@ -1343,12 +1402,6 @@ async function importFigmaScreens(){
   showError('');
   showGenNotice('');
   if(!url){ showError('피그마 링크를 입력해주세요.'); return; }
-  if(!figmaToken){
-    showError('Figma 연결 설정이 되어있지 않습니다. 상단의 "Figma 연결 설정"에서 Personal Access Token을 입력하고 저장해주세요.');
-    document.getElementById('figmaTokenCard').open = true;
-    document.getElementById('figmaTokenCard').scrollIntoView({behavior:'smooth', block:'center'});
-    return;
-  }
   const parsed = parseFigmaUrl(url);
   if(!parsed){
     showError('피그마 링크에서 파일 정보를 찾지 못했습니다. figma.com/design/... 또는 figma.com/file/... 형태의 링크인지 확인해주세요.');
@@ -1365,55 +1418,48 @@ async function importFigmaScreens(){
   fetchBtn.innerHTML = '<span class="spinner"></span>화면 인식 중…';
 
   try{
-    const nodesRes = await fetch(`https://api.figma.com/v1/files/${parsed.fileKey}/nodes?ids=${encodeURIComponent(parsed.nodeId)}`, {
-      headers: { 'X-Figma-Token': figmaToken }
-    });
-    if(!nodesRes.ok){
-      if(nodesRes.status === 403 || nodesRes.status === 401){
-        throw new Error('Figma 인증에 실패했습니다. 토큰이 올바른지, 이 파일에 접근 권한이 있는지 확인해주세요.');
-      }
-      if(nodesRes.status === 404){
-        throw new Error('피그마 파일 또는 화면을 찾지 못했습니다. 링크를 다시 확인해주세요.');
-      }
-      throw new Error(`피그마 API 요청이 실패했습니다 (${nodesRes.status})`);
-    }
-    const nodesData = await nodesRes.json();
-    figmaFileName = nodesData.name || '';
-    const nodeEntry = nodesData.nodes && nodesData.nodes[parsed.nodeId];
-    if(!nodeEntry || !nodeEntry.document){
-      throw new Error('해당 화면(노드)을 찾지 못했습니다. 링크의 선택 영역이 올바른지 확인해주세요.');
-    }
-    const candidates = collectFrameCandidates(nodeEntry.document);
-    if(!candidates.length){
-      throw new Error('가져올 수 있는 화면(프레임)을 찾지 못했습니다. 피그마에서 화면 프레임을 직접 선택한 뒤 다시 링크를 복사해보세요.');
-    }
+    const mcp = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('mcp') : null;
+    if(!mcp) throw { code: 'not_granted' };
+    const listed = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
+      fileKey: parsed.fileKey,
+      code: figmaListScreensCode(parsed.nodeId),
+      description: 'TC 생성용 화면 목록 읽기 (수정 없음)'
+    }, { cache: false })).payload;
+    const list = typeof listed === 'string' ? JSON.parse(listed) : listed;
+    if(!list || list.error === 'not_found') throw new Error('해당 화면(노드)을 찾지 못했어요. 링크의 선택 영역이 올바른지 확인해주세요.');
+    if(!Array.isArray(list.screens) || !list.screens.length) throw new Error('가져올 수 있는 화면(프레임)을 찾지 못했어요. 피그마에서 화면 프레임을 직접 선택한 뒤 다시 링크를 복사해주세요.');
+    figmaFileName = list.name || '';
     figmaFileKey = parsed.fileKey;
 
-    fetchBtn.innerHTML = `<span class="spinner"></span>화면 ${candidates.length}개 이미지 가져오는 중…`;
-    const ids = candidates.map(c=>c.id).join(',');
-    const imgRes = await fetch(`https://api.figma.com/v1/images/${figmaFileKey}?ids=${encodeURIComponent(ids)}&format=png&scale=2`, {
-      headers: { 'X-Figma-Token': figmaToken }
-    });
-    if(!imgRes.ok) throw new Error(`화면 이미지 URL 요청이 실패했습니다 (${imgRes.status})`);
-    const imgData = await imgRes.json();
-    const urls = imgData.images || {};
-
+    const names = uniqueScreenNames(list.screens.map(c=>c.name));
     const chunks = [];
     const failedNames = [];
-    for(const c of candidates){
-      const name = c.name || '(이름 없음)';
-      const imgUrl = urls[c.id];
-      if(!imgUrl){ failedNames.push(name); continue; }
+    for(let i=0; i<list.screens.length; i++){
+      const name = names[i];
+      fetchBtn.innerHTML = `<span class="spinner"></span>화면 ${i+1}/${list.screens.length} 가져오는 중…`;
       try{
-        const blobRes = await fetch(imgUrl);
-        if(!blobRes.ok) throw new Error('image fetch failed');
-        const blob = await blobRes.blob();
-        chunks.push({kind:'image', blob, byteSize: blob.size, label: name, screenNameHint: name});
+        const nodeId = list.screens[i].id;
+        const textRes = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
+          fileKey: parsed.fileKey, code: figmaScreenTextCode(nodeId), description: 'TC 생성용 화면 글자 읽기 (수정 없음)'
+        }, { cache: false })).payload;
+        const textInfo = (typeof textRes === 'string' ? JSON.parse(textRes) : textRes) || {};
+        const text = textInfo.text || '';
+        let blob = null;
+        if(claudeSampleImageLimit){
+          const res = await mcp.callTool(FIGMA_SERVER, 'get_screenshot', {
+            fileKey: parsed.fileKey, nodeId, maxDimension: FIGMA_SCREENSHOT_MAX, enableBase64Response: true
+          }, { cache: false });
+          const img = (res.content || []).find(b=>b.type === 'image' && b.data);
+          if(img) blob = base64ToBlob(img.data, img.mimeType || 'image/png');
+        }
+        if(!blob && !text) throw new Error('no content');
+        chunks.push({kind:'image', blob, text, byteSize: blob ? blob.size : new TextEncoder().encode(text).length, label: name, screenNameHint: name});
       }catch(e){
+        if(e && e.code && e.code !== 'tool_error') throw e; // 연결·권한 문제는 다음 화면도 같으므로 멈춘다
         failedNames.push(name);
       }
     }
-    if(!chunks.length) throw new Error('화면 이미지를 가져오지 못했습니다.');
+    if(!chunks.length) throw new Error('화면 내용을 가져오지 못했어요.');
 
     clearPdfState();
     currentFileChunks = chunks;
@@ -1431,10 +1477,10 @@ async function importFigmaScreens(){
     document.getElementById('removeFile').addEventListener('click', resetUploadSource);
 
     const noticeSuffix = failedNames.length ? ` (${failedNames.map(escapeHtml).join(', ')}는 가져오지 못해 제외됨)` : '';
-    showGenNotice(`"${figmaFileName || '피그마 파일'}"에서 화면 ${chunks.length}개를 자동으로 인식해서 가져왔습니다${noticeSuffix}. 화면마다 별도로 생성되며, 같은 화면 안에서는 이미 다룬 시험항목을 자동으로 피해서 이어 생성합니다.`);
+    showGenNotice(`"${figmaFileName || '피그마 파일'}"에서 화면 ${chunks.length}개를 자동으로 인식해서 가져왔습니다${noticeSuffix}. 화면마다 별도로 생성되며, 같은 화면 안에서는 이미 다룬 시험항목을 자동으로 피해서 이어 생성합니다.${claudeSampleImageLimit ? '' : ' 이 화면에서는 이미지를 Claude에 보낼 수 없어 피그마 화면 안의 글자(텍스트 레이어)로 생성해요.'}`);
     updateButtons();
   }catch(err){
-    showError('피그마 화면을 가져오지 못했습니다: ' + (err.message || '알 수 없는 오류') + ' (사내망에서 피그마 API로의 직접 접속이 차단되어 있을 수도 있습니다)');
+    showError('피그마 화면을 가져오지 못했어요. ' + figmaErrorMessage(err));
   }finally{
     fetchBtn.disabled = false;
     fetchBtn.textContent = originalLabel;
@@ -1523,7 +1569,10 @@ function hasClaudeConnectionConfigured(){
    (runGeneration 참고) 같은 조각의 여러 라운드·FO/BO 요청이 재사용한다. */
 async function prepareChunkPayload(chunk){
   if(chunk.kind === 'image'){
-    return { textSuffix: '', images: [chunk.blob] };
+    const textSuffix = chunk.text
+      ? `\n\n["${chunk.screenNameHint || chunk.label}" 화면의 텍스트 레이어 (위에서 아래 순서, 같은 줄은 | 로 구분)]\n${chunk.text}`
+      : '';
+    return { textSuffix, images: chunk.blob ? [chunk.blob] : [] };
   }
   const images = [];
   for(const num of chunk.imagePages){
@@ -1678,19 +1727,20 @@ async function generateTypedBatch(typeLabel, count, payload, chunk, existingScre
   // screenNameHint가 있으면(피그마에서 화면 1개씩 가져온 경우) 첨부물이 정확히 그 화면 하나임을 이미 알고 있으므로,
   // 모델이 화면명을 지어내지 않도록 명시한다.
   const screenNameHint = chunk.screenNameHint;
+  const hasScreenImage = chunk.kind !== 'image' || !!chunk.blob; // 피그마 화면을 글자로만 가져온 경우 false
   const attachDesc = screenNameHint
-    ? `첨부된 "${screenNameHint}" 화면 이미지를`
+    ? (hasScreenImage ? `첨부된 "${screenNameHint}" 화면 이미지${chunk.text ? '와 아래 텍스트 레이어 내용' : ''}를` : `아래 첨부된 "${screenNameHint}" 화면의 텍스트 레이어 내용(기획 메모 포함)을`)
     : (chunk.kind === 'pdf'
         ? `아래 첨부된 기획안 PDF 원문 텍스트(${chunk.label})${payload.images.length ? '와 첨부 이미지' : ''}를 처음부터 끝까지`
         : '첨부된 기획안/화면 이미지를');
 
   const screenFieldDesc = screenNameHint
-    ? `- screen: 항상 정확히 "${screenNameHint}" 로만 작성하세요 (다른 화면명을 지어내지 마세요 - 첨부 이미지가 바로 이 화면입니다).`
+    ? `- screen: 빈 문자열 ""로 두세요. 화면 구분은 시스템이 category와 subCategory로 채웁니다(첨부 내용은 "${screenNameHint}" 화면 하나입니다).`
     : '- screen: 화면 구분. 기획안에 나온 상위 메뉴명과 화면(하위 메뉴)명을 ">"로 이어서 "상위메뉴 > 하위화면" 형식의 경로로 작성하세요 (예: "제휴요금제 가입자 현황 > 목록"). 상위 메뉴 없이 화면 자체가 최상위라면 화면명만 작성해도 됩니다.';
 
   const coverage = truncateToByteBudget(existingScreens, EXISTING_COVERAGE_MAX_BYTES);
   const coverageBlock = screenNameHint
-    ? `이미 다룬 시험항목(대분류/중분류): ${coverage}\n(위 항목과 겹치지 않도록, "${screenNameHint}" 화면 안에서 아직 다루지 않은 다른 기능/영역/예외 케이스를 다루세요. screen 값은 계속 "${screenNameHint}"로 고정입니다.)`
+    ? `이미 다룬 시험항목(대분류/중분류): ${coverage}\n(위 항목과 겹치지 않도록, "${screenNameHint}" 화면 안에서 아직 다루지 않은 다른 기능/영역/예외 케이스를 다루세요.)`
     : `이미 다룬 화면: ${coverage}\n(이미 다룬 화면/기능은 가급적 피하고 다른 화면/기능을 다루세요.)`;
 
   const promptText =
@@ -1728,7 +1778,10 @@ ${coverageBlock}`;
 
   return parsed.map(item=>({
     screenType: typeLabel,
-    screen: screenNameHint || item.screen || '',
+    // 피그마 화면 조각은 화면 구분을 "대분류 > 중분류"로 채운다. 어느 프레임에서 나왔는지는 _figmaScreen(COLUMNS 밖,
+    // 생성 중 중복 방지용)에만 남긴다.
+    screen: screenNameHint ? figmaScreenLabel(item.category, item.subCategory, screenNameHint) : (item.screen || ''),
+    ...(screenNameHint ? { _figmaScreen: screenNameHint } : {}),
     category: item.category || '',
     subCategory: item.subCategory || '',
     procedure: item.procedure || '',
@@ -1741,6 +1794,12 @@ ${coverageBlock}`;
     result: 'N/A',
     status: '작성중'
   }));
+}
+
+// 피그마 TC의 화면 구분: "대분류 > 중분류", 중분류가 없으면 대분류, 둘 다 없으면 프레임 이름
+function figmaScreenLabel(category, subCategory, frameName){
+  const cat = String(category || '').trim(), sub = String(subCategory || '').trim();
+  return cat && sub ? `${cat} > ${sub}` : (cat || sub || frameName || '');
 }
 
 /* ---------- TC ID 발급 ----------
@@ -1846,7 +1905,8 @@ async function runGeneration(startFresh){
       // 이 화면 안에서 이미 다룬 시험항목(대분류/중분류)만 추려 중복 방지 기준으로 사용한다.
       let existingScreens;
       if(chunk.screenNameHint){
-        const screenRows = tcData.filter(r => r.screen === chunk.screenNameHint);
+        // 예전에 만든 행은 screen이 프레임 이름이고, 새로 만든 행은 _figmaScreen에 프레임 이름이 있다
+        const screenRows = tcData.filter(r => r._figmaScreen === chunk.screenNameHint || r.screen === chunk.screenNameHint);
         existingScreens = screenRows.length
           ? Array.from(new Set(screenRows.map(r => `${r.category}/${r.subCategory}`))).join(', ')
           : '없음';
@@ -2283,25 +2343,15 @@ function buildDistBlock(label, rows){
 
 function renderDistribution(){
   const wrap = document.getElementById('distWrap');
+  document.getElementById('tcStatsCard').hidden = !tcData.length; // TC가 없으면 "TC 통계" 영역도 숨긴다
   if(!tcData.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
 
-  const counts = {};
-  RESULT_OPTIONS.forEach(o=>counts[o]=0);
-  tcData.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
-
-  document.getElementById('distBar').innerHTML = RESULT_OPTIONS.map(o=>{
-    const pct = counts[o]/tcData.length*100;
-    return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}" title="${o}: ${counts[o]}"></span>` : '';
-  }).join('');
-  document.getElementById('distLegend').innerHTML = legendItemsHtml(counts);
-
-  const foRows = tcData.filter(r=>r.screenType !== 'BO');
-  const boRows = tcData.filter(r=>r.screenType === 'BO');
-
+  // 전체 / FO / BO 블록을 모두 펼친 상태로 보인다(0건 블록은 "데이터 없음")
   document.getElementById('distGroups').innerHTML =
-    buildDistBlock('FO', foRows) +
-    buildDistBlock('BO', boRows);
+    buildDistBlock('전체', tcData) +
+    buildDistBlock('FO', tcData.filter(r=>r.screenType !== 'BO')) +
+    buildDistBlock('BO', tcData.filter(r=>r.screenType === 'BO'));
 }
 /* ---------- Export helpers ---------- */
 function formatDate(){
@@ -2312,24 +2362,32 @@ function formatDate(){
 function summarizeCounts(options, counts){
   return options.filter(o=>counts[o]).map(o=>`${o} ${counts[o]}`).join(', ') || '-';
 }
-// 같은 원본 파일 + 같은 구성(스냅샷)이면 이력에 새 항목을 또 쌓지 않고,
-// 기존 항목을 이번 내보내기 시각으로 갱신해 맨 위로 올린다(=중복 누적 방지, 한 건으로만 유지).
 function snapshotsEqual(a, b){
   try{ return JSON.stringify(a) === JSON.stringify(b); }
   catch(e){ return false; }
 }
-// 같은 원본 파일 + 같은 구성이면 같은 이력으로 본다 (팀 동기화 첫 연결 때 중복 이력을 거르는 데도 쓴다).
+// 같은 시각에 같은 원본 파일·같은 구성으로 내보낸 이력이면 같은 이력으로 본다.
+// 팀 동기화 첫 연결 때 이 브라우저에만 있던 이력이 서버 이력과 겹쳐 두 번 올라가지 않게 거르는 데 쓴다.
+// (시각까지 비교하므로, 같은 기획안을 다른 때 다시 내보낸 이력은 따로 남는다)
 function isSameHistoryEntry(a, b){
-  return a.type === b.type && a.fileName === b.fileName && snapshotsEqual(a.snapshot, b.snapshot);
+  return a.type === b.type && a.date === b.date && a.fileName === b.fileName && snapshotsEqual(a.snapshot, b.snapshot);
 }
-function upsertHistoryEntry(newEntry){
-  const dupIdx = historyList.findIndex(h => isSameHistoryEntry(h, newEntry));
-  if(dupIdx > -1){
-    const [existing] = historyList.splice(dupIdx, 1);
-    historyList = [{ ...existing, date: newEntry.date, figmaUrl: newEntry.figmaUrl ?? existing.figmaUrl }, ...historyList];
-  }else{
-    historyList = [newEntry, ...historyList];
-  }
+// 엑셀로 내보낼 때마다 이력 맨 위에 새 항목 1건을 쌓는다(같은 파일·같은 구성이어도 합치지 않는다).
+function addHistoryEntry(newEntry){
+  historyList = [newEntry, ...historyList];
+}
+// JSON 백업의 이력을 기존 이력 위에 쌓는다. 기존 이력과 내용이 완전히 같은 항목(_id 제외)은 빼고, 파일 순서는 지킨다.
+function mergeImportedHistory(existing, imported){
+  const key = h => JSON.stringify(historyDataOf(h));
+  const seen = new Set(existing.map(key));
+  const added = [];
+  imported.forEach(h=>{
+    const k = key(h);
+    if(seen.has(k)) return;
+    seen.add(k);
+    added.push(historyDataOf(h));
+  });
+  return { list: [...added, ...existing], added: added.length };
 }
 
 /* ---------- 엑셀 서식(색상/테두리) 상수 ----------
@@ -2542,7 +2600,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     summary: summarizeCounts(RESULT_OPTIONS, counts),
     snapshot: tcData.map(toExportRow) // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
   };
-  upsertHistoryEntry(historyEntry);
+  addHistoryEntry(historyEntry);
 
   // 화면(screenType+screen) 단위로 그룹핑 - 최초 등장 순서를 유지한다
   const order = [];
@@ -2669,8 +2727,7 @@ function renderHistory(){
 
   wrap.innerHTML = filtered.map(h=>{
     const idx = historyList.indexOf(h);
-    // 예전 버전에서 만들어진 UAT 이력 항목도 결과 분포 막대는 그대로 보여준다(구성 값은 CVT/TC와 동일한
-    // RESULT_OPTIONS/RESULT_COLOR를 그대로 썼었다). 다만 UAT 생성 기능 자체는 더 이상 존재하지 않는다.
+    // 예전 버전에서 만들어진 UAT 이력도 TC 이력과 똑같이 보여 주고 불러오기·삭제할 수 있다(스냅샷 형식이 같다).
     const total = h.count || 1;
     const bar = RESULT_OPTIONS.map(o=>{
       const pct = (h.counts[o]||0)/total*100;
@@ -2679,8 +2736,7 @@ function renderHistory(){
     const figmaLink = h.figmaUrl
       ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a></div>`
       : '';
-    // UAT 이력은 과거 기능이 남긴 열람 전용 기록이라 "불러오기"(TC 화면으로 되돌리는 버튼)는 제공하지 않는다.
-    const loadBtn = h.type==='UAT' ? '' : `<button class="ad-btn ad-btn--sm" data-load="${idx}">불러오기</button>`;
+    const loadBtn = `<button class="ad-btn ad-btn--sm" data-load="${idx}">불러오기</button>`;
     return `<div class="history-item">
       <div class="meta">
         <div class="file-name">${escapeHtml(h.fileName)}</div>
@@ -3359,16 +3415,19 @@ async function offerImport(data){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
   const count = (t, h, n) => `TC ${t}건 · 이력 ${h}건 · 테스터 ${n}명`;
+  const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `지금 데이터(${count(tcData.length, historyList.length, testerList.length)})를 이 파일 내용으로 바꿔요.`
+      + `TC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
+      + `이력 ${merged.added}건은 기존 이력 ${historyList.length}건 위에 추가해요.`
+      + (merged.added < data.historyList.length ? ` (이미 있는 이력 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
       + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
-    okLabel: '바꾸기'
+    okLabel: '가져오기'
   });
   if(ok === null) return false;
   tcData = data.tcData.map(r=>toExportRow(r)); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
-  historyList = clone(data.historyList).map(({ _id, ...h })=>h);
+  historyList = merged.list;
   testerList = Array.from(new Set(data.testerList.map(n=>n.trim())));
   resetTcIdCounter();
   selectedTcIds.clear();
@@ -3394,10 +3453,6 @@ document.getElementById('jsonImportInput').addEventListener('change', e=>{
   initClaudeSample();
   initClaudeDownloads();
   renderClaudeApiKeyStatus();
-  loadFigmaToken();
-  renderFigmaTokenStatus();
-  // 피그마 연결 설정은 항상 접힌 상태로 시작해 화면을 작게 유지한다.
-  document.getElementById('figmaTokenCard').open = false;
   await loadHistory();
   await loadTesters();
   if(SYNC_ENABLED){
