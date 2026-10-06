@@ -1236,7 +1236,8 @@ async function handleFile(file){
 
 function updateButtons(){
   // PDF는 이미지 한도가 뒤늦게 확인되면 생성 시점에 조각을 다시 나누므로, 페이지 텍스트만 있어도 준비된 것으로 본다.
-  const ready = !!currentFile && (currentFileChunks.length > 0 || !!currentPdfPageTexts);
+  // 피그마 URL만 넣어 둔 상태도 준비된 것으로 본다(생성 버튼을 누르면 화면을 먼저 가져온다)
+  const ready = figmaImportNeeded() || (!!currentFile && (currentFileChunks.length > 0 || !!currentPdfPageTexts));
   document.getElementById('genBtn').disabled = !ready;
   document.getElementById('appendBtn').disabled = !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
@@ -1390,6 +1391,13 @@ function uniqueScreenNames(names){
 }
 
 document.getElementById('figmaFetchBtn').addEventListener('click', importFigmaScreens);
+// 피그마 모드에서 URL을 넣었지만 아직 그 URL로 화면을 가져오지 않았으면 true
+function figmaImportNeeded(){
+  const input = document.getElementById('figmaUrlInput');
+  const url = input ? input.value.trim() : '';
+  return uploadMode === 'figma' && !!url && url !== figmaUrl;
+}
+document.getElementById('figmaUrlInput').addEventListener('input', updateButtons);
 document.getElementById('figmaUrlInput').addEventListener('keydown', e=>{
   if(e.key === 'Enter'){ e.preventDefault(); importFigmaScreens(); }
 });
@@ -1968,8 +1976,19 @@ async function runGeneration(startFresh){
   updateButtons();
 }
 
-document.getElementById('genBtn').addEventListener('click', ()=>runGeneration(true));
-document.getElementById('appendBtn').addEventListener('click', ()=>runGeneration(false));
+// 피그마 URL만 넣고 생성 버튼을 누르면 화면을 먼저 가져온 뒤 바로 생성한다
+async function startGeneration(startFresh){
+  if(figmaImportNeeded()){
+    const url = document.getElementById('figmaUrlInput').value.trim();
+    document.getElementById('genBtn').disabled = true;
+    document.getElementById('appendBtn').disabled = true;
+    await importFigmaScreens();
+    if(figmaUrl !== url){ updateButtons(); return; } // 가져오기 실패(오류 문구는 importFigmaScreens가 보인다)
+  }
+  await runGeneration(startFresh);
+}
+document.getElementById('genBtn').addEventListener('click', ()=>startGeneration(true));
+document.getElementById('appendBtn').addEventListener('click', ()=>startGeneration(false));
 // 입력이 끝나면 실제로 쓰일 이름(정리된 값)을 칸에 보여 준다
 document.getElementById('tcNameInput').addEventListener('change', e=>{ e.target.value = sanitizeTcName(e.target.value); });
 
