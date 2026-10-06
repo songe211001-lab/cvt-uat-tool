@@ -269,8 +269,18 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     background:var(--panel); color:var(--ink);
   }
 
+  [hidden]{display:none !important;} /* ad-btn 등 display를 정한 클래스에도 hidden 속성이 이기게 */
+
   /* Header */
-  .header{margin-bottom:18px;}
+  .header{margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px;}
+  .header-text{flex:1 1 420px;min-width:0;}
+  .header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .header-sync .sync-time{font-weight:500;}
+  .header-sync .sync-time:empty{display:none;}
+  .header-sync-msg{flex-basis:100%;text-align:right;}
+  #globalAlertBox:not(:empty){margin-bottom:18px;}
+  .tc-name-input{width:150px;}
   .header .ad-subtitle{max-width:720px;word-break:keep-all;} /* 한국어는 단어 단위로 줄바꿈 */
 
   /* Tabs */
@@ -371,7 +381,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .history-item .date{font-size:12px;color:var(--muted);}
   .history-mini-bar{display:flex;height:6px;width:160px;border-radius:var(--radius-xs);overflow:hidden;background:var(--line);margin-top:6px;}
   .history-actions{display:flex;gap:8px;}
-  .type-badge{margin-right:8px;vertical-align:1px;}
+  .access-log-list{list-style:none;margin:0;padding:0;}
+  .access-log-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .access-log-list li:last-child{border-bottom:none;}
+  .access-log-list .when{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
   /* 업로드 방식: 겉모양은 체크박스, 동작은 라디오(한 번에 하나) */
   .mode-choice{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
   .mode-option{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
@@ -460,12 +473,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .row-toggle-btn{font-size:14px;color:var(--muted);flex-shrink:0;width:28px;height:28px;padding:0;margin-left:-6px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-xs);}
   .row-toggle-btn:hover{background:var(--grey-100);}
   .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
-  select.tag-select{
-    border:1px solid var(--line);border-radius:var(--radius-xs);padding:5px 9px;font-size:12px;font-weight:700;
-    font-family:inherit;cursor:pointer;background:var(--panel);color:var(--ink);
-  }
-  select.tag-select.tag-active-constraint{background:var(--minor-soft);color:var(--minor-text);border-color:var(--minor);}
-  select.tag-select.tag-active-integration{background:var(--grey-100);color:var(--ink);border-color:var(--grey-400);}
   .conflict-badge{
     font-size:10.5px;font-weight:700;color:var(--on-primary);background:var(--fatal);
     padding:2px 8px;border-radius:var(--radius-sm);white-space:nowrap;
@@ -483,7 +490,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .upload-btn:hover{border-color:var(--primary);background:var(--primary-soft);}
   .upload-btn.has-file{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-dark);}
   .toolbar-actions{display:flex;gap:8px;margin-left:auto;align-items:center;}
-  .gen-tester-select.ad-select{width:auto;max-width:140px;cursor:pointer;}
   .toolbar-file-chip:empty{display:none;}
   .toolbar-file-chip .file-chip{margin-top:0;}
 
@@ -564,11 +570,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px;color:var(--muted);}
   .select-all-row label{display:flex;align-items:center;gap:6px;cursor:pointer;}
 
-  /* 팀 동기화 상태 한 줄 (이력 관리 탭 상단) */
-  .sync-bar{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-  .sync-bar[hidden]{display:none;}
-  .sync-bar .sub-txt{flex:1;min-width:0;}
+  /* 팀 동기화 상태의 오류·안내 문구 (페이지 머리) */
   #syncStatus[data-state="error"]{color:var(--fatal-text);}
+
+  /* 이름 입력·가져오기 확인 대화상자 (알닷 ad-modal을 native dialog에 씌움) */
+  .app-dialog{border:none;color:var(--ink);}
+  .app-dialog::backdrop{background:var(--overlay);}
+  .app-dialog .ad-modal__body{white-space:pre-line;}
+  .app-dialog .ad-input{margin:-6px 0 18px;}
 
   /* ── 상태 표시·키보드 포커스·누름 피드백 ─────────────────────────── */
   #claudeApiKeyStatus{display:flex;align-items:center;gap:6px;}
@@ -591,9 +600,26 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <div class="app ad-page">
 
   <div class="header">
-    <h1 class="ad-display">테스트 시나리오(TC) 생성 자동화</h1>
-    <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 TC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
+    <div class="header-text">
+      <h1 class="ad-display">테스트 시나리오(TC) 생성 자동화</h1>
+      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 TC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
+    </div>
+    <div class="header-actions">
+      <div class="header-sync" id="syncBar">
+        <span class="ad-sync" id="syncIndicator" role="status" aria-live="polite"><span class="ad-sync__dot" id="syncDot" aria-hidden="true"></span><span id="syncLabel">이 브라우저에만 저장</span><span class="sync-time" id="syncTime"></span></span>
+        <button type="button" class="ad-btn ad-btn--sm" id="presenceChip" hidden>접속 1명</button>
+        <button type="button" class="ad-btn ad-btn--sm" id="syncNowBtn" hidden>지금 동기화</button>
+      </div>
+      <div class="header-backup">
+        <button type="button" class="ad-btn ad-btn--sm" id="jsonExportBtn">JSON 내보내기</button>
+        <button type="button" class="ad-btn ad-btn--sm" id="jsonImportBtn">JSON 가져오기</button>
+        <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
+      </div>
+    </div>
+    <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
   </div>
+
+  <div id="globalAlertBox" role="alert"></div>
 
   <div class="card ad-card ad-panel" id="draftRestoreBanner" style="display:none;border-color:var(--primary);background:var(--primary-soft);">
     <p class="sub-txt" id="draftRestoreMsg" style="margin:0 0 10px;color:var(--ink);font-weight:600;"></p>
@@ -632,9 +658,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <div id="fileChipWrap" class="toolbar-file-chip"></div>
 
         <div class="toolbar-actions">
-          <select id="genTesterSelect" class="gen-tester-select ad-select" aria-label="생성할 TC의 테스터" title="테스터를 지정하면 이번에 생성되는 TC 전체가 그 테스터로 바로 배정됩니다. 비워두면 등록된 테스터에게 순환 배정됩니다.">
-            <option value="">자동 배정</option>
-          </select>
+          <input type="text" class="ad-input tc-name-input" id="tcNameInput" aria-label="TC 이름 (TC-이름-001 형식, 비우면 TC-001)" title="새 TC ID 가운데에 넣을 이름이에요. 비우면 TC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN…" />
           <button class="ad-btn ad-btn--primary" id="genBtn" disabled>TC 생성하기</button>
           <button class="ad-btn" id="appendBtn" disabled>TC 추가 생성</button>
         </div>
@@ -659,20 +683,20 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div id="errorBox" role="alert"></div>
       <div id="genNoticeBox" aria-live="polite"></div>
+    </div>
 
-      <details class="details-block">
-        <summary>테스터 관리</summary>
-        <div class="details-body">
-          <div class="tester-manage" style="margin-top:0;padding-top:0;border-top:none;">
-            <label for="testerNameInput">테스터 관리</label>
-            <div class="tester-input-row">
-              <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
-              <button class="ad-btn ad-btn--sm" id="addTesterBtn" type="button">+ 추가</button>
-            </div>
-            <div class="tester-chips" id="testerChips"></div>
-          </div>
+    <div class="card ad-card ad-panel">
+      <div class="tc-section-head">
+        <h2 class="ad-title">테스터 관리</h2>
+      </div>
+      <div class="tester-manage" style="margin-top:0;padding-top:0;border-top:none;">
+        <label for="testerNameInput">테스터 이름</label>
+        <div class="tester-input-row">
+          <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
+          <button class="ad-btn ad-btn--sm" id="addTesterBtn" type="button">+ 추가</button>
         </div>
-      </details>
+        <div class="tester-chips" id="testerChips"></div>
+      </div>
     </div>
 
     <div class="card ad-card ad-panel">
@@ -753,18 +777,32 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <!-- ===================== TAB 2: 이력 관리 ===================== -->
   <div class="panel" id="panel-hist">
-    <div class="sync-bar" id="syncBar" hidden>
-      <p class="sub-txt" id="syncStatus" aria-live="polite"></p>
-      <button class="ad-btn ad-btn--sm" id="syncNowBtn" type="button">지금 동기화</button>
-    </div>
     <div class="card ad-card ad-panel">
       <h2 class="ad-title" id="historyCountHeading">이력 (0건)</h2>
       <div id="historyList"></div>
       <div id="historyEmpty" class="ad-empty" style="display:none;">아직 내보낸 이력이 없습니다.</div>
     </div>
+    <div class="card ad-card ad-panel" id="accessLogCard" hidden>
+      <h2 class="ad-title">접속 이력</h2>
+      <p class="sub-txt" style="margin:0 0 12px;">최근 50건을 최신순으로 보여요.</p>
+      <ol class="access-log-list" id="accessLogList"></ol>
+      <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
+    </div>
   </div>
 
   <div class="undo-toast ad-toast" id="undoToast" role="status" aria-live="polite"></div>
+
+  <dialog class="ad-modal app-dialog" id="appDialog" aria-labelledby="appDialogTitle">
+    <form method="dialog">
+      <h2 class="ad-modal__title" id="appDialogTitle"></h2>
+      <p class="ad-modal__body" id="appDialogBody"></p>
+      <input type="text" class="ad-input" id="appDialogInput" autocomplete="off" maxlength="20" aria-labelledby="appDialogTitle" hidden />
+      <div class="ad-modal__actions">
+        <button class="ad-btn" value="cancel" formnovalidate>취소</button>
+        <button class="ad-btn" value="ok" id="appDialogOk">확인</button>
+      </div>
+    </form>
+  </dialog>
 
 </div>
 <script>
@@ -1051,7 +1089,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.classList.add('active');
     btn.setAttribute('aria-selected','true');
     document.getElementById(TAB_PANEL_MAP[btn.dataset.tab]).classList.add('active');
-    if(btn.dataset.tab==='hist') renderHistory();
+    if(btn.dataset.tab==='hist'){ renderHistory(); loadAccessLog(); }
   });
 });
 
@@ -1405,9 +1443,6 @@ async function importFigmaScreens(){
 
 /* ---------- Screen type toggle (FO/BO) ---------- */
 /* ---------- Tester management ---------- */
-function nextTesterFor(rowIndex){
-  return testerList.length ? testerList[rowIndex % testerList.length] : '';
-}
 function renderTesterChips(){
   const wrap = document.getElementById('testerChips');
   wrap.innerHTML = testerList.map((t,i)=>
@@ -1421,14 +1456,6 @@ function renderTesterChips(){
       await saveTesters();
     });
   });
-  // 생성 전 "테스터 지정" 드롭다운도 등록된 테스터 목록과 함께 갱신 (선택값은 유지)
-  const genSel = document.getElementById('genTesterSelect');
-  if(genSel){
-    const prevVal = genSel.value;
-    genSel.innerHTML = `<option value="">자동 배정</option>` +
-      testerList.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-    genSel.value = testerList.includes(prevVal) ? prevVal : '';
-  }
 }
 async function addTesterFromInput(){
   const input = document.getElementById('testerNameInput');
@@ -1719,20 +1746,37 @@ ${coverageBlock}`;
 /* ---------- TC ID 발급 ----------
    예전에는 tcData.length + 1로 번호를 매겨서, 중간 행을 지운 뒤 추가하면 기존 ID와 겹쳤다(선택·접기·일괄
    삭제가 tcId 기준이라 겹친 두 행이 함께 선택·삭제됨). 지금은 "현재 가장 큰 번호"와 "이번 세션에서 마지막으로
-   발급한 번호" 중 큰 값의 다음 번호를 쓴다 — 삭제 후 되돌리기로 복원되는 행과도 겹치지 않는다. */
+   발급한 번호" 중 큰 값의 다음 번호를 쓴다 — 삭제 후 되돌리기로 복원되는 행과도 겹치지 않는다.
+   TC ID는 TC-001 또는 가운데에 이름을 넣은 TC-LOGIN-001 형식이다. 번호는 이름과 관계없이 하나로 이어진다
+   (서버 tc_no 전역 유일). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
 let lastIssuedTcNumber = 0;
+const TC_ID_RE = /^TC-(?:([A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]+)-)?(\d+)$/;
+// 이름 정리: 공백·하이픈은 _로, 영문·숫자·한글·_ 외 글자는 빼고 20자로 자른다
+function sanitizeTcName(s){
+  return String(s || '').trim().replace(/[\s-]/g, '_').replace(/[^A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]/g, '').slice(0, 20);
+}
+function tcNumberOf(tcId){
+  const m = TC_ID_RE.exec(tcId || '');
+  return m ? +m[2] : 0;
+}
+function tcNameOf(tcId){
+  const m = TC_ID_RE.exec(tcId || '');
+  return (m && m[1]) || '';
+}
 function maxTcNumber(){
-  return tcData.reduce((max, r)=>{
-    const m = /^TC-(\d+)$/.exec(r.tcId || '');
-    return m ? Math.max(max, +m[1]) : max;
-  }, 0);
+  return tcData.reduce((max, r)=>Math.max(max, tcNumberOf(r.tcId)), 0);
 }
-function formatTcId(n){
-  return 'TC-' + String(n).padStart(3,'0');
+function formatTcId(n, name){
+  return 'TC-' + (name ? name + '-' : '') + String(n).padStart(3,'0');
 }
-function nextTcId(){
+function nextTcId(name){
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber()) + 1;
-  return formatTcId(lastIssuedTcNumber);
+  return formatTcId(lastIssuedTcNumber, name);
+}
+// "기획안 입력"의 TC 이름 칸 (비어 있으면 TC-001 형식)
+function currentTcName(){
+  const input = document.getElementById('tcNameInput');
+  return input ? sanitizeTcName(input.value) : '';
 }
 // tcData 전체를 새 목록으로 갈아끼울 때(새로 생성·이력 불러오기·임시저장 복원) 번호 기준을 초기화한다.
 function resetTcIdCounter(){
@@ -1774,9 +1818,6 @@ async function runGeneration(startFresh){
   const startCount = tcData.length;
   const totalChunks = currentFileChunks.length;
   const roundErrors = [];
-  // 생성 전 "테스터 지정" 드롭다운에서 테스터를 골랐다면, 이번 생성으로 만들어지는 TC 전체를
-  // 자동 순환 배정 대신 그 테스터 한 명에게 바로 배정한다.
-  const forcedTester = document.getElementById('genTesterSelect').value;
 
   // 조각을 순서대로 첨부해가며 생성한다. existingScreens는 매 라운드 tcData 전체에서 다시 계산하므로,
   // 조각이 바뀌어도 앞선 조각에서 이미 다룬 화면이 "이미 다룬 화면" 목록에 자연스럽게 이어진다.
@@ -1839,12 +1880,9 @@ async function runGeneration(startFresh){
         if(foRows[i]) merged.push(foRows[i]);
       }
 
-      const baseIndex = tcData.length;
-      const newIds = await allocateTcIds(merged.length); // 팀 동기화 중이면 서버가 번호를 발급해 겹치지 않는다
-      merged.forEach((row, i)=>{
-        row.tcId = newIds[i];
-        row.tester = forcedTester || (testerList.length ? nextTesterFor(baseIndex + i) : '');
-      });
+      // 테스터는 자동으로 배정하지 않는다(생성된 TC는 미배정, 카드나 일괄 수정에서 직접 지정)
+      const newIds = await allocateTcIds(merged.length, currentTcName()); // 팀 동기화 중이면 서버가 번호를 발급해 겹치지 않는다
+      merged.forEach((row, i)=>{ row.tcId = newIds[i]; });
 
       if(merged.length){
         tcData = tcData.concat(merged);
@@ -1872,6 +1910,8 @@ async function runGeneration(startFresh){
 
 document.getElementById('genBtn').addEventListener('click', ()=>runGeneration(true));
 document.getElementById('appendBtn').addEventListener('click', ()=>runGeneration(false));
+// 입력이 끝나면 실제로 쓰일 이름(정리된 값)을 칸에 보여 준다
+document.getElementById('tcNameInput').addEventListener('change', e=>{ e.target.value = sanitizeTcName(e.target.value); });
 
 /* ---------- 배정 충돌 검사: 같은 테스터에게 제약 태그(일일1회제한/단독실행필요)가 붙은 TC가 2건 이상 배정되면 경고 ---------- */
 function computeConflictTesters(){
@@ -2000,14 +2040,10 @@ function renderTable(){
       </div>
 
       <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
-      <div class="tag-row">
-        <select class="tag-select constraint-tag-select ${constraintTag!=='없음'?'tag-active-constraint':''}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 제약 태그" title="제약 태그: 하루 1회 제한 액션 / 동일 회원과 결합 불가한 단독 실행 필요 액션">
-          ${CONSTRAINT_TAG_OPTIONS.map(o=>`<option value="${o}" ${o===constraintTag?'selected':''}>${CONSTRAINT_TAG_LABEL[o]||o}</option>`).join('')}
-        </select>
-        <select class="tag-select integration-tag-select ${integrationTag!=='없음'?'tag-active-integration':''}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 연동시스템" title="연동 시스템 구분">
-          ${INTEGRATION_TAG_OPTIONS.map(o=>`<option value="${o}" ${o===integrationTag?'selected':''}>${o==='없음'?'연동 없음':o}</option>`).join('')}
-        </select>
-      </div>
+      ${(constraintTag !== '없음' || integrationTag !== '없음') ? `<div class="tag-row">
+        ${constraintTag !== '없음' ? `<span class="ad-badge ad-badge--warning" title="제약 태그">${escapeHtml(CONSTRAINT_TAG_LABEL[constraintTag] || constraintTag)}</span>` : ''}
+        ${integrationTag !== '없음' ? `<span class="ad-badge ad-badge--neutral" title="연동 시스템">${escapeHtml(integrationTag)}</span>` : ''}
+      </div>` : ''}
 
       <div class="tc-grid-two">
         <div>
@@ -2092,20 +2128,6 @@ function renderTable(){
       const idx = +sel.dataset.idx;
       tcData[idx].tester = sel.value;
       renderTable();
-    });
-  });
-  list.querySelectorAll('.constraint-tag-select').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
-      tcData[idx].constraintTag = sel.value;
-      renderTable();
-    });
-  });
-  list.querySelectorAll('.integration-tag-select').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
-      tcData[idx].integrationTag = sel.value;
-      sel.classList.toggle('tag-active-integration', sel.value !== '없음');
     });
   });
   list.querySelectorAll('[data-del]').forEach(btn=>{
@@ -2209,10 +2231,10 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('addRowBtn').addEventListener('click', async ()=>{
-  const [tcId] = await allocateTcIds(1);
+  const [tcId] = await allocateTcIds(1, currentTcName());
   tcData.push({
     tcId, screenType: 'FO', screen:'', category:'', subCategory:'', procedure:'',
-    testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: nextTesterFor(tcData.length),
+    testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: '',
     testNote:'', result:'N/A', status:'작성중'
   });
   renderTable();
@@ -2654,8 +2676,6 @@ function renderHistory(){
       const pct = (h.counts[o]||0)/total*100;
       return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}"></span>` : '';
     }).join('');
-    // 알닷 배지: TC는 brand(연한 coral + 진한 글자), 예전 UAT 기록은 neutral
-    const badgeClass = h.type==='UAT' ? 'ad-badge--neutral' : 'ad-badge--brand';
     const figmaLink = h.figmaUrl
       ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a></div>`
       : '';
@@ -2663,7 +2683,7 @@ function renderHistory(){
     const loadBtn = h.type==='UAT' ? '' : `<button class="ad-btn ad-btn--sm" data-load="${idx}">불러오기</button>`;
     return `<div class="history-item">
       <div class="meta">
-        <div class="file-name"><span class="type-badge ad-badge ${badgeClass}">${h.type}</span>${escapeHtml(h.fileName)}</div>
+        <div class="file-name">${escapeHtml(h.fileName)}</div>
         <div class="date">${escapeHtml(h.date)} · ${h.count}건 · ${escapeHtml(h.summary)}</div>
         ${figmaLink}
         <div class="history-mini-bar">${bar}</div>
@@ -2752,16 +2772,20 @@ const SYNC_CLIENT_ID = (()=>{
 function newRowId(){
   return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
-function tcNumberOf(tcId){
-  const m = /^TC-(\d+)$/.exec(tcId || '');
-  return m ? +m[1] : 0;
-}
 const clone = v => JSON.parse(JSON.stringify(v));
 
 // 서버 data 열에는 tcId를 뺀 COLUMNS 칸만 넣는다(번호는 tc_no 열). _id 같은 동기화용 필드는 들어가지 않는다.
+// TC 이름(TC-이름-001의 가운데)은 tcName으로 넣는다. 이름이 없는 행에는 넣지 않아, 예전 행을 괜히 고쳐 보내지 않는다.
 function rowDataOf(row){
   const { tcId, ...rest } = toExportRow(row);
+  const tcName = tcNameOf(tcId);
+  if(tcName) rest.tcName = tcName;
   return rest;
+}
+// 서버 행(tc_no + data) → 화면 행
+function rowFromServer(id, tcNo, data){
+  const { tcName, ...rest } = data || {};
+  return { ...rest, tcId: formatTcId(tcNo, tcName), _id: id };
 }
 function historyDataOf(entry){
   const { _id, ...rest } = entry;
@@ -2882,7 +2906,7 @@ async function insertTcRows(rows){
 let syncRenumbered = 0;
 function renumberLocalRow(id, no){
   const row = tcData.find(x=>x._id === id);
-  if(row) row.tcId = formatTcId(no);
+  if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId));
   const sh = syncShadow.rows.get(id);
   if(sh) sh.tc_no = no;
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, no);
@@ -2985,7 +3009,7 @@ async function loadFromServer(){
   const localOnlyHistory = historyList.filter(h=>!h._id && !serverHistory.some(x=>isSameHistoryEntry(x, h)));
   const localOnlyTesters = S.testers.size ? [] : testerList.filter(n=>!S.testers.has(n)); // 서버 목록이 비어 있을 때(처음 연결)만 올린다
 
-  tcData = Array.from(S.rows, ([id, v])=>({ ...v.data, tcId: formatTcId(v.tc_no), _id: id }))
+  tcData = Array.from(S.rows, ([id, v])=>rowFromServer(id, v.tc_no, v.data))
     .concat(localOnlyRows)
     .sort((a,b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
   historyList = Array.from(S.history, ([id, d])=>({ ...d, _id: id }))
@@ -2993,9 +3017,10 @@ async function loadFromServer(){
     .sort((a,b)=>String(b.date || '').localeCompare(String(a.date || '')));
   testerList = Array.from(S.testers).sort((a,b)=>a[1] - b[1]).map(([n])=>n).concat(localOnlyTesters);
 
-  syncShadow = { rows: new Map(Array.from(S.rows, ([id, v])=>[id, { tc_no: v.tc_no, data: rowDataOf(v.data) }])), history: S.history, testers: S.testers };
+  syncShadow = { rows: new Map(Array.from(S.rows, ([id, v])=>[id, { tc_no: v.tc_no, data: rowDataOf(rowFromServer(id, v.tc_no, v.data)) }])), history: S.history, testers: S.testers };
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber());
   syncLoaded = true;
+  syncLastSavedAt = new Date();
   afterRemoteApply();
   syncChanges(); // 이 브라우저에만 있던 데이터를 올린다
   flushSyncQueue(); // 지난번에 못 보낸 변경도 이어서 보낸다
@@ -3010,6 +3035,7 @@ async function resyncFromServer(){
     await flushSyncQueue();
     await loadFromServer();
     if(!syncQueue.length) syncErrorMsg = '';
+    loadAccessLog();
   }catch(err){
     syncErrorMsg = `서버에서 불러오지 못했습니다(${err.message || err}).`;
   }finally{
@@ -3051,9 +3077,10 @@ function applyRemoteChange(table, p){
     const local = idx > -1 ? tcData[idx] : null;
     // 이 이벤트보다 나중에(또는 같은 때) 내가 저장한 칸은 내 값을 유지한다
     if(local) Object.keys(row.data || {}).forEach(k=>{ if(ackedAtOrAfter(row.id, k, evTs)) keep.add(k); });
+    keep.delete('tcName'); // 화면 행에는 tcName 칸이 없다(이름은 tcId 안에 있고, 만든 뒤에는 바뀌지 않는다)
     const merged = { ...(row.data || {}) };
     if(local) keep.forEach(k=>{ merged[k] = local[k]; });
-    const next = { ...merged, tcId: formatTcId(row.tc_no), _id: row.id };
+    const next = rowFromServer(row.id, row.tc_no, merged);
     if(local) tcData[idx] = next;
     else{
       const at = tcData.findIndex(r=>tcNumberOf(r.tcId) > row.tc_no);
@@ -3111,37 +3138,122 @@ function afterRemoteApply(){
   renderHistory();
 }
 
+let rtChannel = null;
 function subscribeRealtime(){
-  const ch = sb.channel('cvt-db');
+  // presence key = 탭 식별자 (접속자 칩이 탭 단위로 센다)
+  rtChannel = sb.channel('cvt-db', { config: { presence: { key: SYNC_CLIENT_ID } } });
+  rtChannel.on('presence', { event: 'sync' }, renderPresence);
   ['cvt_tc_rows', 'cvt_history', 'cvt_testers'].forEach(table=>{
-    ch.on('postgres_changes', { event: '*', schema: 'public', table }, p=>onRealtime(table, p));
+    rtChannel.on('postgres_changes', { event: '*', schema: 'public', table }, p=>onRealtime(table, p));
   });
-  ch.subscribe(status=>{
-    if(status === 'SUBSCRIBED'){
-      const reconnected = syncRtEverUp && !syncRtUp;
-      syncRtUp = syncRtEverUp = true;
-      renderSyncStatus();
-      if(reconnected) resyncFromServer(); // 끊겨 있던 동안 놓친 변경을 다시 받는다
-    }else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
-      syncRtUp = false;
-      renderSyncStatus();
-    }
+  rtChannel.subscribe(onRealtimeStatus);
+}
+function onRealtimeStatus(status){
+  if(status === 'SUBSCRIBED'){
+    const reconnected = syncRtEverUp && !syncRtUp;
+    syncRtUp = syncRtEverUp = true;
+    renderSyncStatus();
+    trackPresence();
+    maybeLogAccess();
+    if(reconnected) resyncFromServer(); // 끊겨 있던 동안 놓친 변경을 다시 받는다
+  }else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+    syncRtUp = false;
+    renderSyncStatus();
+  }
+}
+
+/* ---------- 접속자 표시 (Supabase Realtime presence, 이벤트 운영 관리대장과 같은 방식) ---------- */
+const DISPLAY_NAME_KEY = 'cvt_display_name';
+function myName(){
+  try{ return localStorage.getItem(DISPLAY_NAME_KEY) || ''; }catch(e){ return ''; }
+}
+function trackPresence(){
+  if(!rtChannel) return;
+  try{ const r = rtChannel.track({ name: myName() || '이름 없음' }); if(r && r.catch) r.catch(()=>{}); }catch(e){ /* 연결 전이면 무시 */ }
+}
+function renderPresence(){
+  const chip = document.getElementById('presenceChip');
+  if(!chip || !rtChannel) return;
+  const peers = Object.entries(rtChannel.presenceState())
+    .filter(([k])=>k !== SYNC_CLIENT_ID)
+    .map(([, metas])=>(metas[metas.length - 1] || {}).name || '이름 없음');
+  chip.textContent = `접속 ${peers.length + 1}명`;
+  chip.title = [`나: ${myName() || '이름 없음'}`, ...peers].join('\n') + '\n(누르면 내 이름을 바꿀 수 있어요)';
+}
+let askingName = false;
+async function askName(){
+  askingName = true;
+  const v = await openDialog({ title: '팀원에게 보일 내 이름을 입력해주세요', input: myName(), okLabel: '저장' });
+  askingName = false;
+  if(v !== null && v.trim()){
+    try{ localStorage.setItem(DISPLAY_NAME_KEY, v.trim().slice(0, 20)); }catch(e){ /* ignore */ }
+    trackPresence();
+    renderPresence();
+  }
+  maybeLogAccess();
+}
+
+/* ---------- 접속 이력 (cvt_access_log, 탭을 열고 처음 연결됐을 때 한 줄) ---------- */
+let accessLogged = false;
+// 처음 연결된 뒤, 이름 입력창이 닫혀 있을 때 한 번만 기록한다(이름을 받은 뒤 기록하려고)
+async function maybeLogAccess(){
+  if(accessLogged || askingName || !syncRtEverUp || !sb) return;
+  accessLogged = true;
+  try{
+    sbCheck(await sb.from('cvt_access_log').insert({ client_id: SYNC_CLIENT_ID, name: myName() || '이름 없음' }));
+  }catch(e){ accessLogged = false; return; } // 다음 연결 때 다시 시도한다
+  loadAccessLog();
+}
+function fmtDateTime(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${d.toTimeString().slice(0, 8)}`;
+}
+async function loadAccessLog(){
+  if(!SYNC_ENABLED || !sb) return;
+  let rows;
+  try{
+    rows = sbCheck(await sb.from('cvt_access_log').select('name,joined_at').order('joined_at', { ascending: false }).limit(50));
+  }catch(e){ return; } // 테이블이 아직 없으면(예전 스키마) 비어 있는 채로 둔다
+  document.getElementById('accessLogList').innerHTML = (rows || []).map(r=>
+    `<li><span>${escapeHtml(r.name || '이름 없음')}</span><span class="when">${escapeHtml(fmtDateTime(r.joined_at))}</span></li>`
+  ).join('');
+  document.getElementById('accessLogEmpty').hidden = !!(rows && rows.length);
+}
+
+/* ---------- 이름 입력·확인 대화상자 (native dialog). 확인이면 입력값(입력칸이 없으면 ''), 취소면 null ---------- */
+function openDialog({ title, body = '', input = null, okLabel = '확인' }){
+  const dlg = document.getElementById('appDialog');
+  const inp = document.getElementById('appDialogInput');
+  const bodyEl = document.getElementById('appDialogBody');
+  document.getElementById('appDialogTitle').textContent = title;
+  bodyEl.textContent = body;
+  bodyEl.hidden = !body;
+  document.getElementById('appDialogOk').textContent = okLabel;
+  inp.hidden = input === null;
+  inp.value = input || '';
+  dlg.returnValue = '';
+  return new Promise(resolve=>{
+    dlg.addEventListener('close', ()=>resolve(dlg.returnValue === 'ok' ? inp.value : null), { once: true });
+    dlg.showModal();
+    if(input !== null) inp.select();
   });
 }
 
 /* TC 번호 n개 발급. 팀 동기화 중이면 서버가 발급해 다른 팀원과 겹치지 않는다.
    서버에 닿지 않으면 이 브라우저에서 발급하고, 저장할 때 겹치면 새 번호로 바꾼다(insertTcRows). */
-async function allocateTcIds(n){
+async function allocateTcIds(n, name){
   if(SYNC_ENABLED && sb && n > 0){
     try{
       const nos = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: n }));
       if(Array.isArray(nos) && nos.length === n){
         lastIssuedTcNumber = Math.max(lastIssuedTcNumber, ...nos);
-        return nos.map(formatTcId);
+        return nos.map(no=>formatTcId(no, name));
       }
     }catch(e){ /* 아래에서 이 브라우저 번호로 대신한다 */ }
   }
-  return Array.from({ length: n }, ()=>nextTcId());
+  return Array.from({ length: n }, ()=>nextTcId(name));
 }
 // "TC 생성하기"(새로 생성): 팀 공용 TC 리스트와 서버 번호를 비운다. 실패해도 생성은 계속한다(지운 행은 비교 저장으로 지워진다).
 async function resetSharedDraft(){
@@ -3149,30 +3261,42 @@ async function resetSharedDraft(){
   try{ sbCheck(await sb.rpc('reset_cvt_draft')); }catch(e){ /* ignore */ }
 }
 
+// 페이지 머리의 저장 상태(ad-sync): 저장됨 / 저장 중(--saving) / 연결 끊김(--offline) + 마지막 동기화 시각.
+// 오류·번호 바뀜 안내는 그 아래 한 줄(#syncStatus)에 보인다. 동기화가 꺼져 있으면 "이 브라우저에만 저장"만 보인다.
 function renderSyncStatus(){
-  const bar = document.getElementById('syncBar');
-  if(!bar) return;
-  bar.hidden = !SYNC_CONFIGURED;
-  if(!SYNC_CONFIGURED) return;
-  let text;
-  if(!SYNC_ENABLED) text = 'Supabase 라이브러리를 불러오지 못해 팀 동기화를 쓸 수 없습니다. 네트워크(CDN) 차단 여부를 확인해주세요.';
-  else if(!syncLoaded) text = syncErrorMsg || '팀 데이터를 불러오는 중…';
-  else{
-    const parts = [syncRtUp ? '실시간 연결됨' : '실시간 연결 끊김 (30초마다 새로 받아옵니다)'];
-    if(syncQueue.length) parts.push(`보내는 중 ${syncQueue.length}건`);
-    else if(syncLastSavedAt) parts.push('마지막 저장 ' + syncLastSavedAt.toLocaleTimeString('ko-KR'));
-    text = parts.join(' · ');
-    if(syncErrorMsg) text += ' ' + syncErrorMsg;
-  }
-  if(syncConflictMsg) text += ' ' + syncConflictMsg;
-  const status = document.getElementById('syncStatus');
-  status.textContent = text;
-  status.dataset.state = (syncErrorMsg || !SYNC_ENABLED) ? 'error' : '';
+  const ind = document.getElementById('syncIndicator');
+  if(!ind) return;
+  document.getElementById('presenceChip').hidden = !SYNC_ENABLED;
+  document.getElementById('syncNowBtn').hidden = !SYNC_CONFIGURED;
   document.getElementById('syncNowBtn').disabled = !SYNC_ENABLED;
+  document.getElementById('accessLogCard').hidden = !SYNC_ENABLED;
+  document.getElementById('syncDot').hidden = !SYNC_CONFIGURED;
+  let label, state = '', title = '';
+  if(!SYNC_CONFIGURED){ label = '이 브라우저에만 저장'; title = '팀 동기화 설정이 비어 있어 이 브라우저의 저장소에만 저장해요.'; }
+  else if(!SYNC_ENABLED){ label = '연결 끊김'; state = 'offline'; }
+  else if(!syncLoaded){ label = syncErrorMsg ? '연결 끊김' : '불러오는 중…'; state = syncErrorMsg ? 'offline' : 'saving'; }
+  else if(syncErrorMsg || !syncRtUp){ label = '연결 끊김'; state = 'offline'; title = syncRtUp ? '' : '실시간 연결이 끊겨 30초마다 새로 받아와요.'; }
+  else if(syncQueue.length || syncFlushing){ label = '저장 중…'; state = 'saving'; }
+  else label = '저장됨';
+  if(SYNC_ENABLED && syncQueue.length) title = [title, `보내지 못한 변경 ${syncQueue.length}건`].filter(Boolean).join(' ');
+  ind.classList.toggle('ad-sync--saving', state === 'saving');
+  ind.classList.toggle('ad-sync--offline', state === 'offline');
+  ind.title = title;
+  document.getElementById('syncLabel').textContent = label;
+  document.getElementById('syncTime').textContent = (SYNC_ENABLED && syncLastSavedAt) ? '마지막 동기화 ' + syncLastSavedAt.toTimeString().slice(0, 8) : '';
+
+  const msg = !SYNC_CONFIGURED ? ''
+    : !SYNC_ENABLED ? 'Supabase 라이브러리를 불러오지 못해 팀 동기화를 쓸 수 없어요. 네트워크(CDN) 차단 여부를 확인해주세요.'
+    : [syncErrorMsg, syncConflictMsg].filter(Boolean).join(' ');
+  const status = document.getElementById('syncStatus');
+  status.textContent = msg;
+  status.hidden = !msg;
+  status.dataset.state = (syncErrorMsg || !SYNC_ENABLED) ? 'error' : '';
 }
 
 if(SYNC_ENABLED){
   document.getElementById('syncNowBtn').addEventListener('click', resyncFromServer);
+  document.getElementById('presenceChip').addEventListener('click', askName);
   // 편집 중이라 미뤄둔 받기·다시 불러오기는 포커스가 빠진 직후에 한다.
   document.addEventListener('focusout', ()=>{
     setTimeout(()=>{
@@ -3184,6 +3308,86 @@ if(SYNC_ENABLED){
   setInterval(syncChanges, SYNC_DIFF_INTERVAL_MS);
   setInterval(()=>{ if(syncLoaded && !syncRtUp && document.visibilityState === 'visible') resyncFromServer(); }, SYNC_POLL_MS);
 }
+
+/* ---------- JSON 백업 내보내기·가져오기 (동기화와 관계없이 항상 쓸 수 있다) ---------- */
+function showGlobalError(msg){
+  const box = document.getElementById('globalAlertBox');
+  box.innerHTML = msg ? `<div class="ad-alert"><span>${escapeHtml(msg)}</span><button type="button" class="ad-alert__close">닫기</button></div>` : '';
+  if(msg) box.querySelector('button').addEventListener('click', ()=>showGlobalError(''));
+}
+function buildBackup(){
+  return {
+    schema: 1,
+    exportedAt: new Date().toISOString(),
+    tcData: tcData.map(r=>({ ...toExportRow(r), tcName: tcNameOf(r.tcId) })),
+    historyList: historyList.map(historyDataOf),
+    testerList: testerList.slice()
+  };
+}
+// 백업 파일 형식 검사. 문제가 없으면 '', 있으면 원인과 다음 행동을 담은 문구 (순수 함수)
+function validateBackup(d){
+  const next = ' 이 도구의 "JSON 내보내기"로 만든 파일인지 확인하고 다시 가져와주세요.';
+  if(!d || typeof d !== 'object' || Array.isArray(d)) return '백업 파일의 내용이 객체 형식이 아니에요.' + next;
+  if(d.schema !== 1) return `지원하지 않는 백업 형식이에요(schema: ${JSON.stringify(d.schema)}).` + next;
+  for(const k of ['tcData', 'historyList', 'testerList']){
+    if(!Array.isArray(d[k])) return `백업 파일에 ${k} 목록이 없어요.` + next;
+  }
+  const bad = d.tcData.findIndex(r=>!r || typeof r !== 'object' || !tcNumberOf(r.tcId));
+  if(bad > -1) return `TC ${bad + 1}번째 행의 TC ID가 올바르지 않아요(TC-001 또는 TC-이름-001 형식이어야 해요).` + next;
+  const ids = d.tcData.map(r=>r.tcId);
+  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 TC ID가 두 번 이상 들어 있어요.' + next;
+  if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '이력 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
+  if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
+  return '';
+}
+async function handleJsonExport(){
+  showGlobalError('');
+  const d = new Date();
+  const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
+  await saveFileForUser(`TC_생성_자동화_백업_${ymd}.json`, blob);
+}
+async function handleJsonImportFile(file){
+  showGlobalError('');
+  let data;
+  try{ data = JSON.parse(await file.text()); }
+  catch(e){ showGlobalError(`백업 파일을 읽지 못했어요(${e.message}). JSON 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
+  await offerImport(data);
+}
+// 형식을 검사하고, 덮어쓰기 전에 건수를 보여 주며 확인을 받는다. 바꿨으면 true
+async function offerImport(data){
+  const err = validateBackup(data);
+  if(err){ showGlobalError(err); return false; }
+  const count = (t, h, n) => `TC ${t}건 · 이력 ${h}건 · 테스터 ${n}명`;
+  const ok = await openDialog({
+    title: 'JSON 백업 가져오기',
+    body: `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
+      + `지금 데이터(${count(tcData.length, historyList.length, testerList.length)})를 이 파일 내용으로 바꿔요.`
+      + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
+    okLabel: '바꾸기'
+  });
+  if(ok === null) return false;
+  tcData = data.tcData.map(r=>toExportRow(r)); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
+  historyList = clone(data.historyList).map(({ _id, ...h })=>h);
+  testerList = Array.from(new Set(data.testerList.map(n=>n.trim())));
+  resetTcIdCounter();
+  selectedTcIds.clear();
+  saveDraftNow();
+  await saveHistory();
+  await saveTesters();
+  renderTesterChips();
+  renderTable();
+  renderHistory();
+  syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
+  return true;
+}
+document.getElementById('jsonExportBtn').addEventListener('click', handleJsonExport);
+document.getElementById('jsonImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
+document.getElementById('jsonImportInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(file) handleJsonImportFile(file);
+  e.target.value = '';
+});
 
 /* ---------- Init ---------- */
 (async function init(){
@@ -3217,6 +3421,7 @@ if(SYNC_ENABLED){
     });
     subscribeRealtime(); // 먼저 구독해 두고, 전체를 받는 동안 온 이벤트는 모아 두었다가 적용한다
     resyncFromServer();
+    if(!myName()) askName();
   }
 })();
 </script>
