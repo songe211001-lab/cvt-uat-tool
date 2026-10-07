@@ -276,7 +276,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .header-text{flex:1 1 420px;min-width:0;}
   .header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
   .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .header-sync{position:relative;}
   .header-sync .sync-time{font-weight:500;}
+  button.ad-sync{cursor:pointer;}
+  button.ad-sync:hover:not(:disabled){border-color:var(--line);background:var(--panel);}
+  button.ad-sync:disabled{cursor:default;}
+  /* 저장 상태를 누르면 그 아래에 뜨는 접속 이력 창 (이벤트 운영 관리대장의 동기화 기록 창과 같은 방식) */
+  .sync-log{position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:380px;max-height:60vh;text-align:left;}
+  .sync-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .sync-log-head .ad-modal__title{margin:0;}
   .header-sync .sync-time:empty{display:none;}
   .header-sync-msg{flex-basis:100%;text-align:right;}
   #globalAlertBox:not(:empty){margin-bottom:18px;}
@@ -455,7 +463,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     border:1px solid transparent;background:var(--bg);border-radius:var(--radius-md);padding:6px 10px;font-size:14px;font-weight:700;
     flex:1;min-width:120px;outline:none;
   }
-  .tc-screen-input:hover{border-color:var(--line);}
+  .tc-screen-input:not(.tc-title):hover{border-color:var(--line);}
+  .tc-title{cursor:default;}
   .tc-screen-input:focus{border-color:var(--primary);background:var(--panel);}
   .tc-card-head .result-dot{margin-left:auto;margin-right:-4px;flex-shrink:0;}
   /* 읽기 모드: 라벨 | 값 정의 목록. 값 칸은 평소엔 글자만, 마우스를 올리거나 클릭하면 편집 칸으로 보인다 */
@@ -621,7 +630,16 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     </div>
     <div class="header-actions">
       <div class="header-sync" id="syncBar">
-        <span class="ad-sync" id="syncIndicator" role="status" aria-live="polite"><span class="ad-sync__dot" id="syncDot" aria-hidden="true"></span><span id="syncLabel">이 브라우저에만 저장</span><span class="sync-time" id="syncTime"></span></span>
+        <button type="button" class="ad-sync" id="syncIndicator" aria-live="polite" aria-expanded="false" aria-controls="accessLogCard" disabled><span class="ad-sync__dot" id="syncDot" aria-hidden="true"></span><span id="syncLabel">이 브라우저에만 저장</span><span class="sync-time" id="syncTime"></span></button>
+        <div class="ad-modal sync-log" id="accessLogCard" role="dialog" aria-labelledby="accessLogTitle" hidden>
+          <div class="sync-log-head">
+            <h2 class="ad-modal__title" id="accessLogTitle">접속 이력</h2>
+            <button type="button" class="ad-btn ad-btn--sm" id="accessLogClose">닫기</button>
+          </div>
+          <p class="sub-txt" style="margin:0 0 10px;">최근 50건을 최신순으로 보여요.</p>
+          <ol class="access-log-list" id="accessLogList"></ol>
+          <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
+        </div>
         <button type="button" class="ad-btn ad-btn--sm" id="presenceChip" hidden>접속 1명</button>
         <button type="button" class="ad-btn ad-btn--sm" id="syncNowBtn" hidden>지금 동기화</button>
       </div>
@@ -667,7 +685,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
         <div id="figmaImportWrap" style="display:none;gap:8px;flex-wrap:wrap;flex:1;">
           <input type="url" id="figmaUrlInput" class="ad-input" aria-label="피그마 화면 링크" autocomplete="off" spellcheck="false" placeholder="화면 선택 후 '링크 복사'한 URL (https://www.figma.com/design/…)" style="flex:1;min-width:220px;" />
-          <button class="ad-btn" id="figmaFetchBtn" type="button">가져오기</button>
         </div>
 
         <div id="fileChipWrap" class="toolbar-file-chip"></div>
@@ -703,13 +720,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       </div>
     </div>
 
-    <div class="card ad-card ad-panel" id="tcStatsCard" hidden>
+    <div class="card ad-card ad-panel" id="tcStatsCard">
       <div class="tc-section-head">
         <h2 class="ad-title">TC 통계</h2>
       </div>
       <div class="dist-wrap" id="distWrap" style="display:none;">
         <div id="distGroups"></div>
       </div>
+      <div id="distEmpty" class="ad-empty">TC를 생성하면 전체·FO·BO별 결과 통계가 여기에 보여요.</div>
     </div>
 
     <div class="card ad-card ad-panel">
@@ -785,12 +803,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <h2 class="ad-title" id="historyCountHeading">이력 (0건)</h2>
       <div id="historyList"></div>
       <div id="historyEmpty" class="ad-empty" style="display:none;">아직 내보낸 이력이 없습니다.</div>
-    </div>
-    <div class="card ad-card ad-panel" id="accessLogCard" hidden>
-      <h2 class="ad-title">접속 이력</h2>
-      <p class="sub-txt" style="margin:0 0 12px;">최근 50건을 최신순으로 보여요.</p>
-      <ol class="access-log-list" id="accessLogList"></ol>
-      <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
     </div>
   </div>
 
@@ -955,9 +967,11 @@ function buildPdfChunks(pageTexts, maxImagesPerChunk){
 }
 
 // PDF 한 페이지를 PNG Blob으로 그린다 (텍스트 없는 페이지를 이미지로 첨부할 때 사용).
-async function renderPdfPageToBlob(pdf, pageNum){
+const PDF_RENDER_MAX_SIDE = 4096; // 브라우저 캔버스 한도를 넘지 않게(피그마에서 내보낸 PDF는 한 페이지가 수만 px로 길다)
+async function renderPdfPageToBlob(pdf, pageNum, scale = 1.4){
   const page = await pdf.getPage(pageNum);
-  const viewport = page.getViewport({scale: 1.4});
+  const base = page.getViewport({scale: 1});
+  const viewport = page.getViewport({scale: Math.min(scale, PDF_RENDER_MAX_SIDE / Math.max(base.width, base.height))});
   const canvas = document.createElement('canvas');
   canvas.width = viewport.width;
   canvas.height = viewport.height;
@@ -1092,7 +1106,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.classList.add('active');
     btn.setAttribute('aria-selected','true');
     document.getElementById(TAB_PANEL_MAP[btn.dataset.tab]).classList.add('active');
-    if(btn.dataset.tab==='hist'){ renderHistory(); loadAccessLog(); }
+    if(btn.dataset.tab==='hist') renderHistory();
   });
 });
 
@@ -1156,7 +1170,86 @@ function describePdfPlan(plan){
   return parts.join(' ');
 }
 
-const NO_USABLE_PDF_PAGES_MESSAGE = '이 PDF에서 텍스트를 거의 찾지 못했습니다. 화면에는 글자가 선명하게 보여도, PDF 내부적으로는 글자가 "텍스트"가 아니라 그림/도형(윤곽선)으로 저장되어 있으면 이런 일이 생깁니다(스캔본이 아니어도 발생할 수 있음). 이 화면에서는 이미지 첨부 생성도 지원되지 않아 이 PDF로는 생성할 수 없습니다. (참고: PDF 뷰어에서 마우스로 글자가 드래그·선택되지 않는다면 그림으로 저장된 PDF일 가능성이 높습니다)';
+/* ---------- 글자 인식(OCR) ----------
+   이미지를 Claude에 보낼 수 없는 화면(sample.limits()에 images 없음)에서, 글자가 그림(윤곽선)으로 된 PDF 페이지와
+   업로드한 이미지의 글자를 브라우저 안에서 읽어 텍스트로 생성한다. tesseract.js 5.1.1(Apache-2.0)과 한글·영문 인식
+   데이터(pipeline/vendor/ocr)를 아티팩트의 자체 파일 ocr/로 함께 올려 쓴다(아티팩트는 외부 다운로드를 막을 수 있어서). */
+const OCR_BASE = 'ocr/';
+const OCR_RENDER_SCALE = 2.2; // PDF 페이지를 이 배율로 그려 읽는다(작은 글자 인식률)
+let ocrWorkerPromise = null;
+function loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = ()=>reject(new Error('글자 인식 도구(ocr/)를 불러오지 못했어요'));
+    document.head.appendChild(s);
+  });
+}
+function getOcrWorker(){
+  if(!ocrWorkerPromise){
+    ocrWorkerPromise = (async()=>{
+      const base = new URL(OCR_BASE, location.href).href;
+      if(!window.Tesseract) await loadScriptOnce(base + 'tesseract.min.js');
+      // 1 = LSTM 전용 엔진. 압축하지 않은 인식 데이터, 브라우저 캐시(IndexedDB) 안 씀, 같은 출처의 워커 파일을 직접 연다.
+      return window.Tesseract.createWorker(['kor', 'eng'], 1, {
+        workerPath: base + 'worker.min.js', corePath: base, langPath: base.replace(/\/$/, ''),
+        gzip: false, cacheMethod: 'none', workerBlobURL: false
+      });
+    })().catch(err=>{ ocrWorkerPromise = null; throw err; });
+  }
+  return ocrWorkerPromise;
+}
+async function ocrImage(image){
+  const worker = await getOcrWorker();
+  const { data } = await worker.recognize(image);
+  return String((data && data.text) || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+}
+// PDF 한 페이지의 글자를 읽는다. 가로는 OCR_STRIP_PX 이하로 맞추고, 세로로 긴 페이지는 위에서부터 띠로 나눠
+// 그린다(캔버스 한도 회피). 띠 경계에 걸친 줄이 잘리지 않게 조금씩 겹친다(겹친 줄은 한 번 더 나올 수 있음).
+const OCR_STRIP_PX = 3000, OCR_STRIP_OVERLAP = 80;
+async function ocrPdfPage(pdf, pageNum, onStrip){
+  const page = await pdf.getPage(pageNum);
+  const base = page.getViewport({scale: 1});
+  const scale = Math.min(OCR_RENDER_SCALE, OCR_STRIP_PX / base.width);
+  const width = Math.ceil(base.width * scale), height = Math.ceil(base.height * scale);
+  const step = OCR_STRIP_PX - OCR_STRIP_OVERLAP;
+  const strips = Math.max(1, Math.ceil((height - OCR_STRIP_OVERLAP) / step));
+  const texts = [];
+  for(let k=0; k<strips; k++){
+    const top = k * step;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = Math.min(OCR_STRIP_PX, height - top);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({canvasContext: ctx, viewport: page.getViewport({scale, offsetY: -top}), intent: 'print'}).promise;
+    if(onStrip) onStrip(k + 1, strips);
+    texts.push(await ocrImage(canvas));
+    canvas.width = canvas.height = 0; // 메모리 바로 반납
+  }
+  return texts.filter(Boolean).join('\n');
+}
+// 텍스트가 거의 없는 PDF 페이지를 그려서 글자를 읽고 pageTexts에 채운다. 읽어 낸 페이지 번호 목록을 돌려준다.
+async function ocrPdfPages(pdf, pageTexts, onProgress){
+  const targets = pageTexts.map((t, i)=>i + 1).filter(n=>pageTexts[n - 1].replace(/\s+/g, '').length < MIN_PAGE_TEXT_CHARS);
+  const done = [];
+  for(let k=0; k<targets.length; k++){
+    const num = targets[k];
+    onProgress(k + 1, targets.length, '');
+    let text = '';
+    try{
+      text = await ocrPdfPage(pdf, num, (s, n)=>{ if(n > 1) onProgress(k + 1, targets.length, ` · 구간 ${s}/${n}`); });
+    }catch(e){
+      if(/글자 인식 도구/.test(e && e.message)) throw e; // OCR 자체를 못 쓰면 멈춘다(한 페이지 문제면 그 페이지만 건너뛴다)
+    }
+    if(text.replace(/\s+/g, '').length >= MIN_PAGE_TEXT_CHARS){ pageTexts[num - 1] = text; done.push(num); }
+  }
+  return done;
+}
+
+const NO_USABLE_PDF_PAGES_MESSAGE = '이 PDF에서 글자를 읽지 못했어요. 글자가 그림(윤곽선)으로 저장된 PDF라 글자 인식(OCR)도 시도했지만 읽힌 내용이 거의 없어요. 해상도가 더 높은 PDF로 다시 올리거나, 피그마 원본이 있으면 "피그마 URL 가져오기"로 생성해주세요.';
 
 async function handleFile(file){
   const isPdf = file.type === 'application/pdf';
@@ -1177,6 +1270,7 @@ async function handleFile(file){
   showGenNotice('');
 
   let downscaledFrom = null; // 이미지 자동 압축이 일어났으면 원본 용량(MB)을 기록해 안내 문구에 사용
+  let ocrNotice = '';
   try{
     if(isImage){
       // 고화질(고해상도) 이미지라 용량이 크면, 거부하는 대신 자동으로 줄여서 첨부한다 — 어차피
@@ -1188,7 +1282,15 @@ async function handleFile(file){
         uploadFile = await downscaleImageForUpload(file);
         downscaledFrom = (file.size/1024/1024).toFixed(1);
       }
-      currentFileChunks = [{kind:'image', blob: uploadFile, byteSize: uploadFile.size, label: ''}];
+      if(imagesPerChunkBudget()){
+        currentFileChunks = [{kind:'image', blob: uploadFile, byteSize: uploadFile.size, label: ''}];
+      }else{
+        document.getElementById('uploadBtnLabel').textContent = '글자 인식 중…';
+        const text = await ocrImage(uploadFile);
+        if(text.replace(/\s+/g, '').length < MIN_PAGE_TEXT_CHARS) throw new Error('이미지에서 글자를 읽지 못했어요. 이 화면에서는 이미지를 Claude에 보낼 수 없어 글자 인식(OCR)으로 읽는데, 읽힌 내용이 거의 없어요. 글자가 더 선명한 이미지나 PDF로 올려주세요.');
+        currentFileChunks = [{kind:'image', blob: null, text, textSource: 'ocr', byteSize: new TextEncoder().encode(text).length, label: file.name}];
+        ocrNotice = '이 화면에서는 이미지를 Claude에 보낼 수 없어 글자 인식(OCR)으로 읽은 내용으로 생성해요. 인식 오류가 있을 수 있어요.';
+      }
     }else{
       let pdf;
       try{
@@ -1200,6 +1302,13 @@ async function handleFile(file){
       }
       document.getElementById('uploadBtnLabel').textContent = `텍스트 추출 중 (${pdf.numPages}페이지)…`;
       currentPdfPageTexts = await extractPdfPageTexts(pdf);
+      // 이미지를 보낼 수 없는 화면이면, 글자가 그림으로 된 페이지를 글자 인식(OCR)으로 읽는다
+      if(!imagesPerChunkBudget()){
+        const ocrPages = await ocrPdfPages(pdf, currentPdfPageTexts, (k, n, part)=>{
+          document.getElementById('uploadBtnLabel').textContent = `글자 인식 중 (${k}/${n}페이지${part})…`;
+        });
+        if(ocrPages.length) ocrNotice = `글자가 그림으로 된 ${ocrPages.length}개 페이지(p.${formatPageList(ocrPages)})는 글자 인식(OCR)으로 읽었어요. 인식 오류가 있을 수 있어요.`;
+      }
       currentPdfDoc = pdf;
       currentFilePageCount = pdf.numPages;
       replanPdfChunks();
@@ -1218,7 +1327,9 @@ async function handleFile(file){
       showGenNotice(`고화질 이미지라 자동으로 압축해서 첨부했습니다 (원본 ${downscaledFrom}MB → ${compressedMb}MB). 인식 품질에는 차이가 없습니다.`);
     }else if(currentPdfPlan){
       if(!currentFileChunks.length) showError(NO_USABLE_PDF_PAGES_MESSAGE);
-      else showGenNotice(describePdfPlan(currentPdfPlan));
+      else showGenNotice([ocrNotice, describePdfPlan(currentPdfPlan)].filter(Boolean).join(' '));
+    }else if(ocrNotice){
+      showGenNotice(ocrNotice);
     }
   }catch(err){
     showError('파일을 처리하지 못했습니다: ' + (err.message || '알 수 없는 오류'));
@@ -1390,7 +1501,6 @@ function uniqueScreenNames(names){
   });
 }
 
-document.getElementById('figmaFetchBtn').addEventListener('click', importFigmaScreens);
 // 피그마 모드에서 URL을 넣었지만 아직 그 URL로 화면을 가져오지 않았으면 true
 function figmaImportNeeded(){
   const input = document.getElementById('figmaUrlInput');
@@ -1399,13 +1509,14 @@ function figmaImportNeeded(){
 }
 document.getElementById('figmaUrlInput').addEventListener('input', updateButtons);
 document.getElementById('figmaUrlInput').addEventListener('keydown', e=>{
-  if(e.key === 'Enter'){ e.preventDefault(); importFigmaScreens(); }
+  if(e.key === 'Enter'){ e.preventDefault(); if(figmaImportNeeded()) importFigmaScreens(); } // Enter는 화면만 미리 가져온다(생성은 버튼으로)
 });
 
 // URL을 넣으면 화면(프레임) 목록을 확인하는 중간 단계 없이, 찾은 화면을 전부 자동으로 인식해서
 // 바로 고해상도 이미지로 가져온다 (예전에는 "화면 목록 가져오기" -> 체크박스로 선택 -> "선택한 화면
 // 가져오기" 2단계였다).
-async function importFigmaScreens(){
+// progressBtn: 진행 상황을 보여 줄 버튼(누른 생성 버튼, 없으면 "TC 생성하기")
+async function importFigmaScreens(progressBtn){
   const url = document.getElementById('figmaUrlInput').value.trim();
   showError('');
   showGenNotice('');
@@ -1420,7 +1531,7 @@ async function importFigmaScreens(){
     return;
   }
 
-  const fetchBtn = document.getElementById('figmaFetchBtn');
+  const fetchBtn = progressBtn || document.getElementById('genBtn');
   fetchBtn.disabled = true;
   const originalLabel = fetchBtn.textContent;
   fetchBtn.innerHTML = '<span class="spinner"></span>화면 인식 중…';
@@ -1490,8 +1601,8 @@ async function importFigmaScreens(){
   }catch(err){
     showError('피그마 화면을 가져오지 못했어요. ' + figmaErrorMessage(err));
   }finally{
-    fetchBtn.disabled = false;
     fetchBtn.textContent = originalLabel;
+    updateButtons();
   }
 }
 
@@ -1577,9 +1688,10 @@ function hasClaudeConnectionConfigured(){
    (runGeneration 참고) 같은 조각의 여러 라운드·FO/BO 요청이 재사용한다. */
 async function prepareChunkPayload(chunk){
   if(chunk.kind === 'image'){
-    const textSuffix = chunk.text
-      ? `\n\n["${chunk.screenNameHint || chunk.label}" 화면의 텍스트 레이어 (위에서 아래 순서, 같은 줄은 | 로 구분)]\n${chunk.text}`
-      : '';
+    const textSuffix = !chunk.text ? ''
+      : chunk.textSource === 'ocr'
+        ? `\n\n["${chunk.label}" 이미지에서 글자 인식(OCR)으로 읽은 내용 (인식 오류가 섞여 있을 수 있음)]\n${chunk.text}`
+        : `\n\n["${chunk.screenNameHint || chunk.label}" 화면의 텍스트 레이어 (위에서 아래 순서, 같은 줄은 | 로 구분)]\n${chunk.text}`;
     return { textSuffix, images: chunk.blob ? [chunk.blob] : [] };
   }
   const images = [];
@@ -1740,7 +1852,7 @@ async function generateTypedBatch(typeLabel, count, payload, chunk, existingScre
     ? (hasScreenImage ? `첨부된 "${screenNameHint}" 화면 이미지${chunk.text ? '와 아래 텍스트 레이어 내용' : ''}를` : `아래 첨부된 "${screenNameHint}" 화면의 텍스트 레이어 내용(기획 메모 포함)을`)
     : (chunk.kind === 'pdf'
         ? `아래 첨부된 기획안 PDF 원문 텍스트(${chunk.label})${payload.images.length ? '와 첨부 이미지' : ''}를 처음부터 끝까지`
-        : '첨부된 기획안/화면 이미지를');
+        : (hasScreenImage ? '첨부된 기획안/화면 이미지를' : '아래 첨부된 기획안 이미지의 글자 인식(OCR) 내용을'));
 
   const screenFieldDesc = screenNameHint
     ? `- screen: 빈 문자열 ""로 두세요. 화면 구분은 시스템이 category와 subCategory로 채웁니다(첨부 내용은 "${screenNameHint}" 화면 하나입니다).`
@@ -1982,7 +2094,7 @@ async function startGeneration(startFresh){
     const url = document.getElementById('figmaUrlInput').value.trim();
     document.getElementById('genBtn').disabled = true;
     document.getElementById('appendBtn').disabled = true;
-    await importFigmaScreens();
+    await importFigmaScreens(document.getElementById(startFresh ? 'genBtn' : 'appendBtn'));
     if(figmaUrl !== url){ updateButtons(); return; } // 가져오기 실패(오류 문구는 importFigmaScreens가 보인다)
   }
   await runGeneration(startFresh);
@@ -2004,6 +2116,10 @@ function computeConflictTesters(){
   return Object.entries(counts).filter(([,c])=>c>1).map(([t])=>t);
 }
 /* ---------- Table render ---------- */
+// TC 카드 제목: "시험항목(대분류) > 시험(중분류)". 둘 다 비어 있으면 화면 구분을 보인다.
+function tcTitleOf(row){
+  return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
+}
 function renderTable(){
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
@@ -2104,7 +2220,7 @@ function renderTable(){
         <select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select>
-        <div class="cell-edit tc-screen-input" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
+        <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
         ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 TC가 더 있습니다">유사 TC</span>' : ''}
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(row.tester)} 님에게 제약 TC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         ${testerOptions}
@@ -2124,6 +2240,10 @@ function renderTable(){
         ${integrationTag !== '없음' ? `<span class="ad-badge ad-badge--neutral" title="연동 시스템">${escapeHtml(integrationTag)}</span>` : ''}
       </div>` : ''}
 
+      <div class="tc-field-block">
+        <label class="tc-field-label">화면 구분</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
+      </div>
       <div class="tc-grid-two">
         <div>
           <label class="tc-field-label">시험항목(대분류)</label>
@@ -2167,6 +2287,10 @@ function renderTable(){
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
       tcData[idx][key] = el.textContent;
+      if(key === 'category' || key === 'subCategory'){ // 카드 제목(대분류 > 중분류)도 바로 맞춘다
+        const title = list.querySelector(`[data-title-idx="${idx}"]`);
+        if(title) title.textContent = tcTitleOf(tcData[idx]);
+      }
     });
   });
   list.querySelectorAll('.row-toggle-btn').forEach(btn=>{
@@ -2362,7 +2486,7 @@ function buildDistBlock(label, rows){
 
 function renderDistribution(){
   const wrap = document.getElementById('distWrap');
-  document.getElementById('tcStatsCard').hidden = !tcData.length; // TC가 없으면 "TC 통계" 영역도 숨긴다
+  document.getElementById('distEmpty').hidden = !!tcData.length; // TC가 없으면 영역은 두고 안내 문구만 보인다
   if(!tcData.length){ wrap.style.display='none'; return; }
   wrap.style.display='block';
 
@@ -3297,6 +3421,23 @@ async function loadAccessLog(){
   document.getElementById('accessLogEmpty').hidden = !!(rows && rows.length);
 }
 
+// 저장 상태(동기화 시각)를 누르면 접속 이력 창을 열고 닫는다. 열 때마다 최근 50건을 새로 받는다.
+function toggleAccessLog(open){
+  const card = document.getElementById('accessLogCard');
+  const ind = document.getElementById('syncIndicator');
+  const willOpen = open === undefined ? card.hidden : open;
+  card.hidden = !willOpen;
+  ind.setAttribute('aria-expanded', String(willOpen));
+  if(willOpen) loadAccessLog();
+}
+document.getElementById('syncIndicator').addEventListener('click', ()=>toggleAccessLog());
+document.getElementById('accessLogClose').addEventListener('click', ()=>{ toggleAccessLog(false); document.getElementById('syncIndicator').focus(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && !document.getElementById('accessLogCard').hidden) toggleAccessLog(false); });
+document.addEventListener('click', e=>{
+  const card = document.getElementById('accessLogCard');
+  if(!card.hidden && !card.contains(e.target) && !document.getElementById('syncIndicator').contains(e.target)) toggleAccessLog(false);
+});
+
 /* ---------- 이름 입력·확인 대화상자 (native dialog). 확인이면 입력값(입력칸이 없으면 ''), 취소면 null ---------- */
 function openDialog({ title, body = '', input = null, okLabel = '확인' }){
   const dlg = document.getElementById('appDialog');
@@ -3344,7 +3485,8 @@ function renderSyncStatus(){
   document.getElementById('presenceChip').hidden = !SYNC_ENABLED;
   document.getElementById('syncNowBtn').hidden = !SYNC_CONFIGURED;
   document.getElementById('syncNowBtn').disabled = !SYNC_ENABLED;
-  document.getElementById('accessLogCard').hidden = !SYNC_ENABLED;
+  ind.disabled = !SYNC_ENABLED; // 팀 동기화 중일 때만 눌러서 접속 이력을 본다
+  if(!SYNC_ENABLED) toggleAccessLog(false);
   document.getElementById('syncDot').hidden = !SYNC_CONFIGURED;
   let label, state = '', title = '';
   if(!SYNC_CONFIGURED){ label = '이 브라우저에만 저장'; title = '팀 동기화 설정이 비어 있어 이 브라우저의 저장소에만 저장해요.'; }
