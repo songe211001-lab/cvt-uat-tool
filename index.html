@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>테스트 시나리오(TC) 생성 자동화</title>
+<title>테스트 시나리오(QC) 생성 자동화</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -261,6 +261,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   *{box-sizing:border-box;}
   :root{color-scheme:light;}
+  /* 와이드 레이아웃: 페이지 폭 제한(.ad-page의 1180px)을 풀고 좌우 바깥 여백을 이 토큰 하나로 맞춘다.
+     머리·탭·카드가 모두 .app 안에 있어 함께 맞춰진다. 좁은 화면은 디자인 시스템의 모바일 바깥 여백(16px)으로 줄인다. */
+  :root{--page-gutter:100px;}
+  @media (max-width:1040px){ :root{--page-gutter:var(--space-16);} }
+  .app.ad-page{max-width:none;padding-left:var(--page-gutter);padding-right:var(--page-gutter);}
   body{margin:0;-webkit-font-smoothing:antialiased;}
   /* 이 도구는 밝은 화면 하나로 고정된 디자인이라, 보고 있는 기기/브라우저가 다크 모드여도
      입력창(input/textarea/select)이 검은 배경으로 바뀌지 않도록 배경/글자색을 명시한다.
@@ -376,6 +381,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   .icon-btn:hover{color:var(--primary-dark);}
 
+  .table-footer-actions{display:flex;gap:8px;flex-wrap:wrap;}
   .table-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
 
   /* History tab */
@@ -625,8 +631,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <div class="header">
     <div class="header-text">
-      <h1 class="ad-display">테스트 시나리오(TC) 생성 자동화</h1>
-      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 TC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
+      <h1 class="ad-display">테스트 시나리오(QC) 생성 자동화</h1>
+      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
     </div>
     <div class="header-actions">
       <div class="header-sync" id="syncBar">
@@ -663,7 +669,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   </div>
 
   <div class="ad-tabs" role="tablist" aria-label="화면 탭">
-    <button class="tab-btn ad-tab active" data-tab="gen" role="tab" aria-selected="true">TC 생성</button>
+    <button class="tab-btn ad-tab active" data-tab="gen" role="tab" aria-selected="true">QC 생성</button>
     <button class="tab-btn ad-tab" data-tab="hist" role="tab" aria-selected="false">이력 관리</button>
   </div>
 
@@ -690,9 +696,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <div id="fileChipWrap" class="toolbar-file-chip"></div>
 
         <div class="toolbar-actions">
-          <input type="text" class="ad-input tc-name-input" id="tcNameInput" aria-label="TC 이름 (TC-이름-001 형식, 비우면 TC-001)" title="새 TC ID 가운데에 넣을 이름이에요. 비우면 TC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN…" />
-          <button class="ad-btn ad-btn--primary" id="genBtn" disabled>TC 생성하기</button>
-          <button class="ad-btn" id="appendBtn" disabled>TC 추가 생성</button>
+          <input type="text" class="ad-input tc-name-input" id="tcNameInput" aria-label="QC 이름 (TC-이름-001 형식, 비우면 TC-001)" title="새 QC ID 가운데에 넣을 이름이에요. 비우면 TC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN…" />
+          <button class="ad-btn ad-btn--primary" id="genBtn" disabled>QC 생성하기</button>
+          <button class="ad-btn" id="appendBtn" disabled>QC 추가 생성</button>
         </div>
       </div>
 
@@ -722,23 +728,23 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
     <div class="card ad-card ad-panel" id="tcStatsCard">
       <div class="tc-section-head">
-        <h2 class="ad-title">TC 통계</h2>
+        <h2 class="ad-title">QC 통계</h2>
       </div>
       <div class="dist-wrap" id="distWrap" style="display:none;">
         <div id="distGroups"></div>
       </div>
-      <div id="distEmpty" class="ad-empty">TC를 생성하면 전체·FO·BO별 결과 통계가 여기에 보여요.</div>
+      <div id="distEmpty" class="ad-empty">QC를 생성하면 전체·FO·BO별 결과 통계가 여기에 보여요.</div>
     </div>
 
     <div class="card ad-card ad-panel">
       <div class="tc-section-head">
-        <h2 class="ad-title">TC 리스트</h2>
+        <h2 class="ad-title">QC 리스트</h2>
         <span class="ad-badge ad-badge--brand" id="tcCountBadge" style="display:none;">0건</span>
         <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button" style="margin-left:auto;">전체 펼치기</button>
       </div>
 
       <div class="tc-filter-bar">
-        <input type="search" class="ad-input" id="tcSearchInput" aria-label="TC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
+        <input type="search" class="ad-input" id="tcSearchInput" aria-label="QC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
         <select class="ad-select" id="tcFilterType" aria-label="화면유형 필터">
           <option value="ALL">전체 유형</option>
           <option value="FO">FO</option>
@@ -765,10 +771,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div class="bulk-bar" id="bulkBar">
         <span class="bulk-count" id="bulkCount">0개 선택됨</span>
-        <select class="ad-select" id="bulkTesterSelect" aria-label="선택한 TC 테스터 재배정">
+        <select class="ad-select" id="bulkTesterSelect" aria-label="선택한 QC 테스터 재배정">
           <option value="">테스터 재배정…</option>
         </select>
-        <select class="ad-select" id="bulkResultSelect" aria-label="선택한 TC 결과 일괄 변경">
+        <select class="ad-select" id="bulkResultSelect" aria-label="선택한 QC 결과 일괄 변경">
           <option value="">결과값 일괄 변경…</option>
           <option value="PASS">PASS</option>
           <option value="MINOR">MINOR</option>
@@ -777,7 +783,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <option value="FATAL">FATAL</option>
           <option value="CRITICAL">CRITICAL</option>
         </select>
-        <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 TC 진행상태 일괄 변경">
+        <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 QC 진행상태 일괄 변경">
           <option value="">진행상태 일괄 변경…</option>
           <option value="작성중">작성중</option>
           <option value="개발 검토중">개발 검토중</option>
@@ -788,11 +794,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       </div>
 
       <div id="tcCardList"></div>
-      <div id="emptyState" class="ad-empty">아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'TC 생성하기'를 눌러보세요.</div>
+      <div id="emptyState" class="ad-empty">아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'QC 생성하기'를 눌러보세요.</div>
 
       <div class="table-footer">
         <button class="ad-btn ad-btn--sm" id="addRowBtn" type="button">+ 행 추가</button>
-        <button class="ad-btn" id="exportBtn" type="button" disabled>엑셀로 내보내기</button>
+        <div class="table-footer-actions">
+          <button class="ad-btn" id="saveHistoryBtn" type="button" disabled>저장하기</button>
+          <button class="ad-btn" id="exportBtn" type="button" disabled>엑셀로 내보내기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -984,7 +993,7 @@ async function renderPdfPageToBlob(pdf, pageNum, scale = 1.4){
 }
 
 const COLUMNS = [
-  {key:'tcId', label:'TC ID'},
+  {key:'tcId', label:'QC ID'},
   {key:'screenType', label:'화면유형(FO/BO)'},
   {key:'screen', label:'화면 구분'},
   {key:'category', label:'시험항목(대분류)'},
@@ -1352,6 +1361,7 @@ function updateButtons(){
   document.getElementById('genBtn').disabled = !ready;
   document.getElementById('appendBtn').disabled = !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
+  document.getElementById('saveHistoryBtn').disabled = !tcData.length;
 }
 
 // 파일 업로드/피그마 가져오기 두 경로가 공유하는 "기획안 선택 상태"를 모두 초기화한다.
@@ -1441,6 +1451,7 @@ return { name: root.name, screens: screens.map(({ id, name }) => ({ id, name }))
 }
 // 화면 안의 글자(텍스트 레이어)를 위→아래, 같은 줄은 " | "로 이어 읽는다(Figma 안에서 실행, 읽기만 한다).
 // 이미지를 보낼 수 없는 화면(limits에 images 없음)에서는 이 글자만으로 생성하고, 보낼 수 있으면 이미지와 함께 보낸다.
+// 취소선으로 지운 기획 문구는 빼고(삭제된 기능), 목업의 반복 카드처럼 같은 줄이 다시 나오면 한 번만 남긴다.
 const FIGMA_TEXT_MAX = 12000;
 function figmaScreenTextCode(nodeId){
   return `const root = await figma.getNodeByIdAsync(${JSON.stringify(nodeId)});
@@ -1449,7 +1460,12 @@ const out = [];
 (function walk(n) {
   if (n.visible === false) return;
   if (n.type === 'TEXT') {
-    const t = n.characters.replace(/\\s+/g, ' ').trim();
+    let raw = n.characters;
+    try {
+      const segs = n.getStyledTextSegments(['textDecoration']);
+      if (segs.some(s => s.textDecoration === 'STRIKETHROUGH')) raw = segs.filter(s => s.textDecoration !== 'STRIKETHROUGH').map(s => s.characters).join(' ');
+    } catch (e) {}
+    const t = raw.replace(/\\s+/g, ' ').trim();
     const b = n.absoluteBoundingBox;
     if (t) out.push({ t, x: b ? b.x : 0, y: b ? b.y : 0 });
     return;
@@ -1463,8 +1479,19 @@ for (const o of out) {
   const row = Math.round(o.y / 10);
   if (cur && cur.row === row) cur.parts.push(o.t); else { cur = { row, parts: [o.t] }; lines.push(cur); }
 }
-const text = lines.map(l => l.parts.join(' | ')).join('\\n');
+const seen = new Set();
+const text = lines.map(l => l.parts.join(' | ')).filter(line => {
+  if (line.length < 6) return true;
+  if (seen.has(line)) return false;
+  seen.add(line);
+  return true;
+}).join('\\n');
 return { text: text.slice(0, ${FIGMA_TEXT_MAX}), truncated: text.length > ${FIGMA_TEXT_MAX} };`;
+}
+// 기획 설명 프레임(화면정의 등): "설명"이 있고 "1 | ..." 같은 번호 줄이 3개 이상이면 화면이 아니라 설명으로 본다 (순수 함수)
+const FIGMA_SPEC_MAX = 8000;
+function isFigmaSpecText(text){
+  return /설명/.test(text || '') && ((text || '').match(/^\d{1,2} \| /gm) || []).length >= 3;
 }
 // 커넥터 오류 코드 → 사람이 할 일을 담은 문구
 function figmaErrorMessage(err){
@@ -1542,7 +1569,7 @@ async function importFigmaScreens(progressBtn){
     const listed = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
       fileKey: parsed.fileKey,
       code: figmaListScreensCode(parsed.nodeId),
-      description: 'TC 생성용 화면 목록 읽기 (수정 없음)'
+      description: 'QC 생성용 화면 목록 읽기 (수정 없음)'
     }, { cache: false })).payload;
     const list = typeof listed === 'string' ? JSON.parse(listed) : listed;
     if(!list || list.error === 'not_found') throw new Error('해당 화면(노드)을 찾지 못했어요. 링크의 선택 영역이 올바른지 확인해주세요.');
@@ -1559,7 +1586,7 @@ async function importFigmaScreens(progressBtn){
       try{
         const nodeId = list.screens[i].id;
         const textRes = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
-          fileKey: parsed.fileKey, code: figmaScreenTextCode(nodeId), description: 'TC 생성용 화면 글자 읽기 (수정 없음)'
+          fileKey: parsed.fileKey, code: figmaScreenTextCode(nodeId), description: 'QC 생성용 화면 글자 읽기 (수정 없음)'
         }, { cache: false })).payload;
         const textInfo = (typeof textRes === 'string' ? JSON.parse(textRes) : textRes) || {};
         const text = textInfo.text || '';
@@ -1579,6 +1606,19 @@ async function importFigmaScreens(progressBtn){
       }
     }
     if(!chunks.length) throw new Error('화면 내용을 가져오지 못했어요.');
+    // 기획 설명 프레임은 따로 생성하지 않고, 같은 보드의 모든 화면에 공통 참고 자료로 붙인다.
+    // 같은 규칙이 화면마다 반복 생성되지 않게, 중복 방지 범위도 보드 전체(boardScreens)로 넓힌다.
+    const specChunks = chunks.filter(c=>isFigmaSpecText(c.text));
+    let specNotice = '';
+    if(specChunks.length && specChunks.length < chunks.length){
+      const specText = specChunks.map(c=>`[${c.label}]\n${c.text}`).join('\n\n').slice(0, FIGMA_SPEC_MAX);
+      const screenChunks = chunks.filter(c=>!specChunks.includes(c));
+      const boardScreens = screenChunks.map(c=>c.screenNameHint);
+      screenChunks.forEach(c=>{ c.specText = specText; c.boardScreens = boardScreens; });
+      chunks.length = 0;
+      chunks.push(...screenChunks);
+      specNotice = ` 기획 설명 프레임(${specChunks.map(c=>c.label).join(', ')})은 따로 생성하지 않고 각 화면에 함께 붙여 생성해요.`;
+    }
 
     clearPdfState();
     currentFileChunks = chunks;
@@ -1596,7 +1636,7 @@ async function importFigmaScreens(progressBtn){
     document.getElementById('removeFile').addEventListener('click', resetUploadSource);
 
     const noticeSuffix = failedNames.length ? ` (${failedNames.map(escapeHtml).join(', ')}는 가져오지 못해 제외됨)` : '';
-    showGenNotice(`"${figmaFileName || '피그마 파일'}"에서 화면 ${chunks.length}개를 자동으로 인식해서 가져왔습니다${noticeSuffix}. 화면마다 별도로 생성되며, 같은 화면 안에서는 이미 다룬 시험항목을 자동으로 피해서 이어 생성합니다.${claudeSampleImageLimit ? '' : ' 이 화면에서는 이미지를 Claude에 보낼 수 없어 피그마 화면 안의 글자(텍스트 레이어)로 생성해요.'}`);
+    showGenNotice(`"${figmaFileName || '피그마 파일'}"에서 화면 ${chunks.length}개를 자동으로 인식해서 가져왔습니다${noticeSuffix}. 화면마다 별도로 생성되며, 같은 화면 안에서는 이미 다룬 시험항목을 자동으로 피해서 이어 생성합니다.${specNotice}${claudeSampleImageLimit ? '' : ' 이 화면에서는 이미지를 Claude에 보낼 수 없어 피그마 화면 안의 글자(텍스트 레이어)로 생성해요.'}`);
     updateButtons();
   }catch(err){
     showError('피그마 화면을 가져오지 못했어요. ' + figmaErrorMessage(err));
@@ -1692,7 +1732,10 @@ async function prepareChunkPayload(chunk){
       : chunk.textSource === 'ocr'
         ? `\n\n["${chunk.label}" 이미지에서 글자 인식(OCR)으로 읽은 내용 (인식 오류가 섞여 있을 수 있음)]\n${chunk.text}`
         : `\n\n["${chunk.screenNameHint || chunk.label}" 화면의 텍스트 레이어 (위에서 아래 순서, 같은 줄은 | 로 구분)]\n${chunk.text}`;
-    return { textSuffix, images: chunk.blob ? [chunk.blob] : [] };
+    const specSuffix = chunk.specText
+      ? `\n\n[같은 기획서의 기획 설명(화면정의). 번호별 규칙 중 이 화면에 해당하는 것만 근거로 쓰세요]\n${chunk.specText}`
+      : '';
+    return { textSuffix: textSuffix + specSuffix, images: chunk.blob ? [chunk.blob] : [] };
   }
   const images = [];
   for(const num of chunk.imagePages){
@@ -1864,7 +1907,7 @@ async function generateTypedBatch(typeLabel, count, payload, chunk, existingScre
     : `이미 다룬 화면: ${coverage}\n(이미 다룬 화면/기능은 가급적 피하고 다른 화면/기능을 다루세요.)`;
 
   const promptText =
-`당신은 소프트웨어 QA 전문가입니다. ${attachDesc} 자세히 읽고 (본문 텍스트뿐 아니라 표, 다이어그램, 화면 스크린샷/목업 이미지까지 모두 포함해서) 분석하여 CVT(Compatibility Verification Test) 테스트 케이스를 만드세요.
+`당신은 소프트웨어 QA 전문가입니다. ${attachDesc} 자세히 읽고 (${payload.images.length ? '본문 텍스트뿐 아니라 표, 다이어그램, 화면 스크린샷/목업 이미지까지 모두 포함해서' : '본문 텍스트뿐 아니라 표와 기획 메모까지 모두 포함해서'}) 분석하여 CVT(Compatibility Verification Test) 테스트 케이스를 만드세요.
 
 ${typeGuide}
 
@@ -1872,6 +1915,7 @@ ${typeGuide}
 
 반드시 순수 JSON 배열만 출력하세요. 설명, 코드블록 표시(\`\`\`), 다른 텍스트를 절대 포함하지 마세요.
 JSON 문자열 값 안에는 큰따옴표(")를 절대 사용하지 마세요. 화면 문구를 인용할 때는 작은따옴표(')나 「」를 사용하세요. JSON 문법을 깨뜨리지 않는 것이 가장 중요합니다.
+기획서의 수정 이력 표(예: '날짜 | 수정/변경 내용')와 '삭제', '취소'로 표기된 내용은 기능 근거로 쓰지 마세요.
 
 각 항목은 아래 필드만 가지면 됩니다 (tcId·화면유형·테스터 등은 시스템이 자동으로 채우니 작성하지 마세요):
 ${screenFieldDesc}
@@ -2026,7 +2070,9 @@ async function runGeneration(startFresh){
       let existingScreens;
       if(chunk.screenNameHint){
         // 예전에 만든 행은 screen이 프레임 이름이고, 새로 만든 행은 _figmaScreen에 프레임 이름이 있다
-        const screenRows = tcData.filter(r => r._figmaScreen === chunk.screenNameHint || r.screen === chunk.screenNameHint);
+        // 기획 설명을 함께 붙인 보드(boardScreens)는 같은 규칙이 화면마다 반복되지 않게 보드 전체의 시험항목을 기준으로 삼는다
+        const scope = chunk.boardScreens || [chunk.screenNameHint];
+        const screenRows = tcData.filter(r => scope.includes(r._figmaScreen) || scope.includes(r.screen));
         existingScreens = screenRows.length
           ? Array.from(new Set(screenRows.map(r => `${r.category}/${r.subCategory}`))).join(', ')
           : '없음';
@@ -2078,7 +2124,7 @@ async function runGeneration(startFresh){
   const madeCount = tcData.length - startCount;
   if(roundErrors.length){
     showError(madeCount
-      ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 'TC 추가 생성'으로 이어서 만들 수 있습니다.`
+      ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 'QC 추가 생성'으로 이어서 만들 수 있습니다.`
       : (roundErrors[0] || '알 수 없는 오류가 발생했습니다.'));
   }else if(!madeCount){
     showGenNotice('기획안에서 이미 다룬 내용과 겹치지 않는 새 테스트 케이스를 더 찾지 못했습니다.');
@@ -2152,7 +2198,7 @@ function renderTable(){
   const conflictTesters = computeConflictTesters();
   const conflictNote = document.getElementById('conflictSummaryNote');
   conflictNote.textContent = conflictTesters.length
-    ? `${conflictTesters.join(', ')} 님에게 일일제한/단독실행 TC가 2건 이상 배정되어 실행 충돌 가능성이 있습니다.`
+    ? `${conflictTesters.join(', ')} 님에게 일일제한/단독실행 QC가 2건 이상 배정되어 실행 충돌 가능성이 있습니다.`
     : '';
 
   // 검색/필터 적용 (원본 인덱스는 그대로 유지해야 편집이 올바른 행에 반영됨)
@@ -2172,7 +2218,7 @@ function renderTable(){
 
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
-    document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'TC 생성하기'를 눌러보세요.";
+    document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'QC 생성하기'를 눌러보세요.";
     countBadge.style.display = 'none';
   }else if(!filtered.length){
     document.getElementById('emptyState').style.display = 'block';
@@ -2221,8 +2267,8 @@ function renderTable(){
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select>
         <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
-        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 TC가 더 있습니다">유사 TC</span>' : ''}
-        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(row.tester)} 님에게 제약 TC가 2건 이상 배정됨">배정 충돌</span>` : ''}
+        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 QC가 더 있습니다">유사 QC</span>' : ''}
+        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(row.tester)} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         ${testerOptions}
         <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
@@ -2341,7 +2387,7 @@ function renderTable(){
       tcData.splice(idx, 1);
       renderTable();
       renderDistribution();
-      showUndoToast(`'${removedRow.screen || removedRow.tcId}' TC를 삭제했습니다.`, ()=>{
+      showUndoToast(`'${removedRow.screen || removedRow.tcId}' QC를 삭제했습니다.`, ()=>{
         restoreRemovedItems(tcData, [{index: idx, row: removedRow}]);
         renderTable();
         renderDistribution();
@@ -2426,7 +2472,7 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
   selectedTcIds.clear();
   renderTable();
   renderDistribution();
-  showUndoToast(`${removed.length}개 TC를 삭제했습니다.`, ()=>{
+  showUndoToast(`${removed.length}개 QC를 삭제했습니다.`, ()=>{
     restoreRemovedItems(tcData, removed);
     renderTable();
     renderDistribution();
@@ -2674,7 +2720,7 @@ function addScreenSheet(workbook, sheetName, screenType, screenName, rows){
   ws.getRow(4).height = 20;
 
   // 5행: 컬럼 헤더
-  const headerLabels = ['TC ID', '화면 구분', '시험항목\n(대분류)', '시험항목\n(중분류)', '시험 절차', '시험 내역', '기대 결과'];
+  const headerLabels = ['QC ID', '화면 구분', '시험항목\n(대분류)', '시험항목\n(중분류)', '시험 절차', '시험 내역', '기대 결과'];
   headerLabels.forEach((label, i)=>{
     const cell = ws.getCell(5, 2 + i);
     cell.value = label;
@@ -2724,17 +2770,13 @@ function addScreenSheet(workbook, sheetName, screenType, screenName, rows){
   return ws;
 }
 
-document.getElementById('exportBtn').addEventListener('click', async ()=>{
-  if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
-  showError('');
-
+// 지금 TC 리스트를 이력 한 건으로 만든다(엑셀 내보내기와 "저장하기"가 같이 쓴다)
+function currentHistoryEntry(){
   const counts = {};
   RESULT_OPTIONS.forEach(o=>counts[o]=0);
   tcData.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
-
-  const dateStr = formatDate();
-  const historyEntry = {
-    date: dateStr,
+  return {
+    date: formatDate(),
     type: 'TC',
     fileName: currentFile ? currentFile.name : '(수동 입력)',
     figmaUrl: figmaUrl || '',
@@ -2743,6 +2785,28 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     summary: summarizeCounts(RESULT_OPTIONS, counts),
     snapshot: tcData.map(toExportRow) // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
   };
+}
+// "저장하기": 엑셀 파일 없이 지금 TC 리스트를 이력 맨 위에 한 건 쌓는다(되돌리기 가능)
+document.getElementById('saveHistoryBtn').addEventListener('click', async ()=>{
+  if(!tcData.length) return;
+  showError('');
+  const entry = currentHistoryEntry();
+  addHistoryEntry(entry);
+  await saveHistory();
+  renderHistory();
+  showUndoToast(`지금 QC ${entry.count}건을 이력에 저장했어요.`, async ()=>{
+    historyList = historyList.filter(h=>h !== entry);
+    await saveHistory();
+    renderHistory();
+  });
+});
+
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
+  showError('');
+
+  const historyEntry = currentHistoryEntry();
+  const dateStr = historyEntry.date;
   addHistoryEntry(historyEntry);
 
   // 화면(screenType+screen) 단위로 그룹핑 - 최초 등장 순서를 유지한다
@@ -2809,7 +2873,7 @@ function tryRestoreDraft(){
 
   const banner = document.getElementById('draftRestoreBanner');
   document.getElementById('draftRestoreMsg').textContent =
-    `이전에 마치지 못한 작업이 남아 있습니다 (TC ${savedTc.length}건). 이어서 작업하시겠어요?`;
+    `이전에 마치지 못한 작업이 남아 있습니다 (QC ${savedTc.length}건). 이어서 작업하시겠어요?`;
   banner.style.display = 'block';
 
   document.getElementById('draftRestoreYesBtn').addEventListener('click', ()=>{
@@ -2823,7 +2887,7 @@ function tryRestoreDraft(){
   document.getElementById('draftRestoreNoBtn').addEventListener('click', ()=>{
     clearDraft();
     banner.style.display = 'none';
-    showUndoToast(`임시저장(TC ${savedTc.length}건)을 삭제했습니다.`, ()=>{
+    showUndoToast(`임시저장(QC ${savedTc.length}건)을 삭제했습니다.`, ()=>{
       try{ localStorage.setItem('cvt_tc_draft', JSON.stringify(savedTc)); }catch(e){ /* ignore */ }
       tryRestoreDraft();
     });
@@ -3171,7 +3235,7 @@ async function flushSyncQueue(){
     syncFlushing = false;
     const renumbered = syncRenumbered - renumberedBefore;
     if(renumbered){
-      syncConflictMsg = `다른 팀원과 TC 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
+      syncConflictMsg = `다른 팀원과 QC 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
       afterRemoteApply();
     }
     renderSyncStatus();
@@ -3550,9 +3614,9 @@ function validateBackup(d){
     if(!Array.isArray(d[k])) return `백업 파일에 ${k} 목록이 없어요.` + next;
   }
   const bad = d.tcData.findIndex(r=>!r || typeof r !== 'object' || !tcNumberOf(r.tcId));
-  if(bad > -1) return `TC ${bad + 1}번째 행의 TC ID가 올바르지 않아요(TC-001 또는 TC-이름-001 형식이어야 해요).` + next;
+  if(bad > -1) return `QC ${bad + 1}번째 행의 QC ID가 올바르지 않아요(TC-001 또는 TC-이름-001 형식이어야 해요).` + next;
   const ids = d.tcData.map(r=>r.tcId);
-  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 TC ID가 두 번 이상 들어 있어요.' + next;
+  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 QC ID가 두 번 이상 들어 있어요.' + next;
   if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '이력 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
   if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
   return '';
@@ -3562,7 +3626,7 @@ async function handleJsonExport(){
   const d = new Date();
   const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
-  await saveFileForUser(`TC_생성_자동화_백업_${ymd}.json`, blob);
+  await saveFileForUser(`QC_생성_자동화_백업_${ymd}.json`, blob);
 }
 async function handleJsonImportFile(file){
   showGlobalError('');
@@ -3575,12 +3639,12 @@ async function handleJsonImportFile(file){
 async function offerImport(data){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
-  const count = (t, h, n) => `TC ${t}건 · 이력 ${h}건 · 테스터 ${n}명`;
+  const count = (t, h, n) => `QC ${t}건 · 이력 ${h}건 · 테스터 ${n}명`;
   const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `TC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
+      + `QC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
       + `이력 ${merged.added}건은 기존 이력 ${historyList.length}건 위에 추가해요.`
       + (merged.added < data.historyList.length ? ` (이미 있는 이력 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
       + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
