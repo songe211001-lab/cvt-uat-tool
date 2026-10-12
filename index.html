@@ -277,21 +277,22 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   [hidden]{display:none !important;} /* ad-btn 등 display를 정한 클래스에도 hidden 속성이 이기게 */
 
   /* Header */
-  .header{margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px;}
-  .header-text{flex:1 1 420px;min-width:0;}
-  .header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
-  .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  /* 머리: 제목·설명 아래에 버튼 한 줄 (JSON 내보내기·가져오기·엑셀 내보내기 → 저장 상태·접속자·지금 동기화) */
+  .header{margin-bottom:18px;}
+  .header-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;}
+  .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .presence-chip{border-radius:var(--radius-pill);}
   .header-sync{position:relative;}
   .header-sync .sync-time{font-weight:500;}
   button.ad-sync{cursor:pointer;}
   button.ad-sync:hover:not(:disabled){border-color:var(--line);background:var(--panel);}
   button.ad-sync:disabled{cursor:default;}
   /* 저장 상태를 누르면 그 아래에 뜨는 접속 이력 창 (이벤트 운영 관리대장의 동기화 기록 창과 같은 방식) */
-  .sync-log{position:absolute;top:calc(100% + 8px);right:0;z-index:40;width:380px;max-height:60vh;text-align:left;}
+  .sync-log{position:absolute;top:calc(100% + 8px);left:0;z-index:40;width:380px;max-height:60vh;text-align:left;}
   .sync-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
   .sync-log-head .ad-modal__title{margin:0;}
   .header-sync .sync-time:empty{display:none;}
-  .header-sync-msg{flex-basis:100%;text-align:right;}
+  .header-sync-msg{margin-top:8px;}
   #globalAlertBox:not(:empty){margin-bottom:18px;}
   .tc-name-input{width:150px;}
   .header .ad-subtitle{max-width:720px;word-break:keep-all;} /* 한국어는 단어 단위로 줄바꿈 */
@@ -391,6 +392,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     flex-wrap:wrap;
   }
   .history-item .meta{display:flex;flex-direction:column;gap:3px;}
+  .history-title{appearance:none;background:none;border:1px solid transparent;border-radius:var(--radius-xs);padding:1px 6px;margin-left:-7px;font:inherit;color:inherit;text-align:left;cursor:text;}
+  .history-title:hover{border-color:var(--line);background:var(--panel);}
+  .history-title-input{width:min(420px,100%);font-weight:700;}
+  .history-item .file-name .ad-badge{margin-left:8px;vertical-align:1px;}
   .history-item .file-name{font-weight:700;font-size:13.5px;overflow-wrap:anywhere;}
   .history-item .date{font-size:12px;color:var(--muted);}
   .history-mini-bar{display:flex;height:6px;width:160px;border-radius:var(--radius-xs);overflow:hidden;background:var(--line);margin-top:6px;}
@@ -635,6 +640,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
     </div>
     <div class="header-actions">
+      <div class="header-backup">
+        <button type="button" class="ad-btn" id="jsonExportBtn"><span aria-hidden="true">↓</span> JSON 내보내기</button>
+        <button type="button" class="ad-btn" id="jsonImportBtn"><span aria-hidden="true">↑</span> JSON 가져오기</button>
+        <button type="button" class="ad-btn" id="headerExportBtn" disabled><span aria-hidden="true">↓</span> 엑셀 내보내기</button>
+        <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
+      </div>
       <div class="header-sync" id="syncBar">
         <button type="button" class="ad-sync" id="syncIndicator" aria-live="polite" aria-expanded="false" aria-controls="accessLogCard" disabled><span class="ad-sync__dot" id="syncDot" aria-hidden="true"></span><span id="syncLabel">이 브라우저에만 저장</span><span class="sync-time" id="syncTime"></span></button>
         <div class="ad-modal sync-log" id="accessLogCard" role="dialog" aria-labelledby="accessLogTitle" hidden>
@@ -646,13 +657,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <ol class="access-log-list" id="accessLogList"></ol>
           <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
         </div>
-        <button type="button" class="ad-btn ad-btn--sm" id="presenceChip" hidden>접속 1명</button>
+        <button type="button" class="ad-btn ad-btn--sm presence-chip" id="presenceChip" hidden>접속 1명</button>
         <button type="button" class="ad-btn ad-btn--sm" id="syncNowBtn" hidden>지금 동기화</button>
-      </div>
-      <div class="header-backup">
-        <button type="button" class="ad-btn ad-btn--sm" id="jsonExportBtn">JSON 내보내기</button>
-        <button type="button" class="ad-btn ad-btn--sm" id="jsonImportBtn">JSON 가져오기</button>
-        <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
       </div>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
@@ -1268,6 +1274,7 @@ async function handleFile(file){
     return;
   }
   currentFile = file;
+  loadedHistoryId = null; // 새 기획안은 불러온 이력과 별개다
   currentFileChunks = [];
   currentFilePageCount = null;
   clearPdfState();
@@ -1362,6 +1369,7 @@ function updateButtons(){
   document.getElementById('appendBtn').disabled = !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
   document.getElementById('saveHistoryBtn').disabled = !tcData.length;
+  document.getElementById('headerExportBtn').disabled = !tcData.length;
 }
 
 // 파일 업로드/피그마 가져오기 두 경로가 공유하는 "기획안 선택 상태"를 모두 초기화한다.
@@ -1621,6 +1629,7 @@ async function importFigmaScreens(progressBtn){
     }
 
     clearPdfState();
+    loadedHistoryId = null; // 새 기획안은 불러온 이력과 별개다
     currentFileChunks = chunks;
     currentFilePageCount = null;
     currentFile = {
@@ -2038,6 +2047,7 @@ async function runGeneration(startFresh){
 
   if(startFresh){
     await resetSharedDraft(); // 팀 동기화 중이면 서버의 공용 TC 리스트와 번호도 비운다
+    loadedHistoryId = null; // 새로 만든 QC는 불러온 이력과 별개다
     tcData = [];
     resetTcIdCounter();
     selectedTcIds.clear();
@@ -2568,6 +2578,31 @@ function isSameHistoryEntry(a, b){
   return a.type === b.type && a.date === b.date && a.fileName === b.fileName && snapshotsEqual(a.snapshot, b.snapshot);
 }
 // 엑셀로 내보낼 때마다 이력 맨 위에 새 항목 1건을 쌓는다(같은 파일·같은 구성이어도 합치지 않는다).
+// "불러오기"한 이력(지금 편집 중인 이력)의 _id. 저장하기·엑셀 내보내기는 이 이력에 덮어쓴다.
+// 새로 생성·새 파일·피그마 가져오기·JSON 가져오기·그 이력 삭제 때 지운다.
+let loadedHistoryId = null;
+// 편집 중인 이력(id)에 지금 내용(entry)을 덮어쓴다. 없으면 null(새로 쌓는다) (순수 함수)
+// 덮어쓰는 칸: snapshot·count·counts·summary·date. _id·fileName·figmaUrl·title·type은 유지하고 맨 위로 올린다.
+function overwriteHistory(list, id, entry){
+  const index = id ? list.findIndex(h=>h._id === id) : -1;
+  if(index < 0) return null;
+  const prev = list[index];
+  const next = { ...prev, snapshot: entry.snapshot, count: entry.count, counts: entry.counts, summary: entry.summary, date: entry.date };
+  return { list: [next, ...list.slice(0, index), ...list.slice(index + 1)], prev, next, index };
+}
+// 저장하기·엑셀 내보내기 공통: 편집 중인 이력이 있으면 덮어쓰고, 없으면 새로 쌓는다. 되돌리기 함수를 함께 돌려준다.
+function recordHistory(entry){
+  const o = overwriteHistory(historyList, loadedHistoryId, entry);
+  if(o){
+    historyList = o.list;
+    return { overwritten: true, entry: o.next, undo: ()=>{
+      historyList = historyList.filter(h=>h._id !== o.next._id);
+      historyList.splice(Math.min(o.index, historyList.length), 0, o.prev);
+    }};
+  }
+  addHistoryEntry(entry);
+  return { overwritten: false, entry, undo: ()=>{ historyList = historyList.filter(h=>h !== entry); } };
+}
 function addHistoryEntry(newEntry){
   historyList = [newEntry, ...historyList];
 }
@@ -2796,12 +2831,11 @@ function currentHistoryEntry(){
 document.getElementById('saveHistoryBtn').addEventListener('click', async ()=>{
   if(!tcData.length) return;
   showError('');
-  const entry = currentHistoryEntry();
-  addHistoryEntry(entry);
+  const rec = recordHistory(currentHistoryEntry());
   await saveHistory();
   renderHistory();
-  showUndoToast(`지금 QC ${entry.count}건을 이력에 저장했어요.`, async ()=>{
-    historyList = historyList.filter(h=>h !== entry);
+  showUndoToast(rec.overwritten ? '불러온 이력에 덮어썼어요.' : `지금 QC ${rec.entry.count}건을 이력에 저장했어요.`, async ()=>{
+    rec.undo();
     await saveHistory();
     renderHistory();
   });
@@ -2813,7 +2847,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
 
   const historyEntry = currentHistoryEntry();
   const dateStr = historyEntry.date;
-  addHistoryEntry(historyEntry);
+  recordHistory(historyEntry);
 
   // 화면(screenType+screen) 단위로 그룹핑 - 최초 등장 순서를 유지한다
   const order = [];
@@ -2950,9 +2984,11 @@ function renderHistory(){
       ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a></div>`
       : '';
     const loadBtn = `<button class="ad-btn ad-btn--sm" data-load="${idx}">불러오기</button>`;
+    const name = h.title || h.fileName;
+    const editing = h._id && h._id === loadedHistoryId ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : '';
     return `<div class="history-item">
       <div class="meta">
-        <div class="file-name">${escapeHtml(h.fileName)}</div>
+        <div class="file-name"><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="이력 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button>${editing}</div>
         <div class="date">${escapeHtml(h.date)} · ${h.count}건 · ${escapeHtml(h.summary)}</div>
         ${figmaLink}
         <div class="history-mini-bar">${bar}</div>
@@ -2967,6 +3003,10 @@ function renderHistory(){
   wrap.querySelectorAll('[data-load]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const entry = historyList[+btn.dataset.load];
+      if(!entry._id) entry._id = newRowId();
+      loadedHistoryId = entry._id; // 이후 저장하기·엑셀 내보내기는 이 이력에 덮어쓴다
+      saveHistory();
+      renderHistory();
       tcData = normalizeTcIds(JSON.parse(JSON.stringify(entry.snapshot)));
       resetTcIdCounter();
       selectedTcIds.clear();
@@ -2974,14 +3014,48 @@ function renderHistory(){
       document.querySelector('.tab-btn[data-tab="gen"]').click();
     });
   });
+  // 제목을 누르면 그 자리에서 이름을 고친다(Enter·포커스 이탈 = 저장, Esc = 취소). 빈 값이면 원래 이름(fileName)으로 돌아간다.
+  wrap.querySelectorAll('[data-rename]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const entry = historyList[+btn.dataset.rename];
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'ad-input history-title-input cell-edit'; // cell-edit: 고치는 동안 받은 변경 반영을 미룬다
+      input.maxLength = 50;
+      input.value = entry.title || entry.fileName;
+      input.setAttribute('aria-label', '이력 이름');
+      btn.replaceWith(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const finish = async (save)=>{
+        if(done) return;
+        done = true;
+        if(save){
+          const v = input.value.trim().slice(0, 50);
+          if(v && v !== entry.fileName) entry.title = v; else delete entry.title;
+          await saveHistory();
+        }
+        renderHistory();
+      };
+      input.addEventListener('keydown', e=>{
+        if(e.key === 'Enter'){ e.preventDefault(); finish(true); }
+        else if(e.key === 'Escape'){ e.preventDefault(); finish(false); }
+      });
+      input.addEventListener('blur', ()=>finish(true));
+    });
+  });
   wrap.querySelectorAll('[data-remove]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const idx = +btn.dataset.remove;
       const removedEntry = historyList[idx];
+      const wasLoaded = removedEntry._id && removedEntry._id === loadedHistoryId;
+      if(wasLoaded) loadedHistoryId = null;
       historyList.splice(idx, 1);
       await saveHistory();
       renderHistory();
-      showUndoToast(`'${removedEntry.fileName}' 이력을 삭제했습니다.`, async ()=>{
+      showUndoToast(`'${removedEntry.title || removedEntry.fileName}' 이력을 삭제했습니다.`, async ()=>{
+        if(wasLoaded) loadedHistoryId = removedEntry._id;
         restoreRemovedItems(historyList, [{index: idx, row: removedEntry}]);
         await saveHistory();
         renderHistory();
@@ -3657,6 +3731,7 @@ async function offerImport(data){
     okLabel: '가져오기'
   });
   if(ok === null) return false;
+  loadedHistoryId = null;
   tcData = normalizeTcIds(data.tcData.map(r=>toExportRow(r))); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
   historyList = merged.list;
   testerList = Array.from(new Set(data.testerList.map(n=>n.trim())));
@@ -3672,6 +3747,7 @@ async function offerImport(data){
   return true;
 }
 document.getElementById('jsonExportBtn').addEventListener('click', handleJsonExport);
+document.getElementById('headerExportBtn').addEventListener('click', ()=>document.getElementById('exportBtn').click()); // 아래 QC 리스트의 엑셀 내보내기와 같은 동작
 document.getElementById('jsonImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
 document.getElementById('jsonImportInput').addEventListener('change', e=>{
   const file = e.target.files[0];
