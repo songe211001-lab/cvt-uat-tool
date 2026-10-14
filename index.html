@@ -382,7 +382,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   .icon-btn:hover{color:var(--primary-dark);}
 
-  .table-footer-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .project-select{width:auto;min-width:160px;max-width:260px;}
   .table-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
 
   /* History tab */
@@ -597,6 +597,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     display:none;align-items:center;gap:10px;flex-wrap:wrap;
     background:var(--primary-soft);border:1px solid var(--primary);border-radius:var(--radius-md);
     padding:10px 14px;margin-bottom:14px;font-size:12.5px;
+    position:sticky;top:8px;z-index:5; /* 아래쪽 카드를 고를 때도 일괄 변경 바가 보이게 */
   }
   .bulk-bar.show{display:flex;}
   .bulk-bar .bulk-count{font-weight:700;color:var(--primary-dark);white-space:nowrap;}
@@ -637,10 +638,13 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <div class="header">
     <div class="header-text">
       <h1 class="ad-display">테스트 시나리오(QC) 생성 자동화</h1>
-      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 이력으로 관리할 수 있습니다.</p>
+      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 프로젝트로 관리할 수 있습니다.</p>
     </div>
     <div class="header-actions">
       <div class="header-backup">
+        <select class="ad-select project-select" id="projectSelect" aria-label="프로젝트 불러오기">
+          <option value="">프로젝트 선택</option>
+        </select>
         <button type="button" class="ad-btn" id="jsonExportBtn"><span aria-hidden="true">↓</span> JSON 내보내기</button>
         <button type="button" class="ad-btn" id="jsonImportBtn"><span aria-hidden="true">↑</span> JSON 가져오기</button>
         <button type="button" class="ad-btn" id="headerExportBtn" disabled><span aria-hidden="true">↓</span> 엑셀 내보내기</button>
@@ -658,7 +662,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
         </div>
         <button type="button" class="ad-btn ad-btn--sm presence-chip" id="presenceChip" hidden>접속 1명</button>
-        <button type="button" class="ad-btn ad-btn--sm" id="syncNowBtn" hidden>지금 동기화</button>
       </div>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
@@ -676,7 +679,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <div class="ad-tabs" role="tablist" aria-label="화면 탭">
     <button class="tab-btn ad-tab active" data-tab="gen" role="tab" aria-selected="true">QC 생성</button>
-    <button class="tab-btn ad-tab" data-tab="hist" role="tab" aria-selected="false">이력 관리</button>
+    <button class="tab-btn ad-tab" data-tab="hist" role="tab" aria-selected="false">프로젝트 관리</button>
   </div>
 
   <!-- ===================== TAB 1: 생성 ===================== -->
@@ -747,6 +750,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <h2 class="ad-title">QC 리스트</h2>
         <span class="ad-badge ad-badge--brand" id="tcCountBadge" style="display:none;">0건</span>
         <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button" style="margin-left:auto;">전체 펼치기</button>
+        <button class="ad-btn ad-btn--sm" id="exportBtn" type="button" disabled>엑셀로 내보내기</button>
       </div>
 
       <div class="tc-filter-bar">
@@ -804,20 +808,16 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div class="table-footer">
         <button class="ad-btn ad-btn--sm" id="addRowBtn" type="button">+ 행 추가</button>
-        <div class="table-footer-actions">
-          <button class="ad-btn" id="saveHistoryBtn" type="button" disabled>저장하기</button>
-          <button class="ad-btn" id="exportBtn" type="button" disabled>엑셀로 내보내기</button>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===================== TAB 2: 이력 관리 ===================== -->
+  <!-- ===================== TAB 2: 프로젝트 관리 ===================== -->
   <div class="panel" id="panel-hist">
     <div class="card ad-card ad-panel">
-      <h2 class="ad-title" id="historyCountHeading">이력 (0건)</h2>
+      <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
       <div id="historyList"></div>
-      <div id="historyEmpty" class="ad-empty" style="display:none;">아직 내보낸 이력이 없습니다.</div>
+      <div id="historyEmpty" class="ad-empty" style="display:none;">아직 프로젝트가 없어요. 엑셀로 내보내면 프로젝트로 저장돼요.</div>
     </div>
   </div>
 
@@ -1274,7 +1274,7 @@ async function handleFile(file){
     return;
   }
   currentFile = file;
-  loadedHistoryId = null; // 새 기획안은 불러온 이력과 별개다
+  loadedHistoryId = null; renderHistory(); // 새 기획안은 불러온 이력과 별개다
   currentFileChunks = [];
   currentFilePageCount = null;
   clearPdfState();
@@ -1361,14 +1361,14 @@ async function handleFile(file){
   }
 }
 
+let qcGenerating = false; // 생성(피그마 가져오기 포함) 중에는 생성 버튼 두 개를 계속 꺼 둔다(중복 생성 방지)
 function updateButtons(){
   // PDF는 이미지 한도가 뒤늦게 확인되면 생성 시점에 조각을 다시 나누므로, 페이지 텍스트만 있어도 준비된 것으로 본다.
   // 피그마 URL만 넣어 둔 상태도 준비된 것으로 본다(생성 버튼을 누르면 화면을 먼저 가져온다)
   const ready = figmaImportNeeded() || (!!currentFile && (currentFileChunks.length > 0 || !!currentPdfPageTexts));
-  document.getElementById('genBtn').disabled = !ready;
-  document.getElementById('appendBtn').disabled = !(ready && tcData.length>0);
+  document.getElementById('genBtn').disabled = qcGenerating || !ready;
+  document.getElementById('appendBtn').disabled = qcGenerating || !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
-  document.getElementById('saveHistoryBtn').disabled = !tcData.length;
   document.getElementById('headerExportBtn').disabled = !tcData.length;
 }
 
@@ -1629,7 +1629,7 @@ async function importFigmaScreens(progressBtn){
     }
 
     clearPdfState();
-    loadedHistoryId = null; // 새 기획안은 불러온 이력과 별개다
+    loadedHistoryId = null; renderHistory(); // 새 기획안은 불러온 이력과 별개다
     currentFileChunks = chunks;
     currentFilePageCount = null;
     currentFile = {
@@ -2041,13 +2041,14 @@ async function runGeneration(startFresh){
 
   const btn = startFresh ? document.getElementById('genBtn') : document.getElementById('appendBtn');
   const otherBtn = startFresh ? document.getElementById('appendBtn') : document.getElementById('genBtn');
+  qcGenerating = true; // 생성 중 renderTable()→updateButtons()가 버튼을 다시 켜지 않게
   btn.disabled = true; otherBtn.disabled = true;
   const originalLabel = btn.textContent;
   showError('');
 
   if(startFresh){
     await resetSharedDraft(); // 팀 동기화 중이면 서버의 공용 TC 리스트와 번호도 비운다
-    loadedHistoryId = null; // 새로 만든 QC는 불러온 이력과 별개다
+    loadedHistoryId = null; renderHistory(); // 새로 만든 QC는 불러온 이력과 별개다
     tcData = [];
     resetTcIdCounter();
     selectedTcIds.clear();
@@ -2147,16 +2148,21 @@ async function runGeneration(startFresh){
   }
 
   btn.textContent = originalLabel;
+  qcGenerating = false;
   updateButtons();
 }
 
 // 피그마 URL만 넣고 생성 버튼을 누르면 화면을 먼저 가져온 뒤 바로 생성한다
 async function startGeneration(startFresh){
+  if(qcGenerating) return; // 이미 생성 중
   if(figmaImportNeeded()){
     const url = document.getElementById('figmaUrlInput').value.trim();
-    document.getElementById('genBtn').disabled = true;
-    document.getElementById('appendBtn').disabled = true;
-    await importFigmaScreens(document.getElementById(startFresh ? 'genBtn' : 'appendBtn'));
+    qcGenerating = true; // 가져오는 동안에도 생성 버튼을 꺼 둔다
+    try{
+      await importFigmaScreens(document.getElementById(startFresh ? 'genBtn' : 'appendBtn'));
+    }finally{
+      qcGenerating = false;
+    }
     if(figmaUrl !== url){ updateButtons(); return; } // 가져오기 실패(오류 문구는 importFigmaScreens가 보인다)
   }
   await runGeneration(startFresh);
@@ -2590,7 +2596,7 @@ function overwriteHistory(list, id, entry){
   const next = { ...prev, snapshot: entry.snapshot, count: entry.count, counts: entry.counts, summary: entry.summary, date: entry.date };
   return { list: [next, ...list.slice(0, index), ...list.slice(index + 1)], prev, next, index };
 }
-// 저장하기·엑셀 내보내기 공통: 편집 중인 이력이 있으면 덮어쓰고, 없으면 새로 쌓는다. 되돌리기 함수를 함께 돌려준다.
+// 엑셀 내보내기: 편집 중인 이력이 있으면 덮어쓰고, 없으면 새로 쌓는다. 되돌리기 함수를 함께 돌려준다.
 function recordHistory(entry){
   const o = overwriteHistory(historyList, loadedHistoryId, entry);
   if(o){
@@ -2811,7 +2817,7 @@ function addScreenSheet(workbook, sheetName, screenType, screenName, rows){
   return ws;
 }
 
-// 지금 TC 리스트를 이력 한 건으로 만든다(엑셀 내보내기와 "저장하기"가 같이 쓴다)
+// 지금 TC 리스트를 이력(프로젝트) 한 건으로 만든다(엑셀 내보내기가 쓴다)
 function currentHistoryEntry(){
   const counts = {};
   RESULT_OPTIONS.forEach(o=>counts[o]=0);
@@ -2827,27 +2833,17 @@ function currentHistoryEntry(){
     snapshot: tcData.map(toExportRow) // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
   };
 }
-// "저장하기": 엑셀 파일 없이 지금 TC 리스트를 이력 맨 위에 한 건 쌓는다(되돌리기 가능)
-document.getElementById('saveHistoryBtn').addEventListener('click', async ()=>{
-  if(!tcData.length) return;
-  showError('');
-  const rec = recordHistory(currentHistoryEntry());
-  await saveHistory();
-  renderHistory();
-  showUndoToast(rec.overwritten ? '불러온 이력에 덮어썼어요.' : `지금 QC ${rec.entry.count}건을 이력에 저장했어요.`, async ()=>{
-    rec.undo();
-    await saveHistory();
-    renderHistory();
-  });
-});
-
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
   if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
   showError('');
 
   const historyEntry = currentHistoryEntry();
   const dateStr = historyEntry.date;
-  recordHistory(historyEntry);
+  const prevLoadedId = loadedHistoryId;
+  const rec = recordHistory(historyEntry);
+  // 내보낸 프로젝트를 편집 중으로 잡아, 다시 내보내면 같은 프로젝트에 덮어쓰게 한다(같은 내용이 또 쌓이지 않게)
+  if(!rec.entry._id) rec.entry._id = newRowId();
+  loadedHistoryId = rec.entry._id;
 
   // 화면(screenType+screen) 단위로 그룹핑 - 최초 등장 순서를 유지한다
   const order = [];
@@ -2868,12 +2864,19 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     addScreenSheet(workbook, sheetName, screenType, screenName, rows);
   });
 
-  addHistorySheet(workbook, uniqueSheetName('이력 관리', usedNames), historyList);
+  addHistorySheet(workbook, uniqueSheetName('프로젝트 관리', usedNames), historyList);
 
   await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}.xlsx`);
 
   await saveHistory();
   renderHistory();
+  const name = rec.entry.title || rec.entry.fileName;
+  showUndoToast(rec.overwritten ? `'${name}' 프로젝트에 덮어썼어요.` : `'${name}' 프로젝트로 저장했어요.`, async ()=>{
+    rec.undo(); // 프로젝트 기록만 되돌린다(내려받은 엑셀 파일은 그대로)
+    loadedHistoryId = prevLoadedId;
+    await saveHistory();
+    renderHistory();
+  });
 });
 
 /* ---------- 작업 중인 TC 임시 저장 (새로고침·창 닫기로 인한 작업 손실 방지) ----------
@@ -2957,13 +2960,40 @@ async function saveHistory(){
   }catch(e){ /* 브라우저 저장소를 쓸 수 없는 환경(프라이빗 모드 등)이면 조용히 무시 */ }
 }
 
+// 이력 한 건(= 프로젝트)을 QC 리스트로 불러온다. 프로젝트 관리 목록의 "불러오기"와 머리의 프로젝트 셀렉트가 같이 쓴다.
+function loadHistoryEntry(idx){
+  const entry = historyList[idx];
+  if(!entry) return;
+  if(!entry._id) entry._id = newRowId();
+  loadedHistoryId = entry._id; // 이후 엑셀 내보내기는 이 이력에 덮어쓴다
+  saveHistory();
+  renderHistory();
+  tcData = normalizeTcIds(JSON.parse(JSON.stringify(entry.snapshot)));
+  resetTcIdCounter();
+  selectedTcIds.clear();
+  renderTable();
+  document.querySelector('.tab-btn[data-tab="gen"]').click();
+}
+// 머리의 프로젝트 셀렉트: 목록 순서(최신순) 그대로, 편집 중인 프로젝트를 선택 상태로 보인다
+function renderProjectSelect(){
+  const sel = document.getElementById('projectSelect');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">프로젝트 선택</option>' + historyList.map((h, idx)=>
+    `<option value="${idx}"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(h.title || h.fileName)} (${escapeHtml(h.date)})</option>`
+  ).join('');
+}
+document.getElementById('projectSelect').addEventListener('change', e=>{
+  if(e.target.value !== '') loadHistoryEntry(+e.target.value);
+});
+
 function renderHistory(){
+  renderProjectSelect();
   const wrap = document.getElementById('historyList');
   const empty = document.getElementById('historyEmpty');
   const filtered = historyList;
 
   const heading = document.getElementById('historyCountHeading');
-  if(heading) heading.textContent = `이력 (${historyList.length}건)`;
+  if(heading) heading.textContent = `프로젝트 (${historyList.length}건)`;
 
   if(!filtered.length){
     wrap.innerHTML = '';
@@ -2988,7 +3018,7 @@ function renderHistory(){
     const editing = h._id && h._id === loadedHistoryId ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : '';
     return `<div class="history-item">
       <div class="meta">
-        <div class="file-name"><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="이력 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button>${editing}</div>
+        <div class="file-name"><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="프로젝트 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button>${editing}</div>
         <div class="date">${escapeHtml(h.date)} · ${h.count}건 · ${escapeHtml(h.summary)}</div>
         ${figmaLink}
         <div class="history-mini-bar">${bar}</div>
@@ -3001,18 +3031,7 @@ function renderHistory(){
   }).join('');
 
   wrap.querySelectorAll('[data-load]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const entry = historyList[+btn.dataset.load];
-      if(!entry._id) entry._id = newRowId();
-      loadedHistoryId = entry._id; // 이후 저장하기·엑셀 내보내기는 이 이력에 덮어쓴다
-      saveHistory();
-      renderHistory();
-      tcData = normalizeTcIds(JSON.parse(JSON.stringify(entry.snapshot)));
-      resetTcIdCounter();
-      selectedTcIds.clear();
-      renderTable();
-      document.querySelector('.tab-btn[data-tab="gen"]').click();
-    });
+    btn.addEventListener('click', ()=>loadHistoryEntry(+btn.dataset.load));
   });
   // 제목을 누르면 그 자리에서 이름을 고친다(Enter·포커스 이탈 = 저장, Esc = 취소). 빈 값이면 원래 이름(fileName)으로 돌아간다.
   wrap.querySelectorAll('[data-rename]').forEach(btn=>{
@@ -3023,7 +3042,7 @@ function renderHistory(){
       input.className = 'ad-input history-title-input cell-edit'; // cell-edit: 고치는 동안 받은 변경 반영을 미룬다
       input.maxLength = 50;
       input.value = entry.title || entry.fileName;
-      input.setAttribute('aria-label', '이력 이름');
+      input.setAttribute('aria-label', '프로젝트 이름');
       btn.replaceWith(input);
       input.focus();
       input.select();
@@ -3054,7 +3073,7 @@ function renderHistory(){
       historyList.splice(idx, 1);
       await saveHistory();
       renderHistory();
-      showUndoToast(`'${removedEntry.title || removedEntry.fileName}' 이력을 삭제했습니다.`, async ()=>{
+      showUndoToast(`'${removedEntry.title || removedEntry.fileName}' 프로젝트를 삭제했어요.`, async ()=>{
         if(wasLoaded) loadedHistoryId = removedEntry._id;
         restoreRemovedItems(historyList, [{index: idx, row: removedEntry}]);
         await saveHistory();
@@ -3627,8 +3646,6 @@ function renderSyncStatus(){
   const ind = document.getElementById('syncIndicator');
   if(!ind) return;
   document.getElementById('presenceChip').hidden = !SYNC_ENABLED;
-  document.getElementById('syncNowBtn').hidden = !SYNC_CONFIGURED;
-  document.getElementById('syncNowBtn').disabled = !SYNC_ENABLED;
   ind.disabled = !SYNC_ENABLED; // 팀 동기화 중일 때만 눌러서 접속 이력을 본다
   if(!SYNC_ENABLED) toggleAccessLog(false);
   document.getElementById('syncDot').hidden = !SYNC_CONFIGURED;
@@ -3656,7 +3673,6 @@ function renderSyncStatus(){
 }
 
 if(SYNC_ENABLED){
-  document.getElementById('syncNowBtn').addEventListener('click', resyncFromServer);
   document.getElementById('presenceChip').addEventListener('click', askName);
   // 편집 중이라 미뤄둔 받기·다시 불러오기는 포커스가 빠진 직후에 한다.
   document.addEventListener('focusout', ()=>{
@@ -3697,7 +3713,7 @@ function validateBackup(d){
   if(bad > -1) return `QC ${bad + 1}번째 행의 QC ID가 올바르지 않아요(QC-001 또는 QC-이름-001 형식이어야 해요).` + next;
   const ids = d.tcData.map(r=>r.tcId);
   if(new Set(ids).size !== ids.length) return '백업 파일에 같은 QC ID가 두 번 이상 들어 있어요.' + next;
-  if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '이력 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
+  if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '프로젝트 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
   if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
   return '';
 }
@@ -3719,14 +3735,14 @@ async function handleJsonImportFile(file){
 async function offerImport(data){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
-  const count = (t, h, n) => `QC ${t}건 · 이력 ${h}건 · 테스터 ${n}명`;
+  const count = (t, h, n) => `QC ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
   const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
       + `QC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
-      + `이력 ${merged.added}건은 기존 이력 ${historyList.length}건 위에 추가해요.`
-      + (merged.added < data.historyList.length ? ` (이미 있는 이력 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
+      + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
+      + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
       + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
     okLabel: '가져오기'
   });
@@ -3773,6 +3789,7 @@ document.getElementById('jsonImportInput').addEventListener('change', e=>{
   }
   renderTesterChips();
   renderTable();
+  renderHistory(); // 머리의 프로젝트 셀렉트를 처음부터 채운다(동기화가 없으면 탭을 열기 전엔 그려지지 않았다)
   renderSyncStatus();
   lastSavedDraftSnapshot = currentDraftSnapshot();
   appInitialized = true;
