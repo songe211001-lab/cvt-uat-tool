@@ -310,12 +310,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .file-chip{
     display:inline-flex;align-items:center;gap:8px;
     background:var(--primary-soft);color:var(--primary-dark);
-    padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600;margin-top:10px;
-    max-width:100%;overflow-wrap:anywhere;
+    padding:2px 4px 2px 12px;border-radius:6px;font-size:13px;font-weight:600;margin-top:10px;
+    max-width:min(100%, 420px);min-width:0;
   }
+  .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .file-chip .sub-txt{white-space:nowrap;}
+  /* 9: 첨부 제거 버튼은 32px 누름 영역 */
   .file-chip button{
-    border:none;background:none;color:var(--primary-dark);cursor:pointer;font-size:13px;
-    font-weight:700;padding:0;line-height:1;
+    color:var(--primary-dark);font-size:13px;font-weight:700;width:32px;height:32px;flex-shrink:0;
   }
 
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
@@ -378,11 +380,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   td.action-col{text-align:center;white-space:nowrap;}
   .icon-btn{
     border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px;
-    padding:2px 6px;
+    padding:0;min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center;
   }
+  .tc-card-head select{min-height:32px;}
+  .ad-btn--sm{min-height:32px;}
+  button.ad-sync{min-height:36px;} /* 11: 옆 버튼(36px)과 높이를 맞춘다 */
   .icon-btn:hover{color:var(--primary-dark);}
 
-  .project-select{width:auto;min-width:160px;max-width:260px;}
+  .project-select{width:auto;min-width:220px;max-width:360px;}
   .table-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
 
   /* History tab */
@@ -398,6 +403,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .history-item .file-name .ad-badge{margin-left:8px;vertical-align:1px;}
   .history-item .file-name{font-weight:700;font-size:13.5px;overflow-wrap:anywhere;}
   .history-item .date{font-size:12px;color:var(--muted);}
+  .history-item .date a{color:var(--primary-dark);font-weight:600;text-decoration:none;}
+  .history-item .date a:hover{text-decoration:underline;}
   .history-mini-bar{display:flex;height:6px;width:160px;border-radius:var(--radius-xs);overflow:hidden;background:var(--line);margin-top:6px;}
   .history-actions{display:flex;gap:8px;}
   .access-log-list{list-style:none;margin:0;padding:0;}
@@ -479,11 +486,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-screen-input:focus{border-color:var(--primary);background:var(--panel);}
   .tc-card-head .result-dot{margin-left:auto;margin-right:-4px;flex-shrink:0;}
   /* 읽기 모드: 라벨 | 값 정의 목록. 값 칸은 평소엔 글자만, 마우스를 올리거나 클릭하면 편집 칸으로 보인다 */
-  .tc-grid-two > div, .tc-field-block{
+  .tc-field-block{
     display:grid;grid-template-columns:112px 1fr;column-gap:12px;align-items:start;
     padding:4px 0;border-bottom:1px solid var(--line);
   }
-  @media (max-width:640px){.tc-grid-two > div, .tc-field-block{grid-template-columns:1fr;}}
+  @media (max-width:640px){.tc-field-block{grid-template-columns:1fr;}}
   .tc-field-label{
     font-size:11px;font-weight:700;color:var(--muted);padding-top:6px;
     display:block;letter-spacing:.02em;
@@ -499,14 +506,56 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-editable:hover{border-color:var(--line);}
   .tc-editable:focus{border-color:var(--primary);background:var(--panel);}
   .tc-card-footer{
-    display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;
+    border-top:2px solid var(--primary-soft); /* 결과를 적는 칸: 위의 기획 내용과 나눈다 */
+  }
+  .tc-card-footer .tc-footer-item label{color:var(--primary-dark);}
+  .tc-card-footer .tc-editable{background:var(--bg);}
+  /* 대분류 > 중분류 한 줄(두 칸 모두 편집) */
+  .tc-cat-line{display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap;}
+  .tc-cat-line .tc-editable{flex:0 1 auto;min-width:60px;}
+  .tc-cat-sep{color:var(--muted);padding-top:5px;font-weight:700;}
+  /* 카드 머리의 담당자·진행상태·결과·삭제 묶음: 넓은 화면에서는 묶음이 없는 것처럼 같은 줄에 둔다 */
+  .tc-card-controls{display:contents;}
+  /* 900px 이하(태블릿 포함): 담당자·진행상태·결과·삭제를 둘째 줄로 내려 제목 칸을 넓힌다 */
+  @media (max-width:900px){
+    .tc-card-head .tc-title{flex:1 1 0;min-width:0;}
+    .tc-card-controls{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;width:100%;align-items:center;}
+    .tc-card-controls > select, .tc-card-controls > .tc-editable{width:100%;min-width:0;}
+    .tc-card-controls .result-dot{display:none;}
+  }
+  @media (max-width:640px){
+    .tc-card{padding:12px;}
+    .tc-card-head{gap:8px;}
+    /* 휴대폰: 제목은 한 줄 전체(좁은 칸에 갇혀 여러 줄로 접히지 않게) */
+    .tc-card-head .tc-title{flex:1 1 100%;order:1;font-size:13px;padding:6px 8px;}
+    .tc-card-controls{order:2;}
+    .tc-card-head .row-toggle-btn{width:32px;height:32px;}
+    .tc-card-head .tc-id-badge{font-size:13px;}
+    .tc-card-head .screentype-select{padding-left:6px;padding-right:20px;}
+    /* 대분류와 중분류는 위아래 두 칸(">"만 따로 줄을 차지하지 않게) */
+    .tc-cat-line{flex-direction:column;gap:0;}
+    .tc-cat-sep{display:none;}
+    .bulk-bar.show{flex-wrap:nowrap;overflow-x:auto;}
+    .bulk-bar > *{flex-shrink:0;}
+    /* 3: 생성 버튼 줄이 화면 밖으로 넘치지 않게 */
+    .toolbar-actions{margin-left:0;width:100%;flex-wrap:wrap;}
+    .toolbar-actions .tc-name-input{flex:1 1 100%;width:auto;}
+    .toolbar-actions .ad-btn{flex:1 1 0;}
+    /* 5: 머리 버튼: 셀렉트는 한 줄 전체, 버튼 세 개는 한 줄 */
+    .header-backup{width:100%;}
+    .header-backup .project-select{flex:1 1 100%;max-width:none;}
+    .header-backup .ad-btn{flex:1 1 0;padding:7px 8px;font-size:12px;white-space:nowrap;}
   }
   .tc-card-footer .tc-footer-item{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
-  .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;width:112px;flex-shrink:0;letter-spacing:.02em;}
+  .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;white-space:nowrap;width:112px;flex-shrink:0;letter-spacing:.02em;}
   .tc-card-footer .tc-editable{flex:1;min-height:auto;}
   .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
-  .row-toggle-btn{font-size:14px;color:var(--muted);flex-shrink:0;width:28px;height:28px;padding:0;margin-left:-6px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-xs);}
-  .row-toggle-btn:hover{background:var(--grey-100);}
+  .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
+  .row-toggle-btn svg{transition:transform .18s ease;}
+  .row-toggle-btn[aria-expanded="false"] svg{transform:rotate(-90deg);}
+  .row-toggle-btn[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
+  .row-toggle-btn:hover{border-color:var(--primary);color:var(--primary-dark);}
   .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
   .conflict-badge{
     font-size:10.5px;font-weight:700;color:var(--on-primary);background:var(--fatal);
@@ -587,17 +636,21 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   /* Undo toast (삭제 되돌리기): 모양은 .ad-toast, 위치·나타나기만 여기서 */
   .undo-toast{
-    position:fixed;right:20px;bottom:20px;z-index:100;
-    opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .12s var(--ease), transform .12s var(--ease);
+    position:fixed;left:50%;top:16px;z-index:100;max-width:min(560px, calc(100% - 32px));
+    opacity:0;pointer-events:none;transform:translate(-50%, -8px);transition:opacity .12s var(--ease), transform .12s var(--ease);
   }
-  .undo-toast.show{opacity:1;pointer-events:auto;transform:none;}
+  .undo-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%, 0);}
+  body.has-bulk{padding-bottom:88px;} /* 떠 있는 일괄 변경 바가 마지막 카드를 가리지 않게 */
 
   /* Bulk action bar */
   .bulk-bar{
     display:none;align-items:center;gap:10px;flex-wrap:wrap;
     background:var(--primary-soft);border:1px solid var(--primary);border-radius:var(--radius-md);
     padding:10px 14px;margin-bottom:14px;font-size:12.5px;
-    position:sticky;top:8px;z-index:5; /* 아래쪽 카드를 고를 때도 일괄 변경 바가 보이게 */
+  }
+  .bulk-bar.show{
+    position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;margin:0;
+    width:min(980px, calc(100% - 32px));box-shadow:var(--shadow-3);
   }
   .bulk-bar.show{display:flex;}
   .bulk-bar .bulk-count{font-weight:700;color:var(--primary-dark);white-space:nowrap;}
@@ -724,6 +777,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     <div class="card ad-card ad-panel">
       <div class="tc-section-head">
         <h2 class="ad-title">테스터 관리</h2>
+        <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span>
       </div>
       <div class="tester-manage" style="margin-top:0;padding-top:0;border-top:none;">
         <label for="testerNameInput">테스터 이름</label>
@@ -1335,7 +1389,7 @@ async function handleFile(file){
     const pageInfo = currentFilePageCount ? ` · 총 ${currentFilePageCount}페이지` : '';
     const chunkInfo = currentFileChunks.length > 1 ? ` · ${currentFileChunks.length}개 조각` : '';
     document.getElementById('fileChipWrap').innerHTML =
-      `<div class="file-chip">${escapeHtml(file.name)} <span class="sub-txt" style="color:inherit;">(${sizeMb}MB${pageInfo}${chunkInfo})</span> <button id="removeFile" type="button" aria-label="첨부 제거">✕</button></div>`;
+      `<div class="file-chip" title="${escapeHtml(file.name)}"><span class="file-chip-name">${escapeHtml(file.name)}</span> <span class="sub-txt" style="color:inherit;">(${sizeMb}MB${pageInfo}${chunkInfo})</span> <button id="removeFile" class="ad-btn ad-btn--ghost ad-btn--icon" type="button" aria-label="첨부 제거">✕</button></div>`;
     document.getElementById('removeFile').addEventListener('click', resetUploadSource);
 
     if(downscaledFrom){
@@ -1641,7 +1695,7 @@ async function importFigmaScreens(progressBtn){
 
     uploadBtn.classList.add('has-file');
     document.getElementById('fileChipWrap').innerHTML =
-      `<div class="file-chip">${escapeHtml(currentFile.name)} <span class="sub-txt" style="color:inherit;">(화면: ${chunks.map(c=>escapeHtml(c.label)).join(', ')})</span> <button id="removeFile" type="button" aria-label="첨부 제거">✕</button></div>`;
+      `<div class="file-chip" title="화면: ${chunks.map(c=>escapeHtml(c.label)).join(', ')}"><span class="file-chip-name">${escapeHtml(currentFile.name)}</span> <button id="removeFile" class="ad-btn ad-btn--ghost ad-btn--icon" type="button" aria-label="첨부 제거">✕</button></div>`;
     document.getElementById('removeFile').addEventListener('click', resetUploadSource);
 
     const noticeSuffix = failedNames.length ? ` (${failedNames.map(escapeHtml).join(', ')}는 가져오지 못해 제외됨)` : '';
@@ -1657,29 +1711,45 @@ async function importFigmaScreens(progressBtn){
 
 /* ---------- Screen type toggle (FO/BO) ---------- */
 /* ---------- Tester management ---------- */
+// 테스터는 프로젝트별로 둔다. 편집 중인 프로젝트에 testers가 있으면 그 목록, 없으면 기본 테스터(cvt_testers)를 보인다.
+function editingProject(){
+  return loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) || null : null;
+}
+function activeTesters(){
+  const p = editingProject();
+  return p && Array.isArray(p.testers) ? p.testers : testerList;
+}
+// 테스터 추가·삭제: 편집 중인 프로젝트가 있으면 그 프로젝트에(처음 고칠 때 기본 테스터를 복사해 시작), 없으면 기본 테스터에 저장한다
+async function changeTesters(edit){
+  const p = editingProject();
+  if(p){
+    p.testers = edit((Array.isArray(p.testers) ? p.testers : testerList).slice());
+    await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안에 들어 있다)
+  }else{
+    testerList = edit(testerList.slice());
+    await saveTesters();
+  }
+  renderTesterChips();
+  renderTable();
+}
 function renderTesterChips(){
   const wrap = document.getElementById('testerChips');
-  wrap.innerHTML = testerList.map((t,i)=>
+  const p = editingProject();
+  const scope = document.getElementById('testerScope');
+  if(scope) scope.textContent = p ? `프로젝트: ${p.title || p.fileName}` : '기본 테스터';
+  wrap.innerHTML = activeTesters().map((t,i)=>
     `<span class="tester-chip">${escapeHtml(t)}<button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
   wrap.querySelectorAll('[data-tdel]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      testerList.splice(+btn.dataset.tdel, 1);
-      renderTesterChips();
-      renderTable();
-      await saveTesters();
-    });
+    btn.addEventListener('click', ()=>changeTesters(list=>{ list.splice(+btn.dataset.tdel, 1); return list; }));
   });
 }
 async function addTesterFromInput(){
   const input = document.getElementById('testerNameInput');
   const name = input.value.trim();
   if(!name) return;
-  if(!testerList.includes(name)) testerList.push(name);
   input.value = '';
-  renderTesterChips();
-  renderTable();
-  await saveTesters();
+  await changeTesters(list=>list.includes(name) ? list : list.concat(name));
 }
 document.getElementById('addTesterBtn').addEventListener('click', addTesterFromInput);
 document.getElementById('testerNameInput').addEventListener('keydown', e=>{
@@ -2185,6 +2255,8 @@ function computeConflictTesters(){
 }
 /* ---------- Table render ---------- */
 // TC 카드 제목: "시험항목(대분류) > 시험(중분류)". 둘 다 비어 있으면 화면 구분을 보인다.
+// 카드 펼침/접힘 아이콘(아래 화살표). 접혀 있으면 CSS가 오른쪽으로 돌린다(aria-expanded 기준)
+const TOGGLE_CHEVRON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function tcTitleOf(row){
   return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
 }
@@ -2197,7 +2269,8 @@ function renderTable(){
   // 담당자 필터 옵션 갱신 (등록된 테스터 + 현재 데이터에 쓰인 담당자)
   const testerFilterSel = document.getElementById('tcFilterTester');
   const usedTesters = Array.from(new Set(tcData.map(r=>r.tester).filter(Boolean)));
-  const testerOptionsForFilter = Array.from(new Set([...testerList, ...usedTesters]));
+  const testers = activeTesters(); // 편집 중인 프로젝트의 테스터(없으면 기본 테스터)
+  const testerOptionsForFilter = Array.from(new Set([...testers, ...usedTesters]));
   const prevTesterFilterVal = testerFilterSel.value;
   testerFilterSel.innerHTML = `<option value="ALL">전체 담당자</option>` +
     testerOptionsForFilter.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
@@ -2262,9 +2335,9 @@ function renderTable(){
     const isSelected = selectedTcIds.has(row.tcId);
     card.className = 'tc-card' + (isSelected ? ' selected' : '');
 
-    const testerOptions = testerList.length
+    const testerOptions = testers.length
       ? (()=>{
-          const options = Array.from(new Set([...testerList, row.tester].filter(Boolean)));
+          const options = Array.from(new Set([...testers, row.tester].filter(Boolean)));
           return `<select class="tester-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 테스터">
             <option value="" ${!row.tester?'selected':''}>-</option>
             ${options.map(o=>`<option value="${escapeHtml(o)}" ${o===row.tester?'selected':''}>${escapeHtml(o)}</option>`).join('')}
@@ -2282,7 +2355,7 @@ function renderTable(){
     const isCollapsed = !expandedTcRows.has(row.tcId);
     card.innerHTML = `
       <div class="tc-card-head">
-        <button class="icon-btn row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" title="${isCollapsed?'펼치기':'접기'}" aria-label="${escapeHtml(row.tcId)} ${isCollapsed?'펼치기':'접기'}" aria-expanded="${!isCollapsed}">${isCollapsed?'▸':'▾'}</button>
+        <button class="icon-btn ad-btn ad-btn--icon row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" title="${isCollapsed?'펼치기':'접기'}" aria-label="${escapeHtml(row.tcId)} ${isCollapsed?'펼치기':'접기'}" aria-expanded="${!isCollapsed}">${TOGGLE_CHEVRON}</button>
         <input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" />
         <span class="tc-id-badge">${escapeHtml(row.tcId)}</span>
         <select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
@@ -2291,6 +2364,7 @@ function renderTable(){
         <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
         ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 QC가 더 있습니다">유사 QC</span>' : ''}
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(row.tester)} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
+        <div class="tc-card-controls">
         ${testerOptions}
         <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
@@ -2299,7 +2373,8 @@ function renderTable(){
         <select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과">
           ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===row.result?'selected':''}>${o}</option>`).join('')}
         </select>
-        <button class="icon-btn" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
+        <button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
+        </div>
       </div>
 
       <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
@@ -2308,17 +2383,15 @@ function renderTable(){
         ${integrationTag !== '없음' ? `<span class="ad-badge ad-badge--neutral" title="연동 시스템">${escapeHtml(integrationTag)}</span>` : ''}
       </div>` : ''}
 
-      <div class="tc-field-block">
+      ${(row.screen || '').trim() === tcTitleOf(row) ? '' : `<div class="tc-field-block">
         <label class="tc-field-label">화면 구분</label>
         <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
-      </div>
-      <div class="tc-grid-two">
-        <div>
-          <label class="tc-field-label">시험항목(대분류)</label>
+      </div>`}
+      <div class="tc-field-block">
+        <label class="tc-field-label">대분류 &gt; 중분류</label>
+        <div class="tc-cat-line">
           <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="category">${escapeHtml(row.category)}</div>
-        </div>
-        <div>
-          <label class="tc-field-label">시험(중분류)</label>
+          <span class="tc-cat-sep" aria-hidden="true">&gt;</span>
           <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory)}</div>
         </div>
       </div>
@@ -2367,7 +2440,6 @@ function renderTable(){
       const body = btn.closest('.tc-card').querySelector('.tc-card-body');
       const willCollapse = body.style.display !== 'none';
       body.style.display = willCollapse ? 'none' : '';
-      btn.textContent = willCollapse ? '▸' : '▾';
       btn.title = willCollapse ? '펼치기' : '접기';
       btn.setAttribute('aria-expanded', String(!willCollapse));
       if(willCollapse) expandedTcRows.delete(tcId); else expandedTcRows.add(tcId);
@@ -2458,6 +2530,7 @@ function renderBulkBar(){
   const count = selectedTcIds.size;
   document.getElementById('bulkCount').textContent = `${count}개 선택됨`;
   bar.classList.toggle('show', count > 0);
+  document.body.classList.toggle('has-bulk', count > 0);
 }
 
 document.getElementById('bulkTesterSelect').addEventListener('change', (e)=>{
@@ -2830,7 +2903,8 @@ function currentHistoryEntry(){
     count: tcData.length,
     counts: counts,
     summary: summarizeCounts(RESULT_OPTIONS, counts),
-    snapshot: tcData.map(toExportRow) // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
+    snapshot: tcData.map(toExportRow), // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
+    testers: activeTesters().slice() // 새 프로젝트가 될 때 그 시점의 테스터를 복사한다(덮어쓸 때는 기존 프로젝트의 테스터를 그대로 둔다)
   };
 }
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
@@ -2978,9 +3052,12 @@ function loadHistoryEntry(idx){
 function renderProjectSelect(){
   const sel = document.getElementById('projectSelect');
   if(!sel) return;
-  sel.innerHTML = '<option value="">프로젝트 선택</option>' + historyList.map((h, idx)=>
-    `<option value="${idx}"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(h.title || h.fileName)} (${escapeHtml(h.date)})</option>`
-  ).join('');
+  const short = s => s.length > 30 ? s.slice(0, 30) + '…' : s;
+  sel.innerHTML = '<option value="">프로젝트 선택</option>' + historyList.map((h, idx)=>{
+    const name = h.title || h.fileName || '';
+    return `<option value="${idx}" title="${escapeHtml(name)} (${escapeHtml(h.date)})"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(short(name))} · ${escapeHtml(String(h.date || '').slice(5, 10))}</option>`;
+  }).join('');
+  sel.title = sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].title : '';
 }
 document.getElementById('projectSelect').addEventListener('change', e=>{
   if(e.target.value !== '') loadHistoryEntry(+e.target.value);
@@ -2988,6 +3065,7 @@ document.getElementById('projectSelect').addEventListener('change', e=>{
 
 function renderHistory(){
   renderProjectSelect();
+  renderTesterChips(); // 편집 중인 프로젝트가 바뀌면 테스터 목록도 바뀐다
   const wrap = document.getElementById('historyList');
   const empty = document.getElementById('historyEmpty');
   const filtered = historyList;
