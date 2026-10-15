@@ -2773,6 +2773,7 @@ const XLS_STYLE = {
   headerFill: 'FFD9EAF7', headerFont: 'FF1F2937',
   dataFont: 'FF1F2937',
   resultFill: 'FFFFF2CC',
+  groupFill: 'FFEDEFF2', // 대분류 구분 행(옅은 회색)
   headerBorderColor: 'FF999999',
   dataBorderColor: 'FFD9DCE1'
 };
@@ -2851,20 +2852,33 @@ function uniqueSheetName(base, used){
   return name;
 }
 
-// 화면 1개 분량의 TC 목록을 "제목행 + 집계 요약행 + 취합/테스터별 다중 컬럼 표" 시트로 변환해
-// workbook에 추가한다(참고 양식의 남색 제목행/파란 헤더행/옅은 회색 테두리/노란 결과칸 서식 반영).
-function addScreenSheet(workbook, sheetName, screenType, screenName, rows){
-  const ws = workbook.addWorksheet(sheetName);
-  const testerGroups = testerList.slice(); // 등록된 CVT 테스터 목록만큼 개별 컬럼 블록 생성
+// QC 전체를 시트 하나("QC 리스트")로 만든다: 1행 제목, 2행 집계 요약, 3·4행 헤더(취합 영역 + 테스터별 블록), 5행부터 데이터.
+// 유형(FO→BO) 순서로 놓고, 대분류가 바뀌는 곳마다 구분 행("[유형] 대분류 (n건)")을 넣는다(예전 화면별 시트 제목을 대신한다).
+// 서식은 참고 양식(남색 제목행/파란 헤더행/옅은 회색 테두리/노란 결과칸)을 그대로 쓴다.
+function qcSheetSections(rows){
+  const sorted = [...rows.filter(r=>r.screenType !== 'BO'), ...rows.filter(r=>r.screenType === 'BO')];
+  const sections = [];
+  sorted.forEach(r=>{
+    const key = (r.screenType || '') + '|' + (r.category || '');
+    const last = sections[sections.length - 1];
+    if(last && last.key === key) last.rows.push(r);
+    else sections.push({ key, type: r.screenType || '', category: r.category || '', rows: [r] });
+  });
+  return sections;
+}
+function addQcListSheet(workbook, rows, title){
+  const ws = workbook.addWorksheet('QC 리스트');
+  const testerGroups = activeTesters().slice(); // 지금 보이는 테스터(편집 중인 프로젝트의 테스터)만큼 개별 컬럼 블록 생성
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
-  const BASE_COLS = 7; // TC ID~기대 결과
+  const BASE_COLS = 7; // QC ID~기대 결과
   const totalCols = 1 + BASE_COLS + groupCount * 4; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
 
   const counts = {};
   RESULT_OPTIONS.forEach(o=>counts[o]=0);
   rows.forEach(r=>{ counts[r.result] = (counts[r.result]||0) + 1; });
-  const summaryText = 'ㄴ 총 ' + rows.length + '건 - '
+  const foCount = rows.filter(r=>r.screenType !== 'BO').length;
+  const summaryText = `전체 ${rows.length}건 · FO ${foCount}건 · BO ${rows.length - foCount}건  |  `
     + RESULT_OPTIONS.map(o=>`${o} ${counts[o]}건`).join(' / ');
 
   // 열 너비 (A열은 여백)
@@ -2872,84 +2886,93 @@ function addScreenSheet(workbook, sheetName, screenType, screenName, rows){
   for(let g = 0; g < groupCount; g++){ widths.push(10, 22, 10, 16); }
   widths.forEach((w,i)=>{ ws.getColumn(i+1).width = w; });
 
-  ws.getRow(1).height = 6; // 1행: 여백
-
-  // 2행: 제목 (참고 양식과 동일한 남색 배경 + 흰 글자)
-  ws.mergeCells(2, 2, 2, totalCols);
-  const titleCell = ws.getCell(2, 2);
-  titleCell.value = `[${screenType}] ${screenName}`;
+  // 1행: 제목 (남색 배경 + 흰 글자)
+  ws.mergeCells(1, 2, 1, totalCols);
+  const titleCell = ws.getCell(1, 2);
+  titleCell.value = title;
   xlsStyleCell(titleCell, {fill:XLS_STYLE.titleFill, fontColor:XLS_STYLE.titleFont, bold:true, size:13, align:'left', border:XLS_STYLE.headerBorderColor});
-  ws.getRow(2).height = 26;
+  ws.getRow(1).height = 26;
 
-  // 3행: 집계 요약 (옅은 파랑 배경 + 진한 남색 글자)
-  ws.mergeCells(3, 2, 3, totalCols);
-  const summaryCell = ws.getCell(3, 2);
+  // 2행: 집계 요약 (옅은 파랑 배경 + 진한 남색 글자)
+  ws.mergeCells(2, 2, 2, totalCols);
+  const summaryCell = ws.getCell(2, 2);
   summaryCell.value = summaryText;
   xlsStyleCell(summaryCell, {fill:XLS_STYLE.summaryFill, fontColor:XLS_STYLE.summaryFont, bold:true, size:10, align:'left', border:XLS_STYLE.headerBorderColor});
-  ws.getRow(3).height = 22;
+  ws.getRow(2).height = 22;
 
-  // 4행: 취합 영역 / 테스터별 그룹 헤더
-  ws.mergeCells(4, aggStartCol, 4, aggStartCol + 3);
-  const aggCell = ws.getCell(4, aggStartCol);
+  // 3행: 취합 영역 / 테스터별 그룹 헤더
+  ws.mergeCells(3, aggStartCol, 3, aggStartCol + 3);
+  const aggCell = ws.getCell(3, aggStartCol);
   aggCell.value = '취합 영역';
   xlsStyleCell(aggCell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
   testerGroups.forEach((name, i)=>{
     const startCol = aggStartCol + (i + 1) * 4;
-    ws.mergeCells(4, startCol, 4, startCol + 3);
-    const cell = ws.getCell(4, startCol);
+    ws.mergeCells(3, startCol, 3, startCol + 3);
+    const cell = ws.getCell(3, startCol);
     cell.value = name;
     xlsStyleCell(cell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
   });
-  ws.getRow(4).height = 20;
+  ws.getRow(3).height = 20;
 
-  // 5행: 컬럼 헤더
-  const headerLabels = ['QC ID', '화면 구분', '시험항목\n(대분류)', '시험항목\n(중분류)', '시험 절차', '시험 내역', '기대 결과'];
+  // 4행: 컬럼 헤더 (2열은 값이 FO/BO라서 "유형")
+  const headerLabels = ['QC ID', '유형', '시험항목\n(대분류)', '시험항목\n(중분류)', '시험 절차', '시험 내역', '기대 결과'];
   headerLabels.forEach((label, i)=>{
-    const cell = ws.getCell(5, 2 + i);
+    const cell = ws.getCell(4, 2 + i);
     cell.value = label;
     xlsStyleCell(cell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
   });
   for(let g = 0; g < groupCount; g++){
     const startCol = aggStartCol + g * 4;
     ['테스터', '테스트 내역', '결과', '비고'].forEach((label, i)=>{
-      const cell = ws.getCell(5, startCol + i);
+      const cell = ws.getCell(4, startCol + i);
       cell.value = label;
       xlsStyleCell(cell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
     });
   }
-  ws.getRow(5).height = 30;
+  ws.getRow(4).height = 30;
 
-  // 6행부터: 데이터
-  rows.forEach((r, ri)=>{
-    const rowNum = 6 + ri;
-    const baseVals = [r.tcId, r.screenType, r.category, r.subCategory,
-      formatSteps(r.procedure), formatSentences(r.testDetail), formatSentences(r.expected)];
-    baseVals.forEach((v, i)=>{
-      const cell = ws.getCell(rowNum, 2 + i);
-      cell.value = v || '';
-      xlsStyleCell(cell, {align: i >= 4 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
-    });
-    // 취합 영역: 현재 도구에 저장된 담당 테스터/테스트 내역/결과를 그대로 반영
-    const aggVals = [r.tester || '', r.testNote || '', r.result || '', ''];
-    aggVals.forEach((v, i)=>{
-      const cell = ws.getCell(rowNum, aggStartCol + i);
-      cell.value = v;
-      const isResult = i === 2;
-      xlsStyleCell(cell, {align: i===1 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor, fill: isResult ? XLS_STYLE.resultFill : undefined, bold: isResult});
-    });
-    // 등록된 테스터별 블록: 이름만 미리 채워두고, 실제 테스트 후 각자 기입하도록 비워둔다
-    testerGroups.forEach((name, gi)=>{
-      const startCol = aggStartCol + (gi + 1) * 4;
-      const vals = [name, '', '', ''];
-      vals.forEach((v, i)=>{
-        const cell = ws.getCell(rowNum, startCol + i);
+  // 5행부터: 구분 행 + 데이터
+  let rowNum = 5;
+  qcSheetSections(rows).forEach(sec=>{
+    ws.mergeCells(rowNum, 2, rowNum, totalCols);
+    const groupCell = ws.getCell(rowNum, 2);
+    groupCell.value = `[${sec.type}] ${sec.category || '(대분류 없음)'} (${sec.rows.length}건)`;
+    xlsStyleCell(groupCell, {fill:XLS_STYLE.groupFill, bold:true, size:10, align:'left', border:XLS_STYLE.dataBorderColor});
+    ws.getRow(rowNum).height = 20;
+    rowNum++;
+    sec.rows.forEach(r=>{
+      const baseVals = [r.tcId, r.screenType, r.category, r.subCategory,
+        formatSteps(r.procedure), formatSentences(r.testDetail), formatSentences(r.expected)];
+      baseVals.forEach((v, i)=>{
+        const cell = ws.getCell(rowNum, 2 + i);
+        cell.value = v || '';
+        xlsStyleCell(cell, {align: i >= 4 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
+      });
+      // 취합 영역: 현재 도구에 저장된 담당 테스터/테스트 내역/결과를 그대로 반영
+      const aggVals = [r.tester || '', r.testNote || '', r.result || '', ''];
+      aggVals.forEach((v, i)=>{
+        const cell = ws.getCell(rowNum, aggStartCol + i);
         cell.value = v;
         const isResult = i === 2;
         xlsStyleCell(cell, {align: i===1 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor, fill: isResult ? XLS_STYLE.resultFill : undefined, bold: isResult});
       });
+      // 테스터별 블록: 이름만 미리 채워두고, 실제 테스트 후 각자 기입하도록 비워둔다
+      testerGroups.forEach((name, gi)=>{
+        const startCol = aggStartCol + (gi + 1) * 4;
+        [name, '', '', ''].forEach((v, i)=>{
+          const cell = ws.getCell(rowNum, startCol + i);
+          cell.value = v;
+          const isResult = i === 2;
+          xlsStyleCell(cell, {align: i===1 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor, fill: isResult ? XLS_STYLE.resultFill : undefined, bold: isResult});
+        });
+      });
+      rowNum++;
     });
   });
 
+  // 헤더(1~4행) 틀 고정, 열 머리 행에 자동 필터
+  ws.views = [{ state: 'frozen', xSplit: 0, ySplit: 4 }];
+  ws.autoFilter = { from: { row: 4, column: 2 }, to: { row: 4, column: totalCols } };
   return ws;
 }
 
@@ -2984,26 +3007,11 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   if(!rec.entry._id) rec.entry._id = newRowId();
   loadedHistoryId = rec.entry._id;
 
-  // 화면(screenType+screen) 단위로 그룹핑 - 최초 등장 순서를 유지한다
-  const order = [];
-  const groups = new Map();
-  tcData.forEach(row=>{
-    const key = (row.screenType || '') + '|' + (row.screen || '(화면 미지정)');
-    if(!groups.has(key)){ groups.set(key, []); order.push(key); }
-    groups.get(key).push(row);
-  });
-
+  // 시트 하나("QC 리스트")에 모든 QC를 넣는다. 제목: 프로젝트 이름 · 분류 · 내보낸 시각
+  // ("프로젝트 관리" 시트는 더 만들지 않는다. addHistorySheet는 남겨 둔다)
   const workbook = new ExcelJS.Workbook();
-  const usedNames = new Set();
-  order.forEach(key=>{
-    const rows = groups.get(key);
-    const screenType = rows[0].screenType || '';
-    const screenName = rows[0].screen || '(화면 미지정)';
-    const sheetName = uniqueSheetName(`${screenType} ${screenName}`.trim(), usedNames);
-    addScreenSheet(workbook, sheetName, screenType, screenName, rows);
-  });
-
-  addHistorySheet(workbook, uniqueSheetName('프로젝트 관리', usedNames), historyList);
+  const projectName = rec.entry.title || rec.entry.fileName || historyEntry.fileName;
+  addQcListSheet(workbook, tcData, `${projectName} · ${categoryOf(rec.entry)} · ${dateStr}`);
 
   await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}.xlsx`);
 
