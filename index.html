@@ -3975,29 +3975,44 @@ function validateBackup(d){
   if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
   return '';
 }
+// 백업 파일 이름: 날짜만 넣으면 같은 날 여러 번 내보낼 때 이름이 같아져, 가져올 때 예전 파일을 고르기 쉬웠다.
+// 그래서 초까지의 시각과 편집 중인 프로젝트 이름을 넣는다(파일 이름에 못 쓰는 글자는 뺀다). (순수 함수)
+function backupFileName(d, projectName){
+  const p2 = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}`;
+  const name = String(projectName || '').replace(/[\\/:*?"<>|\s]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 30);
+  return `QC_생성_자동화_백업_${stamp}${name ? '_' + name : ''}.json`;
+}
 async function handleJsonExport(){
   showGlobalError('');
-  const d = new Date();
-  const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const p = editingProject();
   const blob = new Blob([JSON.stringify(buildBackup(), null, 2)], { type: 'application/json' });
-  await saveFileForUser(`QC_생성_자동화_백업_${ymd}.json`, blob);
+  await saveFileForUser(backupFileName(new Date(), p && (p.title || p.fileName)), blob);
 }
 async function handleJsonImportFile(file){
   showGlobalError('');
   let data;
   try{ data = JSON.parse(await file.text()); }
   catch(e){ showGlobalError(`백업 파일을 읽지 못했어요(${e.message}). JSON 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
-  await offerImport(data);
+  await offerImport(data, file.name);
+}
+// 백업의 exportedAt(ISO)을 "YYYY-MM-DD HH:mm"(이 기기 시각)으로 보인다
+function formatExportedAt(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return String(iso);
+  const p2 = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
 }
 // 형식을 검사하고, 덮어쓰기 전에 건수를 보여 주며 확인을 받는다. 바꿨으면 true
-async function offerImport(data){
+async function offerImport(data, fileName){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
   const count = (t, h, n) => `QC ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
   const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
-    body: `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
+    body: (fileName ? `파일: ${fileName}${data.exportedAt ? ` (내보낸 시각 ${formatExportedAt(data.exportedAt)})` : ''}\n` : '')
+      + `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
       + `QC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
       + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
       + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
