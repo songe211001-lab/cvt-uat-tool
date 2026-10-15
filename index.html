@@ -252,6 +252,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   /* 색·글꼴·간격·모서리는 알닷 디자인 시스템 토큰(alddot-tokens.css)만 쓴다. 여기서는 새 색을 만들지 않는다.
      QA 결과 6단계 색만 이 도구 고유 이름으로 토큰에 연결한다(--major/--critical은 토큰에서 다른 뜻이라 이름을 따로 둔다). */
   :root{
+    --excel-green: #217346; /* 엑셀 내보내기 버튼 전용(엑셀을 떠올리는 초록) */
+    --excel-green-dark: #185c37;
     --result-pass: var(--pass);
     --result-minor: var(--minor-border);
     --result-na: var(--na);
@@ -281,6 +283,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .header{margin-bottom:18px;}
   .header-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;}
   .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  /* 머리: 왼쪽 프로젝트 셀렉트, 오른쪽 끝에 JSON 버튼·저장 상태·접속자 */
+  .header-actions{justify-content:space-between;}
+  .header-project{display:flex;flex:1 1 360px;max-width:560px;min-width:0;}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto;}
   .presence-chip{border-radius:var(--radius-pill);}
   .header-sync{position:relative;}
   .header-sync .sync-time{font-weight:500;}
@@ -288,7 +294,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   button.ad-sync:hover:not(:disabled){border-color:var(--line);background:var(--panel);}
   button.ad-sync:disabled{cursor:default;}
   /* 저장 상태를 누르면 그 아래에 뜨는 접속 이력 창 (이벤트 운영 관리대장의 동기화 기록 창과 같은 방식) */
-  .sync-log{position:absolute;top:calc(100% + 8px);left:0;z-index:40;width:380px;max-height:60vh;text-align:left;}
+  .sync-log{position:absolute;top:calc(100% + 8px);right:0;left:auto;z-index:40;width:min(380px, calc(100vw - 32px));max-height:60vh;text-align:left;}
   .sync-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
   .sync-log-head .ad-modal__title{margin:0;}
   .header-sync .sync-time:empty{display:none;}
@@ -387,7 +393,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   button.ad-sync{min-height:36px;} /* 11: 옆 버튼(36px)과 높이를 맞춘다 */
   .icon-btn:hover{color:var(--primary-dark);}
 
-  .project-select{width:auto;min-width:220px;max-width:360px;}
+  .project-select{flex:1 1 auto;width:100%;min-width:0;}
   .table-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
 
   /* History tab */
@@ -406,7 +412,36 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .history-item .date a{color:var(--primary-dark);font-weight:600;text-decoration:none;}
   .history-item .date a:hover{text-decoration:underline;}
   .history-mini-bar{display:flex;height:6px;width:160px;border-radius:var(--radius-xs);overflow:hidden;background:var(--line);margin-top:6px;}
-  .history-actions{display:flex;gap:8px;}
+  .history-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
+  .history-item.is-editing{border-color:var(--primary);box-shadow:inset 3px 0 0 var(--primary);}
+  .project-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  /* 프로젝트 분류: 탭 줄과 항목의 분류 칩 */
+  .category-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .category-tab .count{color:var(--muted);font-weight:500;margin-left:4px;}
+  .category-tab[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
+  .category-tab[aria-pressed="true"] .count{color:var(--primary-dark);}
+  .category-chip{cursor:pointer;border:1px solid transparent;margin-right:8px;vertical-align:1px;}
+  .category-chip:hover{border-color:var(--primary);}
+  .category-chip.is-none{background:var(--grey-100);color:var(--muted);}
+  .category-select{width:auto;min-width:140px;margin-right:8px;}
+  .category-add{color:var(--primary-dark);}
+  /* QC 리스트 머리 버튼: 전체 펼치기와 엑셀 내보내기를 같은 크기로 */
+  .qc-list-btn{min-width:140px;min-height:36px;align-self:center;}
+  #tcCollapseAllBtn{margin-left:auto;}
+  @media (max-width:640px){
+    /* 휴대폰: 제목 줄 아래에 두 버튼을 반씩 */
+    .tc-section-head:has(.qc-list-btn){flex-wrap:wrap;}
+    .tc-section-head:has(.qc-list-btn)::after{content:"";flex-basis:100%;order:1;} /* 제목 줄 다음에 줄바꿈 */
+    .tc-section-head .qc-list-btn{flex:1 1 0;min-width:0;order:2;}
+    #tcCollapseAllBtn{margin-left:0;}
+  }
+  .project-tools .ad-input{flex:1;min-width:200px;width:auto;}
+  .project-tools .ad-select{width:auto;}
+  /* 1: 엑셀 내보내기 강조(초록). 코랄 primary와 구분된다 */
+  .excel-btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;background:var(--excel-green);border-color:var(--excel-green);color:var(--on-primary);font-weight:700;}
+  .excel-btn:hover:not(:disabled){background:var(--excel-green-dark);border-color:var(--excel-green-dark);color:var(--on-primary);}
+  .excel-icon rect{fill:var(--on-primary);}
+  .excel-icon path{stroke:var(--excel-green);stroke-width:2.2;stroke-linecap:round;fill:none;}
   .access-log-list{list-style:none;margin:0;padding:0;}
   .access-log-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
   .access-log-list li:last-child{border-bottom:none;}
@@ -543,16 +578,17 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     .toolbar-actions .tc-name-input{flex:1 1 100%;width:auto;}
     .toolbar-actions .ad-btn{flex:1 1 0;}
     /* 5: 머리 버튼: 셀렉트는 한 줄 전체, 버튼 세 개는 한 줄 */
-    .header-backup{width:100%;}
-    .header-backup .project-select{flex:1 1 100%;max-width:none;}
-    .header-backup .ad-btn{flex:1 1 0;padding:7px 8px;font-size:12px;white-space:nowrap;}
+    .header-project{flex:1 1 100%;max-width:none;}
+    .header-right{width:100%;}
+    .header-backup .ad-btn{padding:7px 8px;font-size:12px;white-space:nowrap;}
   }
   .tc-card-footer .tc-footer-item{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
   .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;white-space:nowrap;width:112px;flex-shrink:0;letter-spacing:.02em;}
   .tc-card-footer .tc-editable{flex:1;min-height:auto;}
   .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
-  .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
-  .row-toggle-btn svg{transition:transform .18s ease;}
+  .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
+  .row-toggle-btn svg{width:20px;height:20px;transition:transform .18s ease;} /* 디자인 시스템 .ad-btn svg(15px)보다 크게 */
+  .excel-btn .excel-icon{width:16px;height:16px;}
   .row-toggle-btn[aria-expanded="false"] svg{transform:rotate(-90deg);}
   .row-toggle-btn[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
   .row-toggle-btn:hover{border-color:var(--primary);color:var(--primary-dark);}
@@ -679,6 +715,22 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{transition:none !important;}
   }
+  /* 셀렉트 공통: 기본 화살표 대신 토큰 색의 작은 꺾쇠, 왼쪽 14px·오른쪽 화살표 자리 36px */
+  select.ad-select, .tc-card-head select, select.tester-select{
+    -webkit-appearance:none;appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-size:5px 5px, 5px 5px;background-repeat:no-repeat;
+    background-position:calc(100% - 19px) 52%, calc(100% - 14px) 52%;
+    padding-left:14px;padding-right:36px;
+  }
+  /* 카드·일괄 변경 바의 작은 셀렉트는 여백을 줄인다 */
+  .tc-card-head select, select.tester-select, .bulk-bar select.ad-select{
+    background-position:calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+    padding-left:10px;padding-right:28px;
+  }
+  @media (max-width:640px){
+    .tc-card-head select, select.tester-select{padding-left:8px;padding-right:22px;background-position:calc(100% - 12px) 52%, calc(100% - 7px) 52%;}
+  }
 </style>
 </head>
 <body class="ad-root">
@@ -694,13 +746,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 프로젝트로 관리할 수 있습니다.</p>
     </div>
     <div class="header-actions">
-      <div class="header-backup">
+      <div class="header-project">
         <select class="ad-select project-select" id="projectSelect" aria-label="프로젝트 불러오기">
           <option value="">프로젝트 선택</option>
         </select>
+      </div>
+      <div class="header-right">
+      <div class="header-backup">
         <button type="button" class="ad-btn" id="jsonExportBtn"><span aria-hidden="true">↓</span> JSON 내보내기</button>
         <button type="button" class="ad-btn" id="jsonImportBtn"><span aria-hidden="true">↑</span> JSON 가져오기</button>
-        <button type="button" class="ad-btn" id="headerExportBtn" disabled><span aria-hidden="true">↓</span> 엑셀 내보내기</button>
         <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
       </div>
       <div class="header-sync" id="syncBar">
@@ -715,6 +769,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
         </div>
         <button type="button" class="ad-btn ad-btn--sm presence-chip" id="presenceChip" hidden>접속 1명</button>
+      </div>
       </div>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
@@ -803,8 +858,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <div class="tc-section-head">
         <h2 class="ad-title">QC 리스트</h2>
         <span class="ad-badge ad-badge--brand" id="tcCountBadge" style="display:none;">0건</span>
-        <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button" style="margin-left:auto;">전체 펼치기</button>
-        <button class="ad-btn ad-btn--sm" id="exportBtn" type="button" disabled>엑셀로 내보내기</button>
+        <button class="ad-btn qc-list-btn" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
+        <button class="ad-btn excel-btn qc-list-btn" id="exportBtn" type="button" disabled><svg class="excel-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/><path d="M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6"/></svg>엑셀로 내보내기</button>
       </div>
 
       <div class="tc-filter-bar">
@@ -870,7 +925,16 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <div class="panel" id="panel-hist">
     <div class="card ad-card ad-panel">
       <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
+      <div class="category-tabs" id="projectCategoryTabs" role="group" aria-label="프로젝트 분류"></div>
+      <div class="project-tools">
+        <input type="search" class="ad-input" id="projectSearch" aria-label="프로젝트 검색" autocomplete="off" placeholder="프로젝트 이름·날짜 검색…" />
+        <select class="ad-select" id="projectSort" aria-label="프로젝트 정렬">
+          <option value="recent">최근 수정순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
       <div id="historyList"></div>
+      <div id="historyNoMatch" class="ad-empty" hidden>검색 결과가 없어요.</div>
       <div id="historyEmpty" class="ad-empty" style="display:none;">아직 프로젝트가 없어요. 엑셀로 내보내면 프로젝트로 저장돼요.</div>
     </div>
   </div>
@@ -1423,7 +1487,6 @@ function updateButtons(){
   document.getElementById('genBtn').disabled = qcGenerating || !ready;
   document.getElementById('appendBtn').disabled = qcGenerating || !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
-  document.getElementById('headerExportBtn').disabled = !tcData.length;
 }
 
 // 파일 업로드/피그마 가져오기 두 경로가 공유하는 "기획안 선택 상태"를 모두 초기화한다.
@@ -2256,7 +2319,7 @@ function computeConflictTesters(){
 /* ---------- Table render ---------- */
 // TC 카드 제목: "시험항목(대분류) > 시험(중분류)". 둘 다 비어 있으면 화면 구분을 보인다.
 // 카드 펼침/접힘 아이콘(아래 화살표). 접혀 있으면 CSS가 오른쪽으로 돌린다(aria-expanded 기준)
-const TOGGLE_CHEVRON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const TOGGLE_CHEVRON = '<svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function tcTitleOf(row){
   return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
 }
@@ -2747,8 +2810,8 @@ async function downloadWorkbook(workbook, filename){
 
 function addHistorySheet(workbook, sheetName, list){
   const ws = workbook.addWorksheet(sheetName);
-  const header = ['생성일시','구분','원본 파일명','건수','결과 요약','피그마 링크'];
-  const widths = [18, 8, 26, 8, 34, 40];
+  const header = ['분류','생성일시','구분','원본 파일명','건수','결과 요약','피그마 링크'];
+  const widths = [12, 18, 8, 26, 8, 34, 40];
   widths.forEach((w,i)=>{ ws.getColumn(i+1).width = w; });
   header.forEach((label, i)=>{
     const cell = ws.getCell(1, i+1);
@@ -2758,11 +2821,11 @@ function addHistorySheet(workbook, sheetName, list){
   ws.getRow(1).height = 20;
   list.forEach((h, ri)=>{
     const rowNum = 2 + ri;
-    const vals = [h.date, h.type, h.fileName, h.count, h.summary, h.figmaUrl || ''];
+    const vals = [categoryOf(h), h.date, h.type, h.fileName, h.count, h.summary, h.figmaUrl || ''];
     vals.forEach((v, i)=>{
       const cell = ws.getCell(rowNum, i+1);
       cell.value = v;
-      xlsStyleCell(cell, {align: (i===2||i===4||i===5) ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
+      xlsStyleCell(cell, {align: (i===3||i===5||i===6) ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
     });
   });
   return ws;
@@ -2915,6 +2978,8 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   const dateStr = historyEntry.date;
   const prevLoadedId = loadedHistoryId;
   const rec = recordHistory(historyEntry);
+  // 새 프로젝트는 프로젝트 관리 탭에서 고른 분류를 따른다(전체·미분류면 미분류)
+  if(!rec.overwritten && projectCategory !== 'ALL' && projectCategory !== UNCATEGORIZED) rec.entry.category = projectCategory;
   // 내보낸 프로젝트를 편집 중으로 잡아, 다시 내보내면 같은 프로젝트에 덮어쓰게 한다(같은 내용이 또 쌓이지 않게)
   if(!rec.entry._id) rec.entry._id = newRowId();
   loadedHistoryId = rec.entry._id;
@@ -2945,7 +3010,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   await saveHistory();
   renderHistory();
   const name = rec.entry.title || rec.entry.fileName;
-  showUndoToast(rec.overwritten ? `'${name}' 프로젝트에 덮어썼어요.` : `'${name}' 프로젝트로 저장했어요.`, async ()=>{
+  showUndoToast(rec.overwritten ? `'${name}' 프로젝트에 덮어썼어요(${categoryOf(rec.entry)}).` : `'${name}' 프로젝트로 저장했어요(${categoryOf(rec.entry)}).`, async ()=>{
     rec.undo(); // 프로젝트 기록만 되돌린다(내려받은 엑셀 파일은 그대로)
     loadedHistoryId = prevLoadedId;
     await saveHistory();
@@ -3048,17 +3113,89 @@ function loadHistoryEntry(idx){
   renderTable();
   document.querySelector('.tab-btn[data-tab="gen"]').click();
 }
+// ---------- 프로젝트 분류(기업/알닷/로밍 등) ----------
+// category는 프로젝트 데이터 안의 문자열이다(서버 cvt_history.data, 스키마 변경 없음). 없으면 "미분류"로 보이고 저장하지 않는다.
+// 분류 목록 = 기본 분류 + 지금 프로젝트들에 쓰인 분류(처음 나온 순서) + 미분류. 목록을 따로 저장하지 않는다.
+const DEFAULT_CATEGORIES = ['기업', '알닷', '로밍'];
+const UNCATEGORIZED = '미분류';
+function sanitizeCategory(s){
+  return String(s || '').trim().slice(0, 20);
+}
+function categoryOf(h){
+  return (h && sanitizeCategory(h.category)) || UNCATEGORIZED;
+}
+// added: 사용자가 "분류 추가"로 만든 분류(프로젝트가 없어도 목록에 나온다)
+function categoryList(list, added){
+  const extra = [];
+  const push = c=>{ if(c && c !== UNCATEGORIZED && !DEFAULT_CATEGORIES.includes(c) && !extra.includes(c)) extra.push(c); };
+  (added || []).forEach(c=>push(sanitizeCategory(c)));
+  (list || []).forEach(h=>push(categoryOf(h)));
+  return [...DEFAULT_CATEGORIES, ...extra, UNCATEGORIZED];
+}
+let addedCategories = [];
+try{ addedCategories = (JSON.parse(localStorage.getItem('cvt_project_categories') || '[]') || []).filter(c=>typeof c === 'string'); }catch(e){ addedCategories = []; }
+// "분류 추가": 이름을 받아 목록에 넣고 그 분류 탭을 고른다(이후 새로 내보내는 프로젝트가 이 분류가 된다)
+async function addProjectCategory(){
+  const name = await openDialog({ title: '분류 추가', body: '새 분류 이름을 20자 이내로 적어주세요. 이 분류 탭을 고른 상태에서 엑셀로 내보내면 그 프로젝트가 이 분류가 돼요.', input: '', okLabel: '추가' });
+  const v = sanitizeCategory(name);
+  if(name === null || !v || v === UNCATEGORIZED) return;
+  if(!categoryList(historyList, addedCategories).includes(v)){
+    addedCategories.push(v);
+    try{ localStorage.setItem('cvt_project_categories', JSON.stringify(addedCategories)); }catch(e){ /* 저장 공간이 없으면 이번 화면에서만 쓴다 */ }
+    showUndoToast(`'${v}' 분류를 추가했어요.`, ()=>{
+      addedCategories = addedCategories.filter(c=>c !== v);
+      try{ localStorage.setItem('cvt_project_categories', JSON.stringify(addedCategories)); }catch(e){ /* ignore */ }
+      if(projectCategory === v) projectCategory = 'ALL';
+      renderHistory();
+    });
+  }
+  projectCategory = v;
+  renderHistory();
+}
+function filterByCategory(list, cat){
+  return (!cat || cat === 'ALL') ? list : list.filter(h=>categoryOf(h) === cat);
+}
+let projectCategory = 'ALL'; // 프로젝트 관리 탭에서 고른 분류
+// 프로젝트 분류를 바꾼다(미분류를 고르면 필드를 지운다). 저장하면 팀 동기화로 전달된다.
+async function setProjectCategory(idx, cat){
+  const entry = historyList[idx];
+  if(!entry) return;
+  const v = sanitizeCategory(cat);
+  if(!v || v === UNCATEGORIZED) delete entry.category; else entry.category = v;
+  await saveHistory();
+  renderHistory();
+}
+
 // 머리의 프로젝트 셀렉트: 목록 순서(최신순) 그대로, 편집 중인 프로젝트를 선택 상태로 보인다
 function renderProjectSelect(){
   const sel = document.getElementById('projectSelect');
   if(!sel) return;
-  const short = s => s.length > 30 ? s.slice(0, 30) + '…' : s;
-  sel.innerHTML = '<option value="">프로젝트 선택</option>' + historyList.map((h, idx)=>{
+  const short = s => s.length > 40 ? s.slice(0, 40) + '…' : s;
+  const optionOf = (h, idx)=>{
     const name = h.title || h.fileName || '';
     return `<option value="${idx}" title="${escapeHtml(name)} (${escapeHtml(h.date)})"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(short(name))} · ${escapeHtml(String(h.date || '').slice(5, 10))}</option>`;
+  };
+  // 분류별로 묶는다(기업, 알닷, 로밍, 다른 분류, 미분류). 프로젝트가 없는 분류는 묶음을 만들지 않는다
+  sel.innerHTML = '<option value="">프로젝트 선택</option>' + categoryList(historyList, addedCategories).map(cat=>{
+    const items = historyList.map((h, idx)=>[h, idx]).filter(([h])=>categoryOf(h) === cat);
+    return items.length ? `<optgroup label="${escapeHtml(cat)}">${items.map(([h, idx])=>optionOf(h, idx)).join('')}</optgroup>` : '';
   }).join('');
   sel.title = sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].title : '';
 }
+document.getElementById('projectSearch').addEventListener('input', ()=>renderHistory());
+// 분류 탭 줄: 전체 + 분류 목록(건수 포함, 0건인 기본 분류도 보인다)
+function renderCategoryTabs(){
+  const wrap = document.getElementById('projectCategoryTabs');
+  if(!wrap) return;
+  const cats = categoryList(historyList, addedCategories);
+  if(projectCategory !== 'ALL' && !cats.includes(projectCategory)) projectCategory = 'ALL';
+  wrap.innerHTML = [['ALL', '전체', historyList.length], ...cats.map(c=>[c, c, filterByCategory(historyList, c).length])]
+    .map(([v, label, n])=>`<button type="button" class="ad-btn ad-btn--sm category-tab" data-cat="${escapeHtml(v)}" aria-pressed="${v === projectCategory}">${escapeHtml(label)}<span class="count">${n}</span></button>`).join('')
+    + '<button type="button" class="ad-btn ad-btn--sm ad-btn--ghost category-add" id="categoryAddBtn">+ 분류 추가</button>';
+  wrap.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click', ()=>{ projectCategory = b.dataset.cat; renderHistory(); }));
+  document.getElementById('categoryAddBtn').addEventListener('click', addProjectCategory);
+}
+document.getElementById('projectSort').addEventListener('change', ()=>renderHistory());
 document.getElementById('projectSelect').addEventListener('change', e=>{
   if(e.target.value !== '') loadHistoryEntry(+e.target.value);
 });
@@ -3068,14 +3205,24 @@ function renderHistory(){
   renderTesterChips(); // 편집 중인 프로젝트가 바뀌면 테스터 목록도 바뀐다
   const wrap = document.getElementById('historyList');
   const empty = document.getElementById('historyEmpty');
-  const filtered = historyList;
+  // 검색(이름·날짜) → 정렬(최근 수정순/이름순) → 편집 중인 프로젝트를 맨 위로
+  const q = (document.getElementById('projectSearch').value || '').trim().toLowerCase();
+  const nameOf = h => h.title || h.fileName || '';
+  renderCategoryTabs();
+  const filtered = filterByCategory(historyList, projectCategory)
+    .filter(h => !q || `${nameOf(h)} ${h.date || ''}`.toLowerCase().includes(q))
+    .sort(document.getElementById('projectSort').value === 'name'
+      ? (a, b) => nameOf(a).localeCompare(nameOf(b), 'ko')
+      : (a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+    .sort((a, b) => (b._id === loadedHistoryId && !!loadedHistoryId) - (a._id === loadedHistoryId && !!loadedHistoryId));
 
   const heading = document.getElementById('historyCountHeading');
   if(heading) heading.textContent = `프로젝트 (${historyList.length}건)`;
 
+  document.getElementById('historyNoMatch').hidden = !(historyList.length && !filtered.length);
   if(!filtered.length){
     wrap.innerHTML = '';
-    empty.style.display = 'block';
+    empty.style.display = historyList.length ? 'none' : 'block';
     return;
   }
   empty.style.display = 'none';
@@ -3089,27 +3236,52 @@ function renderHistory(){
       return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}"></span>` : '';
     }).join('');
     const figmaLink = h.figmaUrl
-      ? `<div class="date"><a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a></div>`
+      ? ` · <a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a>`
       : '';
-    const loadBtn = `<button class="ad-btn ad-btn--sm" data-load="${idx}">불러오기</button>`;
     const name = h.title || h.fileName;
-    const editing = h._id && h._id === loadedHistoryId ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : '';
-    return `<div class="history-item">
+    const isEditing = !!h._id && h._id === loadedHistoryId;
+    // 편집 중인 프로젝트는 "불러오기" 대신 "편집 중" 표시만 둔다
+    const loadBtn = isEditing
+      ? '<span class="ad-badge ad-badge--neutral">편집 중</span>'
+      : `<button class="ad-btn" data-load="${idx}">불러오기</button>`;
+    const testerCount = (Array.isArray(h.testers) ? h.testers : testerList).length;
+    return `<div class="history-item${isEditing ? ' is-editing' : ''}">
       <div class="meta">
-        <div class="file-name"><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="프로젝트 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button>${editing}</div>
-        <div class="date">${escapeHtml(h.date)} · ${h.count}건 · ${escapeHtml(h.summary)}</div>
-        ${figmaLink}
+        <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="프로젝트 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button></div>
+        <div class="date">${escapeHtml(h.date)} · QC ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
         <div class="history-mini-bar">${bar}</div>
       </div>
       <div class="history-actions">
         ${loadBtn}
-        <button class="ad-btn ad-btn--sm" data-remove="${idx}">삭제</button>
+        <button class="ad-btn ad-btn--ghost" data-remove="${idx}">삭제</button>
       </div>
     </div>`;
   }).join('');
 
   wrap.querySelectorAll('[data-load]').forEach(btn=>{
     btn.addEventListener('click', ()=>loadHistoryEntry(+btn.dataset.load));
+  });
+  // 분류 칩을 누르면 그 자리에 분류 선택이 열린다(기본·쓰인 분류, 미분류, 새 분류 입력)
+  wrap.querySelectorAll('[data-cat-idx]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const idx = +chip.dataset.catIdx;
+      const sel = document.createElement('select');
+      sel.className = 'ad-select category-select cell-edit'; // cell-edit: 고르는 동안 받은 변경 반영을 미룬다
+      sel.setAttribute('aria-label', '분류 선택');
+      sel.innerHTML = categoryList(historyList, addedCategories).map(c=>`<option value="${escapeHtml(c)}"${c === categoryOf(historyList[idx]) ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')
+        + '<option value="__new">새 분류 입력…</option>';
+      chip.replaceWith(sel);
+      sel.focus();
+      let done = false;
+      sel.addEventListener('change', async ()=>{
+        done = true;
+        if(sel.value !== '__new') return setProjectCategory(idx, sel.value);
+        const name = await openDialog({ title: '새 분류', body: '분류 이름을 20자 이내로 적어주세요.', input: '' });
+        if(name !== null && sanitizeCategory(name)) return setProjectCategory(idx, name);
+        renderHistory();
+      });
+      sel.addEventListener('blur', ()=>{ if(!done) renderHistory(); });
+    });
   });
   // 제목을 누르면 그 자리에서 이름을 고친다(Enter·포커스 이탈 = 저장, Esc = 취소). 빈 값이면 원래 이름(fileName)으로 돌아간다.
   wrap.querySelectorAll('[data-rename]').forEach(btn=>{
@@ -3841,7 +4013,6 @@ async function offerImport(data){
   return true;
 }
 document.getElementById('jsonExportBtn').addEventListener('click', handleJsonExport);
-document.getElementById('headerExportBtn').addEventListener('click', ()=>document.getElementById('exportBtn').click()); // 아래 QC 리스트의 엑셀 내보내기와 같은 동작
 document.getElementById('jsonImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
 document.getElementById('jsonImportInput').addEventListener('change', e=>{
   const file = e.target.files[0];
