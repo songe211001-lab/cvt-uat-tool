@@ -2059,12 +2059,17 @@ ${typeGuide}
 JSON 문자열 값 안에는 큰따옴표(")를 절대 사용하지 마세요. 화면 문구를 인용할 때는 작은따옴표(')나 「」를 사용하세요. JSON 문법을 깨뜨리지 않는 것이 가장 중요합니다.
 기획서의 수정 이력 표(예: '날짜 | 수정/변경 내용')와 '삭제', '취소'로 표기된 내용은 기능 근거로 쓰지 마세요.
 
+QC 단위 규칙(중요): QC는 "한 화면에 들어가서 한 번에 확인할 수 있는 단위"로 묶어 작성하세요.
+- 같은 화면·같은 사전 조건에서 순서대로 확인할 수 있는 문구, 버튼, 표시값, 정렬, 링크 이동 등은 QC 하나의 절차 단계와 시험 내역 목록으로 합치세요. 항목마다 QC를 따로 만들지 마세요.
+- 사전 조건(회원 상태, 권한, 데이터 유무)이 달라 화면을 다시 준비해야 하는 경우(예: 목록 없음, 변경 불가 회선, 권한 없음, 오류)만 별도 QC로 나누세요.
+- 그래서 한 화면에서 나오는 QC는 보통 1~3개입니다.
+
 각 항목은 아래 필드만 가지면 됩니다 (tcId·화면유형·테스터 등은 시스템이 자동으로 채우니 작성하지 마세요):
 ${screenFieldDesc}
 - category: 시험항목 대분류
 - subCategory: 시험 중분류
-- procedure: 시험절차. 줄바꿈 없이 한 줄로, 전제조건(사전 상태)부터 시작해 "1) ... 2) ... 3) ... 4) ..." 형태로 4~6단계까지 구체적으로 서술하세요. 각 단계에 입력값 예시나 진입 경로를 포함하세요.
-- testDetail: 시험 내역. 줄바꿈 없이, 확인해야 할 세부 항목과 예외/경계 케이스(예: 빈 값, 잘못된 형식, 권한 없음 등)를 포함해 2~3문장으로 구체적으로 작성하세요.
+- procedure: 시험절차. 줄바꿈 없이 한 줄로, 전제조건(사전 상태)부터 시작해 "1) ... 2) ... 3) ..." 형태로 작성하세요. 같은 화면에서 이어서 확인하는 항목은 단계로 이어 붙이세요(최대 10단계). 각 단계에 입력값 예시나 진입 경로를 포함하세요.
+- testDetail: 시험 내역. 줄바꿈 없이, 이 QC 하나로 함께 확인할 항목을 "① ... ② ... ③ ..." 처럼 모두 나열하세요(문구·버튼·표시값·정렬·건수 등).
 - expected: 기대 결과. 줄바꿈 없이, 실제 화면에 노출되는 문구/상태 변화/데이터 반영 여부를 구체적으로 서술하세요.
 - constraintTag: 이 TC 실행에 "하루 1회만 실행 가능한 액션"이 포함되면 "일일1회제한", 같은 테스트 계정으로 다른 TC와 동시에/같은 날 묶어 실행하면 안 되는(예: 명의이전처럼 계정 상태를 바꿔버리는) 액션이면 "단독실행필요", 둘 다 아니면 "없음"으로 표기하세요.
 - integrationTag: 이 TC가 연동하는 외부/부가 시스템이 있으면 "쿠폰", "요금제", "명의이전" 중 해당하는 값으로, 그 외 연동 시스템이면 "기타연동", 연동 시스템이 없으면 "없음"으로 표기하세요.
@@ -2144,6 +2149,29 @@ function nextTcId(name){
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber()) + 1;
   return formatTcId(lastIssuedTcNumber, name);
 }
+// QC 번호를 리스트 순서대로 1부터 다시 매긴다(이름 칸은 그대로). 삭제·되돌리기·생성·행 추가 뒤에 불러 번호에 빈칸이 없게 한다.
+// 선택·펼침 상태(tcId 기준)도 새 번호로 옮긴다. 바뀐 개수를 돌려준다.
+function renumberTcIds(){
+  const map = new Map();
+  tcData.forEach((r, i)=>{
+    const next = formatTcId(i + 1, tcNameOf(r.tcId));
+    if(next !== r.tcId){ map.set(r.tcId, next); r.tcId = next; }
+  });
+  [selectedTcIds, expandedTcRows].forEach(set=>{
+    const ids = [...set];
+    set.clear();
+    ids.forEach(id=>set.add(map.get(id) || id));
+  });
+  lastIssuedTcNumber = tcData.length;
+  return map.size;
+}
+// 생성·행 추가 직후 번호를 다시 매겨도 되는지: 팀원이 함께 접속해 있거나 접속 상태를 모르면 하지 않는다
+// (각자 상대가 막 만든 행을 아직 모르는 채로 같은 번호를 매기면 겹친다. 삭제할 때의 앞당기기는 내 화면의 행끼리라 언제나 한다)
+function canRenumberAfterCreate(){
+  if(!SYNC_ENABLED) return true;
+  if(typeof rtChannel === 'undefined' || !rtChannel || !syncRtUp) return false;
+  return !Object.keys(rtChannel.presenceState()).some(k=>k !== SYNC_CLIENT_ID);
+}
 // "기획안 입력"의 TC 이름 칸 (비어 있으면 TC-001 형식)
 function currentTcName(){
   const input = document.getElementById('tcNameInput');
@@ -2155,7 +2183,8 @@ function resetTcIdCounter(){
 }
 
 /* ---------- Run generation: FO/BO를 순차로 요청 (동시에 큰 첨부물을 두 번 올리지 않아 네트워크 안정성 우선) ---------- */
-const ROUNDS_PER_CLICK = 4;
+const ROUNDS_PER_CLICK = 2;
+const ROUNDS_PER_FIGMA_SCREEN = 1; // 화면당 묶음 QC: 같은 화면을 여러 라운드로 쪼개 자잘한 QC가 늘어나지 않게
 const ROUNDS_PER_PDF_CHUNK_WHEN_SPLIT = 2; // PDF가 여러 조각이면 조각 수만큼 호출이 늘어나므로 조각당 라운드를 줄인다
 const PER_ROUND_TYPE_COUNT = 3;
 
@@ -2200,7 +2229,8 @@ async function runGeneration(startFresh){
     const chunkLabel = totalChunks > 1
       ? ` · ${chunk.screenNameHint ? chunk.screenNameHint : '조각 '+(chunkIdx+1)+'/'+totalChunks+(chunk.label ? '('+chunk.label+')' : '')}`
       : '';
-    const rounds = (chunk.kind === 'pdf' && totalChunks > 1) ? ROUNDS_PER_PDF_CHUNK_WHEN_SPLIT : ROUNDS_PER_CLICK;
+    const rounds = chunk.screenNameHint ? ROUNDS_PER_FIGMA_SCREEN
+      : (chunk.kind === 'pdf' && totalChunks > 1) ? ROUNDS_PER_PDF_CHUNK_WHEN_SPLIT : ROUNDS_PER_CLICK;
 
     // 조각의 첨부물(텍스트·페이지 이미지)은 한 번만 준비해 이 조각의 모든 라운드·FO/BO 요청이 재사용한다.
     let payload;
@@ -2262,6 +2292,7 @@ async function runGeneration(startFresh){
 
       if(merged.length){
         tcData = tcData.concat(merged);
+        if(canRenumberAfterCreate()) renumberTcIds(); // 혼자 쓸 때만: 서버 발급 번호에 빈칸이 있어도 리스트 순서대로 이어지게
         renderTable();
       }
 
@@ -2542,10 +2573,13 @@ function renderTable(){
       const removedRow = tcData[idx];
       selectedTcIds.delete(removedRow.tcId);
       tcData.splice(idx, 1);
+      const label = `${removedRow.tcId} ${removedRow.screen || ''}`.trim();
+      renumberTcIds(); // 뒤 번호를 하나씩 앞당긴다
       renderTable();
       renderDistribution();
-      showUndoToast(`'${removedRow.screen || removedRow.tcId}' QC를 삭제했습니다.`, ()=>{
+      showUndoToast(`'${label}' QC를 삭제했어요. 뒤 번호는 하나씩 앞당겼어요.`, ()=>{
         restoreRemovedItems(tcData, [{index: idx, row: removedRow}]);
+        renumberTcIds();
         renderTable();
         renderDistribution();
       });
@@ -2628,10 +2662,12 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
   tcData.forEach((r, i)=>{ if(selectedTcIds.has(r.tcId)) removed.push({index: i, row: r}); });
   tcData = tcData.filter(r=>!selectedTcIds.has(r.tcId));
   selectedTcIds.clear();
+  renumberTcIds(); // 남은 QC 번호를 1부터 빈칸 없이
   renderTable();
   renderDistribution();
-  showUndoToast(`${removed.length}개 QC를 삭제했습니다.`, ()=>{
+  showUndoToast(`${removed.length}개 QC를 삭제했어요. 번호를 다시 매겼어요.`, ()=>{
     restoreRemovedItems(tcData, removed);
+    renumberTcIds();
     renderTable();
     renderDistribution();
   });
@@ -2644,6 +2680,7 @@ document.getElementById('addRowBtn').addEventListener('click', async ()=>{
     testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: '',
     testNote:'', result:'N/A', status:'작성중'
   });
+  if(canRenumberAfterCreate()) renumberTcIds();
   renderTable();
 });
 
@@ -3443,7 +3480,7 @@ function diffSyncMaps(prev, next){
     const patch = {};
     Object.keys(v.data).forEach(k=>{ if(!same(v.data[k], p.data[k])) patch[k] = v.data[k]; });
     if(Object.keys(patch).length) op.rowPatch.push({ id, patch });
-    if(p.tc_no !== v.tc_no) op.rowNo.push({ id, tc_no: v.tc_no });
+    if(p.tc_no !== v.tc_no) op.rowNo.push({ id, tc_no: v.tc_no, from: p.tc_no });
   });
   prev.rows.forEach((_, id)=>{ if(!next.rows.has(id)) op.rowDel.push(id); });
   next.history.forEach((d, id)=>{ if(!same(d, prev.history.get(id))) op.histUp.push({ id, data: d }); });
@@ -3538,14 +3575,16 @@ async function sendSyncOp(op){
   for(const part of chunksOf(op.rowDel, 200)) sbCheck(await sb.from('cvt_tc_rows').delete().in('id', part));
   for(const part of chunksOf(op.histDel, 200)) sbCheck(await sb.from('cvt_history').delete().in('id', part));
   if(op.testerDel.length) sbCheck(await sb.from('cvt_testers').delete().in('name', op.testerDel));
-  if(op.rowIns.length) await insertTcRows(op.rowIns);
   for(const part of chunksOf(op.rowPatch, 10)){
     await Promise.all(part.map(async x=>{
       const updatedAt = sbCheck(await sb.rpc('patch_cvt_tc_row', { p_id: x.id, p_patch: x.patch, p_client: SYNC_CLIENT_ID }));
       ackWrite(x.id, updatedAt, Object.keys(x.patch));
     }));
   }
-  for(const x of op.rowNo){
+  // 번호 다시 매기기(삭제로 앞당김·되돌리기로 뒤로 밀림)가 서로 겹치지 않게: 줄어드는 번호는 작은 것부터, 늘어나는 번호는 큰 것부터 바꾼다
+  const down = op.rowNo.filter(x=>!(x.tc_no > x.from)).sort((a, b)=>a.tc_no - b.tc_no);
+  const up = op.rowNo.filter(x=>x.tc_no > x.from).sort((a, b)=>b.tc_no - a.tc_no);
+  for(const x of [...down, ...up]){
     const res = await sb.from('cvt_tc_rows').update({ tc_no: x.tc_no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id);
     if(res.error && res.error.code === '23505'){
       const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1 }));
@@ -3553,6 +3592,8 @@ async function sendSyncOp(op){
       sbCheck(await sb.from('cvt_tc_rows').update({ tc_no: no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id));
     }else sbCheck(res);
   }
+  // 새 행은 번호 이동이 끝난 뒤에 넣는다(되돌리기로 돌아온 행이 비워진 번호를 쓰도록)
+  if(op.rowIns.length) await insertTcRows(op.rowIns);
   if(op.histUp.length){
     const data = sbCheck(await sb.from('cvt_history').upsert(op.histUp.map(h=>({ id: h.id, data: h.data, updated_by: SYNC_CLIENT_ID }))).select('id,updated_at'));
     (data || []).forEach(d=>ackWrite('h:' + d.id, d.updated_at, ['*']));
@@ -3877,6 +3918,15 @@ function openDialog({ title, body = '', input = null, okLabel = '확인' }){
     if(input !== null) inp.select();
   });
 }
+// 입력칸에서 Enter = "확인". 폼의 기본 제출은 첫 버튼("취소")으로 처리되어 입력값이 버려졌다.
+// 한글 입력 중(조합 중)에 누른 Enter는 조합이 끝난 뒤 확인한다.
+document.getElementById('appDialogInput').addEventListener('keydown', e=>{
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const dlg = document.getElementById('appDialog');
+  if(e.isComposing) e.target.addEventListener('compositionend', ()=>dlg.close('ok'), { once: true });
+  else dlg.close('ok');
+});
 
 /* TC 번호 n개 발급. 팀 동기화 중이면 서버가 발급해 다른 팀원과 겹치지 않는다.
    서버에 닿지 않으면 이 브라우저에서 발급하고, 저장할 때 겹치면 새 번호로 바꾼다(insertTcRows). */
