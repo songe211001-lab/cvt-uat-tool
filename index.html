@@ -425,6 +425,19 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .category-chip.is-none{background:var(--grey-100);color:var(--muted);}
   .category-select{width:auto;min-width:140px;margin-right:8px;}
   .category-add{color:var(--primary-dark);}
+  /* 담당자별 탭(QC 리스트) */
+  .tester-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .tester-tab .count{color:var(--muted);font-weight:500;margin-left:6px;}
+  .tester-tab[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
+  .tester-tab[aria-pressed="true"] .count{color:var(--primary-dark);}
+  @media (max-width:640px){ .tester-tabs{flex-wrap:nowrap;overflow-x:auto;} .tester-tabs > *{flex-shrink:0;} }
+  /* 카드 머리 담당자 버튼과 고르기 팝오버 */
+  .tester-pick{min-width:96px;max-width:160px;justify-content:flex-start;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;text-align:left;}
+  .tester-pick.is-none{color:var(--muted);}
+  .tester-pick[aria-expanded="true"]{border-color:var(--primary);}
+  @media (max-width:900px){ .tc-card-controls > .tester-pick{width:100%;max-width:none;min-width:0;} }
+  .tester-popover{position:fixed;z-index:90;min-width:200px;max-width:min(280px, calc(100vw - 16px));max-height:280px;overflow:auto;padding:10px 12px;box-shadow:var(--shadow-3);}
+  .tester-option{display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:13px;color:var(--ink);cursor:pointer;}
   /* QC 리스트 머리 버튼: 전체 펼치기와 엑셀 내보내기를 같은 크기로 */
   .qc-list-btn{min-width:140px;min-height:36px;align-self:center;}
   #tcCollapseAllBtn{margin-left:auto;}
@@ -862,6 +875,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <button class="ad-btn excel-btn qc-list-btn" id="exportBtn" type="button" disabled><svg class="excel-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/><path d="M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6"/></svg>엑셀로 내보내기</button>
       </div>
 
+      <div class="tester-tabs" id="testerTabs" role="group" aria-label="담당자별 보기"></div>
       <div class="tc-filter-bar">
         <input type="search" class="ad-input" id="tcSearchInput" aria-label="QC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
         <select class="ad-select" id="tcFilterType" aria-label="화면유형 필터">
@@ -878,9 +892,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <option value="FATAL">FATAL</option>
           <option value="CRITICAL">CRITICAL</option>
         </select>
-        <select class="ad-select" id="tcFilterTester" aria-label="담당자 필터">
-          <option value="ALL">전체 담당자</option>
-        </select>
       </div>
 
       <div class="select-all-row">
@@ -890,8 +901,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div class="bulk-bar" id="bulkBar">
         <span class="bulk-count" id="bulkCount">0개 선택됨</span>
-        <select class="ad-select" id="bulkTesterSelect" aria-label="선택한 QC 테스터 재배정">
-          <option value="">테스터 재배정…</option>
+        <select class="ad-select" id="bulkTesterAdd" aria-label="선택한 QC에 담당 추가">
+          <option value="">담당 추가…</option>
+        </select>
+        <select class="ad-select" id="bulkTesterRemove" aria-label="선택한 QC에서 담당 빼기">
+          <option value="">담당 빼기…</option>
         </select>
         <select class="ad-select" id="bulkResultSelect" aria-label="선택한 QC 결과 일괄 변경">
           <option value="">결과값 일괄 변경…</option>
@@ -1177,7 +1191,8 @@ let testerList = [];
 let tcSearchQuery = '';
 let tcFilterType = 'ALL';
 let tcFilterResult = 'ALL';
-let tcFilterTester = 'ALL';
+// 담당자 탭: 'ALL' | 'NONE'(미배정) | 담당자 이름. 이 브라우저에만 기억한다(cvt_tester_tab)
+let tcFilterTester = (()=>{ try{ return localStorage.getItem('cvt_tester_tab') || 'ALL'; }catch(e){ return 'ALL'; } })();
 let selectedTcIds = new Set(); // 일괄 수정을 위해 선택된 tcData 인덱스가 아닌 tcId(행이 재배치돼도 안전)
 let expandedTcRows = new Set(); // 펼친 TC 행의 tcId 목록 (기본은 모두 접힌 한 줄 요약)
 let figmaUrl = '';
@@ -1223,10 +1238,6 @@ document.getElementById('tcFilterType').addEventListener('change', e=>{
 });
 document.getElementById('tcFilterResult').addEventListener('change', e=>{
   tcFilterResult = e.target.value;
-  renderTable();
-});
-document.getElementById('tcFilterTester').addEventListener('change', e=>{
-  tcFilterTester = e.target.value;
   renderTable();
 });
 
@@ -1995,7 +2006,12 @@ async function loadTesters(){
     testerList = [];
   }
 }
+// 기본 테스터 목록을 사용자가 바꿨는지(추가·삭제·순서·가져오기). 바꿨을 때만 서버로 순서를 보낸다.
+// 받은 순서 변경은 한 건씩 도착해서, 그 사이 목록이 잠깐 다른 순서로 보일 수 있다. 그걸 내 변경으로 착각해 예전 순서를 다시 보내면
+// 두 사람의 목록 순서가 서로 뒤집혔다.
+let testersDirty = false;
 async function saveTesters(){
+  testersDirty = true;
   try{
     localStorage.setItem('cvt_testers', JSON.stringify(testerList));
   }catch(e){ /* 브라우저 저장소를 쓸 수 없는 환경(프라이빗 모드 등)이면 조용히 무시 */ }
@@ -2336,13 +2352,21 @@ document.getElementById('appendBtn').addEventListener('click', ()=>startGenerati
 // 입력이 끝나면 실제로 쓰일 이름(정리된 값)을 칸에 보여 준다
 document.getElementById('tcNameInput').addEventListener('change', e=>{ e.target.value = sanitizeTcName(e.target.value); });
 
+/* ---------- 담당자 여러 명: tester 칸에 이름을 ", "로 이어 저장한다(서버·엑셀·예전 데이터와 같은 칸) ---------- */
+function testersOf(row){
+  const out = [];
+  String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean).forEach(n=>{ if(!out.includes(n)) out.push(n); });
+  return out;
+}
+function joinTesters(list){
+  return testersOf({ tester: (list || []).join(',') }).join(', ');
+}
 /* ---------- 배정 충돌 검사: 같은 테스터에게 제약 태그(일일1회제한/단독실행필요)가 붙은 TC가 2건 이상 배정되면 경고 ---------- */
 function computeConflictTesters(){
   const counts = {};
   tcData.forEach(r=>{
-    if(!r.tester) return;
     if(r.constraintTag === '일일1회제한' || r.constraintTag === '단독실행필요'){
-      counts[r.tester] = (counts[r.tester]||0) + 1;
+      testersOf(r).forEach(t=>{ counts[t] = (counts[t]||0) + 1; });
     }
   });
   return Object.entries(counts).filter(([,c])=>c>1).map(([t])=>t);
@@ -2360,21 +2384,17 @@ function renderTable(){
 
   const countBadge = document.getElementById('tcCountBadge');
 
-  // 담당자 필터 옵션 갱신 (등록된 테스터 + 현재 데이터에 쓰인 담당자)
-  const testerFilterSel = document.getElementById('tcFilterTester');
-  const usedTesters = Array.from(new Set(tcData.map(r=>r.tester).filter(Boolean)));
-  const testers = activeTesters(); // 편집 중인 프로젝트의 테스터(없으면 기본 테스터)
+  // 담당자 목록: 등록된 테스터(편집 중인 프로젝트, 없으면 기본 테스터) + 지금 QC에 배정된 담당자
+  const usedTesters = Array.from(new Set(tcData.flatMap(testersOf)));
+  const testers = activeTesters();
   const testerOptionsForFilter = Array.from(new Set([...testers, ...usedTesters]));
-  const prevTesterFilterVal = testerFilterSel.value;
-  testerFilterSel.innerHTML = `<option value="ALL">전체 담당자</option>` +
-    testerOptionsForFilter.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-  testerFilterSel.value = testerOptionsForFilter.includes(prevTesterFilterVal) ? prevTesterFilterVal : 'ALL';
-  tcFilterTester = testerFilterSel.value;
+  if(tcFilterTester !== 'ALL' && tcFilterTester !== 'NONE' && !testerOptionsForFilter.includes(tcFilterTester)) tcFilterTester = 'ALL';
+  renderTesterTabs(testerOptionsForFilter);
 
-  // 일괄 재배정 드롭다운 옵션도 함께 갱신
-  const bulkTesterSel = document.getElementById('bulkTesterSelect');
-  bulkTesterSel.innerHTML = `<option value="">테스터 재배정…</option>` +
-    testerOptionsForFilter.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  // 일괄 담당 추가/빼기 드롭다운
+  const optionList = list=>list.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  document.getElementById('bulkTesterAdd').innerHTML = '<option value="">담당 추가…</option>' + optionList(testerOptionsForFilter);
+  document.getElementById('bulkTesterRemove').innerHTML = '<option value="">담당 빼기…</option>' + optionList(usedTesters);
 
   // 유사/중복 TC 감지: 화면명+대분류가 같은 케이스가 2개 이상이면 배지 표시
   const dupKeyCount = {};
@@ -2396,7 +2416,7 @@ function renderTable(){
     .filter(({row})=>{
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
       if(tcFilterResult !== 'ALL' && row.result !== tcFilterResult) return false;
-      if(tcFilterTester !== 'ALL' && row.tester !== tcFilterTester) return false;
+      if(tcFilterTester === 'NONE' ? testersOf(row).length : (tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester))) return false;
       if(tcSearchQuery){
         const hay = [row.screen, row.category, row.subCategory, row.procedure, row.testDetail, row.expected]
           .join(' ').toLowerCase();
@@ -2429,14 +2449,9 @@ function renderTable(){
     const isSelected = selectedTcIds.has(row.tcId);
     card.className = 'tc-card' + (isSelected ? ' selected' : '');
 
+    const assigned = testersOf(row);
     const testerOptions = testers.length
-      ? (()=>{
-          const options = Array.from(new Set([...testers, row.tester].filter(Boolean)));
-          return `<select class="tester-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 테스터">
-            <option value="" ${!row.tester?'selected':''}>-</option>
-            ${options.map(o=>`<option value="${escapeHtml(o)}" ${o===row.tester?'selected':''}>${escapeHtml(o)}</option>`).join('')}
-          </select>`;
-        })()
+      ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '미배정')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '미배정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
       : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tester">${escapeHtml(row.tester)}</div>`;
 
     const dupKey = `${(row.screen||'').trim().toLowerCase()}|${(row.category||'').trim().toLowerCase()}`;
@@ -2444,7 +2459,8 @@ function renderTable(){
     const status = STATUS_OPTIONS.includes(row.status) ? row.status : '작성중';
     const constraintTag = CONSTRAINT_TAG_OPTIONS.includes(row.constraintTag) ? row.constraintTag : '없음';
     const integrationTag = INTEGRATION_TAG_OPTIONS.includes(row.integrationTag) ? row.integrationTag : '없음';
-    const rowHasConflict = row.tester && conflictTesters.includes(row.tester) && constraintTag !== '없음';
+    const conflictNames = assigned.filter(t=>conflictTesters.includes(t));
+    const rowHasConflict = conflictNames.length > 0 && constraintTag !== '없음';
 
     const isCollapsed = !expandedTcRows.has(row.tcId);
     card.innerHTML = `
@@ -2457,7 +2473,7 @@ function renderTable(){
         </select>
         <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
         ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 QC가 더 있습니다">유사 QC</span>' : ''}
-        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(row.tester)} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
+        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
         <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
@@ -2560,12 +2576,8 @@ function renderTable(){
       renderDistribution();
     });
   });
-  list.querySelectorAll('.tester-select').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
-      tcData[idx].tester = sel.value;
-      renderTable();
-    });
+  list.querySelectorAll('.tester-pick').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openTesterPicker(+btn.dataset.pickIdx, btn); });
   });
   list.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -2630,13 +2642,87 @@ function renderBulkBar(){
   document.body.classList.toggle('has-bulk', count > 0);
 }
 
-document.getElementById('bulkTesterSelect').addEventListener('change', (e)=>{
+document.getElementById('bulkTesterAdd').addEventListener('change', (e)=>{
   const val = e.target.value;
-  if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.tester = val; });
   e.target.value = '';
+  if(!val || !selectedTcIds.size) return;
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.tester = joinTesters([...testersOf(r), val]); });
   renderTable();
 });
+document.getElementById('bulkTesterRemove').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  e.target.value = '';
+  if(!val || !selectedTcIds.size) return;
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.tester = joinTesters(testersOf(r).filter(t=>t !== val)); });
+  renderTable();
+});
+
+// 담당자별 탭: 전체 / 담당자마다 / 미배정. "건수 · 완료 n"을 보인다(여러 명에게 배정된 QC는 각 탭에 모두 나온다)
+function renderTesterTabs(names){
+  const wrap = document.getElementById('testerTabs');
+  if(!wrap) return;
+  const stat = rows=>`<span class="count">${rows.length} · 완료 ${rows.filter(r=>r.status === '완료').length}</span>`;
+  const tabs = [['ALL', '전체', tcData], ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n))]), ['NONE', '미배정', tcData.filter(r=>!testersOf(r).length)]];
+  wrap.innerHTML = tabs.map(([v, label, rows])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${stat(rows)}</button>`).join('');
+  wrap.querySelectorAll('[data-tester]').forEach(b=>b.addEventListener('click', ()=>{
+    tcFilterTester = b.dataset.tester;
+    try{ localStorage.setItem('cvt_tester_tab', tcFilterTester); }catch(e){ /* 기억하지 못해도 이번 화면에서는 동작 */ }
+    renderTable();
+  }));
+}
+
+// 담당자 고르기 팝오버(카드 머리 버튼): 체크하는 즉시 저장. Esc·바깥 클릭으로 닫힌다
+let testerPickerIdx = -1;
+function closeTesterPicker(){
+  const pop = document.getElementById('testerPopover');
+  if(pop) pop.remove();
+  document.querySelectorAll('.tester-pick[aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded', 'false'));
+  testerPickerIdx = -1;
+}
+function openTesterPicker(idx, anchor){
+  const wasOpen = testerPickerIdx === idx;
+  closeTesterPicker();
+  if(wasOpen) return;
+  const row = tcData[idx];
+  if(!row) return;
+  testerPickerIdx = idx;
+  const options = Array.from(new Set([...activeTesters(), ...testersOf(row)])); // 목록에 없는 배정자도 체크된 채로 보인다
+  const pop = document.createElement('div');
+  pop.id = 'testerPopover';
+  pop.className = 'ad-modal tester-popover';
+  pop.setAttribute('role', 'dialog');
+  pop.setAttribute('aria-label', `${row.tcId} 담당자 고르기`);
+  pop.innerHTML = `<p class="sub-txt" style="margin:0 0 6px;">${escapeHtml(row.tcId)} 담당자(여러 명 가능)</p>` + options.map(n=>
+    `<label class="tester-option"><input type="checkbox" value="${escapeHtml(n)}"${testersOf(row).includes(n) ? ' checked' : ''} /> ${escapeHtml(n)}</label>`).join('');
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = `${Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 8)}px`;
+  pop.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 8))}px`;
+  anchor.setAttribute('aria-expanded', 'true');
+  pop.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const checked = [...pop.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value);
+    tcData[idx].tester = joinTesters(checked);
+    renderTable(); // 팝오버는 리스트 밖에 있어 그대로 열려 있다
+    const again = document.querySelector(`.tester-pick[data-pick-idx="${idx}"]`);
+    if(again) again.setAttribute('aria-expanded', 'true');
+  }));
+  const first = pop.querySelector('input');
+  if(first) first.focus();
+}
+document.addEventListener('mousedown', e=>{
+  if(testerPickerIdx < 0) return;
+  if(e.target.closest('#testerPopover') || e.target.closest('.tester-pick')) return;
+  closeTesterPicker();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && testerPickerIdx >= 0){
+    const idx = testerPickerIdx;
+    closeTesterPicker();
+    const btn = document.querySelector(`.tester-pick[data-pick-idx="${idx}"]`);
+    if(btn) btn.focus();
+  }
+});
+window.addEventListener('scroll', ()=>{ if(testerPickerIdx >= 0) closeTesterPicker(); }, { passive: true });
 document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
@@ -3298,6 +3384,7 @@ function renderHistory(){
       </div>
       <div class="history-actions">
         ${loadBtn}
+        <button class="ad-btn ad-btn--ghost" data-share="${idx}" title="이 프로젝트를 바로 여는 링크를 복사해요">링크 복사</button>
         <button class="ad-btn ad-btn--ghost" data-remove="${idx}">삭제</button>
       </div>
     </div>`;
@@ -3305,6 +3392,9 @@ function renderHistory(){
 
   wrap.querySelectorAll('[data-load]').forEach(btn=>{
     btn.addEventListener('click', ()=>loadHistoryEntry(+btn.dataset.load));
+  });
+  wrap.querySelectorAll('[data-share]').forEach(btn=>{
+    btn.addEventListener('click', ()=>copyProjectLink(+btn.dataset.share));
   });
   // 분류 칩을 누르면 그 자리에 분류 선택이 열린다(기본·쓰인 분류, 미분류, 새 분류 입력)
   wrap.querySelectorAll('[data-cat-idx]').forEach(chip=>{
@@ -3460,7 +3550,8 @@ function localSyncMaps(){
     if(!h._id) h._id = newRowId();
     history.set(h._id, historyDataOf(h));
   });
-  testerList.forEach((name, i)=>testers.set(name, i));
+  if(testersDirty || !syncShadow) testerList.forEach((name, i)=>testers.set(name, i));
+  else syncShadow.testers.forEach((order, name)=>testers.set(name, order)); // 내가 바꾸지 않았으면 서버 기준 그대로(보낼 것 없음)
   return { rows, history, testers };
 }
 
@@ -3485,7 +3576,11 @@ function diffSyncMaps(prev, next){
   prev.rows.forEach((_, id)=>{ if(!next.rows.has(id)) op.rowDel.push(id); });
   next.history.forEach((d, id)=>{ if(!same(d, prev.history.get(id))) op.histUp.push({ id, data: d }); });
   prev.history.forEach((_, id)=>{ if(!next.history.has(id)) op.histDel.push(id); });
-  next.testers.forEach((order, name)=>{ if(prev.testers.get(name) !== order) op.testerUp.push({ name, sort_order: order }); });
+  // 테스터: 하나라도 바뀌면(추가·순서 변경) 전체 순서를 함께 보낸다. 바뀐 이름만 보내면 두 사람의 기록이 섞여
+  // 서버의 순서 값이 겹치고(예: 둘 다 1), 그걸 받은 쪽이 자기 순서를 다시 보내 목록 순서가 서로 뒤집혔다.
+  if([...next.testers].some(([name, order])=>prev.testers.get(name) !== order)){
+    next.testers.forEach((order, name)=>op.testerUp.push({ name, sort_order: order }));
+  }
   prev.testers.forEach((_, name)=>{ if(!next.testers.has(name)) op.testerDel.push(name); });
   return isEmptyOp(op) ? null : op;
 }
@@ -3519,6 +3614,7 @@ function syncChanges(){
   const next = localSyncMaps();
   const op = diffSyncMaps(syncShadow, next);
   syncShadow = next;
+  testersDirty = false;
   if(op){
     syncQueue.push(op);
     persistSyncQueue();
@@ -3669,6 +3765,7 @@ async function loadFromServer(){
   const serverHistory = Array.from(S.history.values());
   const localOnlyHistory = historyList.filter(h=>!h._id && !serverHistory.some(x=>isSameHistoryEntry(x, h)));
   const localOnlyTesters = S.testers.size ? [] : testerList.filter(n=>!S.testers.has(n)); // 서버 목록이 비어 있을 때(처음 연결)만 올린다
+  if(localOnlyTesters.length) testersDirty = true;
 
   tcData = Array.from(S.rows, ([id, v])=>rowFromServer(id, v.tc_no, v.data))
     .concat(localOnlyRows)
@@ -3683,6 +3780,7 @@ async function loadFromServer(){
   syncLoaded = true;
   syncLastSavedAt = new Date();
   afterRemoteApply();
+  openSharedProjectOnce(); // 공유 링크(?project=)로 열었으면 서버 목록을 받은 뒤 그 프로젝트를 불러온다
   syncChanges(); // 이 브라우저에만 있던 데이터를 올린다
   flushSyncQueue(); // 지난번에 못 보낸 변경도 이어서 보낸다
 }
@@ -3901,7 +3999,7 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- 이름 입력·확인 대화상자 (native dialog). 확인이면 입력값(입력칸이 없으면 ''), 취소면 null ---------- */
-function openDialog({ title, body = '', input = null, okLabel = '확인' }){
+function openDialog({ title, body = '', input = null, okLabel = '확인', maxLength = 20 }){
   const dlg = document.getElementById('appDialog');
   const inp = document.getElementById('appDialogInput');
   const bodyEl = document.getElementById('appDialogBody');
@@ -3910,6 +4008,7 @@ function openDialog({ title, body = '', input = null, okLabel = '확인' }){
   bodyEl.hidden = !body;
   document.getElementById('appDialogOk').textContent = okLabel;
   inp.hidden = input === null;
+  inp.maxLength = maxLength;
   inp.value = input || '';
   dlg.returnValue = '';
   return new Promise(resolve=>{
@@ -4093,6 +4192,56 @@ document.getElementById('jsonImportInput').addEventListener('change', e=>{
   e.target.value = '';
 });
 
+/* ---------- 프로젝트 바로 열기 링크 (?project=프로젝트ID) ----------
+   서버를 붙인 공유 주소(GitHub Pages)에서 링크를 열면 그 프로젝트를 불러온다. 아티팩트처럼 주소를 쓸 수 없는 화면에서
+   복사할 때는 공유 주소를 기준으로 링크를 만든다. */
+const SHARE_BASE_URL = 'https://songe211001-lab.github.io/cvt-uat-tool/';
+function projectShareUrl(id){
+  const usable = /^https?:$/.test(location.protocol) && !/claude/i.test(location.hostname);
+  return `${usable ? location.origin + location.pathname : SHARE_BASE_URL}?project=${encodeURIComponent(id)}`;
+}
+async function copyProjectLink(idx){
+  const entry = historyList[idx];
+  if(!entry) return;
+  if(!entry._id){ entry._id = newRowId(); await saveHistory(); }
+  const url = projectShareUrl(entry._id);
+  try{
+    await navigator.clipboard.writeText(url);
+    showUndoToast(`'${entry.title || entry.fileName}' 프로젝트 링크를 복사했어요.`, ()=>{});
+  }catch(e){
+    // 클립보드를 쓸 수 없는 화면이면 링크를 보여 주고 직접 복사하게 한다
+    await openDialog({ title: '프로젝트 링크', body: '아래 링크를 복사해서 공유해 주세요. 열면 이 프로젝트가 바로 불러와져요.', input: url, okLabel: '닫기', maxLength: 2000 });
+  }
+}
+// 주소의 ?project= (또는 #project=) 값. 처음 한 번만 처리한다
+let pendingSharedProject = (()=>{
+  try{ return new URLSearchParams(location.search).get('project') || new URLSearchParams(location.hash.slice(1)).get('project') || null; }
+  catch(e){ return null; }
+})();
+async function openSharedProjectOnce(){
+  if(!pendingSharedProject) return;
+  const dlg = document.getElementById('appDialog');
+  if(dlg.open){ dlg.addEventListener('close', ()=>setTimeout(openSharedProjectOnce, 50), { once: true }); return; } // 이름 입력 창이 먼저 떠 있으면 닫힌 뒤
+  const id = pendingSharedProject;
+  pendingSharedProject = null;
+  try{ history.replaceState(null, '', location.pathname); }catch(e){ /* 주소를 바꿀 수 없는 화면이면 그대로 */ }
+  const idx = historyList.findIndex(h=>h._id === id);
+  if(idx < 0){ showGlobalError('공유된 프로젝트를 찾지 못했어요. 삭제되었거나 다른 서버의 프로젝트일 수 있어요.'); return; }
+  const entry = historyList[idx];
+  const same = snapshotsEqual(tcData.map(toExportRow), entry.snapshot);
+  if(tcData.length && !same){
+    const ok = await openDialog({
+      title: '공유된 프로젝트 열기',
+      body: `'${entry.title || entry.fileName}' 프로젝트(QC ${entry.count}건)를 불러올까요?\n지금 QC 리스트(${tcData.length}건)는 이 프로젝트 내용으로 바뀌어요.`
+        + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원 화면의 QC 리스트도 함께 바뀌어요.' : ''),
+      okLabel: '불러오기'
+    });
+    if(ok === null) return;
+  }
+  document.getElementById('draftRestoreBanner').style.display = 'none';
+  loadHistoryEntry(idx);
+}
+
 /* ---------- Init ---------- */
 (async function init(){
   initClaudeSample();
@@ -4112,6 +4261,7 @@ document.getElementById('jsonImportInput').addEventListener('change', e=>{
   renderTesterChips();
   renderTable();
   renderHistory(); // 머리의 프로젝트 셀렉트를 처음부터 채운다(동기화가 없으면 탭을 열기 전엔 그려지지 않았다)
+  if(!SYNC_ENABLED) openSharedProjectOnce();
   renderSyncStatus();
   lastSavedDraftSnapshot = currentDraftSnapshot();
   appInitialized = true;
