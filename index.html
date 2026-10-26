@@ -2534,6 +2534,7 @@ function renderTable(){
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
       tcData[idx][key] = el.textContent;
+      scheduleAutoSave(); // 글자를 고칠 때도 실시간 저장
       if(key === 'category' || key === 'subCategory'){ // 카드 제목(대분류 > 중분류)도 바로 맞춘다
         const title = list.querySelector(`[data-title-idx="${idx}"]`);
         if(title) title.textContent = tcTitleOf(tcData[idx]);
@@ -2791,6 +2792,7 @@ function qcStats(rows){
   };
 }
 function renderDistribution(){
+  scheduleAutoSave(); // QC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
   document.getElementById('distEmpty').hidden = !!tcData.length; // QC가 없으면 표 대신 안내 문구
   document.getElementById('distWrap').hidden = !tcData.length;
   if(!tcData.length) return;
@@ -3165,6 +3167,35 @@ function currentHistoryEntry(){
     snapshot: tcData.map(toExportRow), // 동기화 메타 필드(_origin/_rev)는 이력에 남기지 않는다
     testers: activeTesters().slice() // 새 프로젝트가 될 때 그 시점의 테스터를 복사한다(덮어쓸 때는 기존 프로젝트의 테스터를 그대로 둔다)
   };
+}
+/* ---------- 실시간 저장 ----------
+   QC를 고치면 0.3초 뒤(잇따른 수정은 모아서) 바로 저장한다.
+   1) 열려 있는 프로젝트(loadedHistoryId)의 저장본에도 반영한다(예전에는 엑셀로 내보낼 때만 저장돼, 다른 프로젝트로 갔다 오면 수정이 사라졌다)
+   2) 이 브라우저 임시저장, 3) 팀 동기화 중이면 1초 비교를 기다리지 않고 서버로 보낸다
+   내용이 같으면 쓰지 않는다(여러 팀원이 같은 프로젝트를 보고 있어도 서로 계속 덮어쓰지 않게) */
+let autoSaveTimer = null;
+function scheduleAutoSave(){
+  if(!appInitialized) return; // 처음 그릴 때·복원 중에는 저장하지 않는다
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSaveNow, 300);
+}
+function autoSaveNow(){
+  autoSaveTimer = null;
+  if(SYNC_ENABLED && !syncLoaded) return; // 서버 목록을 받기 전(이 브라우저의 예전 임시저장)에는 프로젝트에 쓰지 않는다
+  saveProjectSnapshot();
+  saveDraftNow();
+  if(SYNC_ENABLED) syncChanges();
+}
+// 열려 있는 프로젝트의 저장본을 지금 QC 리스트로 맞춘다(목록 순서는 그대로, 수정 시각은 지금으로)
+function saveProjectSnapshot(){
+  const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
+  if(!entry) return false;
+  const now = currentHistoryEntry();
+  if(snapshotsEqual(entry.snapshot, now.snapshot)) return false;
+  Object.assign(entry, { snapshot: now.snapshot, count: now.count, counts: now.counts, summary: now.summary, date: now.date });
+  saveHistory();
+  renderHistory();
+  return true;
 }
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
   if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
