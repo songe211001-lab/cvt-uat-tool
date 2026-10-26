@@ -632,12 +632,17 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   .tc-editable:hover{border-color:var(--line);}
   .tc-editable:focus{border-color:var(--primary);background:var(--panel);}
+  /* 테스트 내역: 테스터가 직접 적는 칸이라 coral 박스로 위의 기획 내용과 확실히 구분한다 */
   .tc-card-footer{
-    display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;
-    border-top:2px solid var(--primary-soft); /* 결과를 적는 칸: 위의 기획 내용과 나눈다 */
+    margin-top:14px;padding:12px 14px;border-radius:10px;
+    background:var(--primary-soft);border:1px solid var(--primary);border-left-width:4px;
   }
-  .tc-card-footer .tc-footer-item label{color:var(--primary-dark);}
-  .tc-card-footer .tc-editable{background:var(--bg);}
+  .tc-card-footer .tc-footer-item label{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--primary-dark);}
+  .tc-card-footer .tc-footer-item label svg{width:15px;height:15px;flex-shrink:0;}
+  .tc-card-footer .tc-editable{display:block;min-height:56px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
+  .tc-card-footer .tc-editable:hover{border-color:var(--primary);}
+  .tc-card-footer .tc-editable:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .tc-card-footer .tc-editable:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
   /* 대분류 > 중분류 한 줄(두 칸 모두 편집) */
   .tc-cat-line{display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap;}
   .tc-cat-line .tc-editable{flex:0 1 auto;min-width:60px;}
@@ -667,10 +672,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     .bulk-bar > *{flex-shrink:0;}
     /* 5: 머리 버튼: 좁은 화면에서는 글자를 줄인다 */
   }
-  .tc-card-footer .tc-footer-item{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
-  .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;white-space:nowrap;width:112px;flex-shrink:0;letter-spacing:.02em;}
-  .tc-card-footer .tc-editable{flex:1;min-height:auto;}
-  .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
   /* 펼침 버튼: 36px 원(v2 셸의 버튼 높이 32보다 우선) */
   .ad-shell .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
   .row-toggle-btn svg{width:20px;height:20px;transition:transform .18s ease;} /* 디자인 시스템 .ad-btn svg(15px)보다 크게 */
@@ -2517,8 +2518,8 @@ function renderTable(){
 
       <div class="tc-card-footer">
         <div class="tc-footer-item">
-          <label>테스트 내역</label>
-          <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote">${escapeHtml(row.testNote)}</div>
+          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역</label>
+          <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote" data-placeholder="테스트하면서 확인한 내용을 적어주세요">${escapeHtml(row.testNote)}</div>
         </div>
       </div>
       </div>
