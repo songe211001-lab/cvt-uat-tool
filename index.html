@@ -3257,7 +3257,13 @@ function tryRestoreDraft(){
   }, { once: true });
 }
 setInterval(()=>{ if(isDraftDirty()) saveDraftNow(); }, 3000);
+// 페이지를 떠날 때(새로고침·탭 닫기·앱 전환) 1초 비교를 기다리지 않고 바뀐 내용을 서버 대기열에 넣는다.
+// 대기열은 이 브라우저에 저장되어, 다시 열면 받아온 서버 값이 내 변경을 덮지 않고 이어서 보낸다(담당자를 고르자마자 새로고침하면 사라지던 문제)
+const queueUnsentChanges = ()=>{ if(SYNC_ENABLED) syncChanges(); };
+window.addEventListener('pagehide', queueUnsentChanges);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') queueUnsentChanges(); });
 window.addEventListener('beforeunload', (e)=>{
+  queueUnsentChanges();
   if(isDraftDirty()){
     saveDraftNow();
     e.preventDefault();
