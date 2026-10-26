@@ -1464,7 +1464,7 @@ async function handleFile(file){
     return;
   }
   currentFile = file;
-  loadedHistoryId = null; renderHistory(); // 새 기획안은 불러온 이력과 별개다
+  // 지금 프로젝트에 이어서 만든다("QC 생성하기"는 clearWorkingList가 새 프로젝트로 옮긴다)
   currentFileChunks = [];
   currentFilePageCount = null;
   clearPdfState();
@@ -1764,7 +1764,7 @@ async function importFigmaScreens(progressBtn){
     }
 
     clearPdfState();
-    loadedHistoryId = null; renderHistory(); // 새 기획안은 불러온 이력과 별개다
+    // 지금 프로젝트에 이어서 만든다("QC 생성하기"는 clearWorkingList가 새 프로젝트로 옮긴다)
     currentFileChunks = chunks;
     currentFilePageCount = null;
     currentFile = {
@@ -2129,7 +2129,7 @@ function figmaScreenLabel(category, subCategory, frameName){
    발급한 번호" 중 큰 값의 다음 번호를 쓴다 — 삭제 후 되돌리기로 복원되는 행과도 겹치지 않는다.
    ID는 QC-001 또는 가운데에 이름을 넣은 QC-LOGIN-001 형식이다. 번호는 이름과 관계없이 하나로 이어진다
    (예전 ID 접두사 TC-도 그대로 읽고, 불러올 때 normalizeTcIds로 QC-로 맞춘다)
-   (서버 tc_no 전역 유일). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
+   (서버 tc_no는 프로젝트 안에서 유일). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
 let lastIssuedTcNumber = 0;
 const TC_ID_RE = /^(?:QC|TC)-(?:([A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]+)-)?(\d+)$/;
 // 이름 정리: 공백·하이픈은 _로, 영문·숫자·한글·_ 외 글자는 빼고 20자로 자른다
@@ -2198,13 +2198,10 @@ const ROUNDS_PER_FIGMA_SCREEN = 1; // 화면당 묶음 QC: 같은 화면을 여�
 const ROUNDS_PER_PDF_CHUNK_WHEN_SPLIT = 2; // PDF가 여러 조각이면 조각 수만큼 호출이 늘어나므로 조각당 라운드를 줄인다
 const PER_ROUND_TYPE_COUNT = 3;
 
-// QC 리스트를 비우고 새로 시작한다("QC 생성하기"와 분류 화면의 "새 프로젝트"가 같이 쓴다)
+// 빈 새 프로젝트로 시작한다("QC 생성하기"와 분류 화면의 "새 프로젝트"가 같이 쓴다). 지금 프로젝트의 QC는 그대로 남는다
 async function clearWorkingList(){
-  await resetSharedDraft(); // 팀 동기화 중이면 서버의 공용 TC 리스트와 번호도 비운다
-  loadedHistoryId = null; renderHistory(); // 새로 만든 QC는 불러온 이력과 별개다
-  tcData = [];
-  resetTcIdCounter();
-  selectedTcIds.clear();
+  switchProject(null);
+  renderHistory();
   renderTable();
 }
 async function runGeneration(startFresh){
@@ -2829,6 +2826,10 @@ function isSameHistoryEntry(a, b){
 // "불러오기"한 이력(지금 편집 중인 이력)의 _id. 저장하기·엑셀 내보내기는 이 이력에 덮어쓴다.
 // 새로 생성·새 파일·피그마 가져오기·JSON 가져오기·그 이력 삭제 때 지운다.
 let loadedHistoryId = null;
+// QC 리스트는 프로젝트마다 따로다. 서버 행(cvt_tc_rows.project)의 키 = 프로젝트 ID, 아직 목록에 없는 새 프로젝트는 draftProjectKey
+// (QC가 생기면 이 ID로 프로젝트가 만들어진다: createProjectFromList)
+let draftProjectKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+function currentProjectKey(){ return loadedHistoryId || draftProjectKey; }
 // 지금 화면: 분류(프로젝트 목록) / 프로젝트(QC 생성·리스트). 주소 #/c/분류, #/c/분류/p/프로젝트ID와 같이 움직인다
 let currentRoute = { view: 'cat', cat: null };
 // 편집 중인 이력(id)에 지금 내용(entry)을 덮어쓴다. 없으면 null(새로 쌓는다) (순수 함수)
@@ -3133,8 +3134,7 @@ async function handleExcelImportFile(file){
   const ok = await openDialog({
     title: '엑셀 가져오기',
     body: `파일: ${file.name}\n엑셀에서 QC ${rows.length}건을 찾았어요. 지금 QC 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
-      + `QC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`
-      + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
+      + `QC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`,
     okLabel: '가져오기'
   });
   if(ok === null) return false;
@@ -3173,19 +3173,32 @@ function currentHistoryEntry(){
    QC를 고치면 0.3초 뒤(잇따른 수정은 모아서) 바로 저장한다.
    1) 열려 있는 프로젝트(loadedHistoryId)의 저장본에도 반영한다(예전에는 엑셀로 내보낼 때만 저장돼, 다른 프로젝트로 갔다 오면 수정이 사라졌다)
    2) 이 브라우저 임시저장, 3) 팀 동기화 중이면 1초 비교를 기다리지 않고 서버로 보낸다
-   내용이 같으면 쓰지 않는다(여러 팀원이 같은 프로젝트를 보고 있어도 서로 계속 덮어쓰지 않게) */
-let autoSaveTimer = null;
+   내용이 같으면 쓰지 않는다(여러 팀원이 같은 프로젝트를 보고 있어도 서로 계속 덮어쓰지 않게)
+   팀원에게서 받은 변경은 저장본에 쓰지 않는다(고친 사람의 화면이 쓴다) */
+let autoSaveTimer = null, remoteApplying = false;
 function scheduleAutoSave(){
-  if(!appInitialized) return; // 처음 그릴 때·복원 중에는 저장하지 않는다
+  if(!appInitialized || remoteApplying) return; // 처음 그릴 때·복원 중·받은 변경을 그릴 때는 저장하지 않는다
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(autoSaveNow, 300);
 }
 function autoSaveNow(){
   autoSaveTimer = null;
   if(SYNC_ENABLED && !syncLoaded) return; // 서버 목록을 받기 전(이 브라우저의 예전 임시저장)에는 프로젝트에 쓰지 않는다
-  saveProjectSnapshot();
+  if(!loadedHistoryId && tcData.length) createProjectFromList(); // 새 프로젝트는 QC가 생기면 바로 프로젝트 목록에 올린다
+  else saveProjectSnapshot();
   saveDraftNow();
   if(SYNC_ENABLED) syncChanges();
+}
+// 지금 QC 리스트로 새 프로젝트를 만든다(지금 분류, 행 키와 같은 ID). 엑셀 내보내기도 같은 방식으로 만든다
+function createProjectFromList(){
+  const entry = currentHistoryEntry();
+  if(projectCategory && projectCategory !== 'ALL' && projectCategory !== UNCATEGORIZED) entry.category = projectCategory;
+  entry._id = draftProjectKey;
+  addHistoryEntry(entry);
+  loadedHistoryId = entry._id;
+  saveHistory();
+  renderHistory();
+  return entry;
 }
 // 열려 있는 프로젝트의 저장본을 지금 QC 리스트로 맞춘다(목록 순서는 그대로, 수정 시각은 지금으로)
 function saveProjectSnapshot(){
@@ -3209,7 +3222,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   // 새 프로젝트는 프로젝트 관리 탭에서 고른 분류를 따른다(전체·미분류면 미분류)
   if(!rec.overwritten && projectCategory !== 'ALL' && projectCategory !== UNCATEGORIZED) rec.entry.category = projectCategory;
   // 내보낸 프로젝트를 편집 중으로 잡아, 다시 내보내면 같은 프로젝트에 덮어쓰게 한다(같은 내용이 또 쌓이지 않게)
-  if(!rec.entry._id) rec.entry._id = newRowId();
+  if(!rec.entry._id) rec.entry._id = draftProjectKey; // 새 프로젝트 ID = 지금 QC 행의 프로젝트 키
   loadedHistoryId = rec.entry._id;
 
   // 시트 하나("QC 리스트")에 모든 QC를 넣는다. 제목: 프로젝트 이름 · 분류 · 내보낸 시각
@@ -3323,14 +3336,40 @@ function loadHistoryEntry(idx){
   const entry = historyList[idx];
   if(!entry) return;
   if(!entry._id) entry._id = newRowId();
-  loadedHistoryId = entry._id; // 이후 엑셀 내보내기는 이 이력에 덮어쓴다
+  switchProject(entry); // 이후 수정·엑셀 내보내기는 이 프로젝트에 저장된다
   saveHistory();
   renderHistory();
-  tcData = normalizeTcIds(JSON.parse(JSON.stringify(entry.snapshot)));
-  resetTcIdCounter();
-  selectedTcIds.clear();
   renderTable();
   goRoute({ view: 'proj', cat: categoryOf(entry), id: entry._id }, currentRoute.view === 'proj'); // 프로젝트끼리 옮길 때는 뒤로 가기 기록을 늘리지 않는다
+}
+// 다른 프로젝트로 옮긴다(entry가 없으면 빈 새 프로젝트). 지금 프로젝트의 QC는 서버·저장본에 그대로 두고, 옮길 프로젝트의 QC를 꺼낸다
+function switchProject(entry){
+  if(SYNC_ENABLED && syncLoaded){
+    syncChanges(); // 지금 프로젝트의 변경을 먼저 대기열에 싣는다
+    syncShadow.rows.forEach((v, id)=>otherRows.set(id, v));
+    syncShadow.rows = new Map();
+  }
+  loadedHistoryId = entry ? entry._id : null;
+  if(!entry) draftProjectKey = newRowId();
+  tcData = takeProjectRows(entry);
+  resetTcIdCounter();
+  selectedTcIds.clear();
+}
+// 지금 프로젝트의 QC: 서버에서 받은 그 프로젝트의 행. 없으면(예전에 만든 프로젝트) 프로젝트 저장본으로 채운다
+function takeProjectRows(entry){
+  const key = currentProjectKey(), mine = [];
+  otherRows.forEach((v, id)=>{
+    if(v.project !== key) return;
+    const row = rowFromServer(id, v.tc_no, v.data);
+    mine.push(row);
+    syncShadow.rows.set(id, { tc_no: v.tc_no, project: key, data: rowDataOf(row) });
+    otherRows.delete(id);
+  });
+  if(mine.length || !entry) return mine.sort((a, b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
+  const rows = normalizeTcIds(clone(entry.snapshot || []));
+  // 행 ID를 프로젝트 ID로 정해, 두 사람이 동시에 처음 열어도 같은 행이 두 번 쌓이지 않게 한다
+  if(SYNC_ENABLED) rows.forEach((r, i)=>{ r._id = `${entry._id}-r${i + 1}`; });
+  return rows;
 }
 // 분류 화면에서 프로젝트 항목을 누르면 연다. 지금 편집 중인 프로젝트는 다시 불러오지 않고 화면만 옮긴다
 function openProjectItem(idx){
@@ -3403,8 +3442,9 @@ function openProjectManage(cat){
 // 프로젝트(분류) 삭제: 탭과 그 안의 QC 프로젝트를 지우고 첫 탭으로 간다. 되돌리기로 모두 돌아온다
 async function deleteProjectCategory(cat){
   const removed = historyList.map((row, index)=>({ row, index })).filter(x=>categoryOf(x.row) === cat);
-  const prevLoaded = loadedHistoryId, prevAdded = addedCategories.slice(), prevHidden = hiddenCategories.slice();
-  if(removed.some(x=>x.row._id && x.row._id === loadedHistoryId)) loadedHistoryId = null;
+  const prevAdded = addedCategories.slice(), prevHidden = hiddenCategories.slice();
+  const loadedRemoved = removed.find(x=>x.row._id && x.row._id === loadedHistoryId);
+  if(loadedRemoved){ switchProject(null); renderTable(); }
   historyList = historyList.filter(h=>categoryOf(h) !== cat);
   addedCategories = addedCategories.filter(c=>c !== cat);
   if(DEFAULT_CATEGORIES.includes(cat) && !hiddenCategories.includes(cat)) hiddenCategories.push(cat);
@@ -3413,7 +3453,8 @@ async function deleteProjectCategory(cat){
   goRoute({ view: 'main' }); // 첫 탭(프로젝트가 있는 첫 분류)으로
   showUndoToast(`'${cat}' 프로젝트${removed.length ? `와 QC 프로젝트 ${removed.length}건` : ''}을 삭제했어요.`, async ()=>{
     restoreRemovedItems(historyList, removed);
-    addedCategories = prevAdded; hiddenCategories = prevHidden; loadedHistoryId = prevLoaded;
+    addedCategories = prevAdded; hiddenCategories = prevHidden;
+    if(loadedRemoved){ switchProject(loadedRemoved.row); renderTable(); }
     saveCategoryLists();
     await saveHistory();
     goRoute({ view: 'cat', cat });
@@ -3650,13 +3691,13 @@ function renderHistory(){
       const idx = +btn.dataset.remove;
       const removedEntry = historyList[idx];
       const wasLoaded = removedEntry._id && removedEntry._id === loadedHistoryId;
-      if(wasLoaded) loadedHistoryId = null;
+      if(wasLoaded){ switchProject(null); renderTable(); } // 지운 프로젝트의 QC 행은 서버에 남겨 둬, 되돌리면 그대로 돌아온다
       historyList.splice(idx, 1);
       await saveHistory();
       renderHistory();
       showUndoToast(`'${removedEntry.title || removedEntry.fileName}' 프로젝트를 삭제했어요.`, async ()=>{
-        if(wasLoaded) loadedHistoryId = removedEntry._id;
         restoreRemovedItems(historyList, [{index: idx, row: removedEntry}]);
+        if(wasLoaded){ switchProject(removedEntry); renderTable(); }
         await saveHistory();
         renderHistory();
       });
@@ -3671,7 +3712,8 @@ function renderHistory(){
      patch_cvt_tc_row로 합쳐서, 두 사람이 같은 행의 다른 칸을 고쳐도 둘 다 남는다.
    - 보낼 내용은 localStorage(cvt_pending)에 쌓아 두고 순서대로 보낸다. 연결이 끊겨도 다시 연결되면 보낸다.
    - 다른 사람의 변경은 Realtime(postgres_changes)으로 바로 받는다. 실시간 연결이 안 되면 30초마다 새로 받아온다.
-   - TC 번호는 서버(allocate_cvt_tc_nos)가 발급한다. 연결이 안 돼 이 브라우저에서 발급한 번호가 겹치면 저장할 때 새 번호로 바꾼다. */
+   - QC 행은 프로젝트마다 따로다(cvt_tc_rows.project = 프로젝트 ID). 화면에는 지금 프로젝트의 행만 두고, 다른 프로젝트의 행은 otherRows에 둔다.
+   - TC 번호는 서버(allocate_cvt_tc_nos)가 프로젝트 안에서 발급한다. 연결이 안 돼 이 브라우저에서 발급한 번호가 겹치면 저장할 때 새 번호로 바꾼다. */
 const SYNC_CONFIGURED = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 const SYNC_ENABLED = SYNC_CONFIGURED && !!(window.supabase && window.supabase.createClient);
 const SYNC_PENDING_KEY = 'cvt_pending';
@@ -3680,7 +3722,8 @@ const SYNC_POLL_MS = 30000;         // 실시간 연결이 끊겨 있는 동안 
 const SYNC_RETRY_MS = 5000;         // 일시적 오류 뒤 다시 보내는 간격
 
 let sb = null;
-let syncShadow = { rows: new Map(), history: new Map(), testers: new Map() }; // 서버에 반영됐거나 대기열에 실린 기준
+let syncShadow = { rows: new Map(), history: new Map(), testers: new Map() }; // 서버에 반영됐거나 대기열에 실린 기준(QC 행은 지금 프로젝트 것만)
+let otherRows = new Map(); // 다른 프로젝트의 서버 QC 행(id → {tc_no, project, data}). 프로젝트를 옮기면 여기서 꺼낸다(switchProject)
 let syncQueue = [];
 let syncFlushing = false, syncLoaded = false, syncRtUp = false, syncRtEverUp = false;
 let syncErrorMsg = '', syncConflictMsg = '', syncRetryTimer = null;
@@ -3740,7 +3783,7 @@ function localSyncMaps(){
   const rows = new Map(), history = new Map(), testers = new Map();
   tcData.forEach(r=>{
     if(!r._id) r._id = newRowId();
-    rows.set(r._id, { tc_no: tcNumberOf(r.tcId), data: rowDataOf(r) });
+    rows.set(r._id, { tc_no: tcNumberOf(r.tcId), project: currentProjectKey(), data: rowDataOf(r) });
   });
   historyList.forEach(h=>{
     if(!h._id) h._id = newRowId();
@@ -3763,11 +3806,11 @@ function diffSyncMaps(prev, next){
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   next.rows.forEach((v, id)=>{
     const p = prev.rows.get(id);
-    if(!p){ op.rowIns.push({ id, tc_no: v.tc_no, data: v.data }); return; }
+    if(!p){ op.rowIns.push({ id, tc_no: v.tc_no, project: v.project, data: v.data }); return; }
     const patch = {};
     Object.keys(v.data).forEach(k=>{ if(!same(v.data[k], p.data[k])) patch[k] = v.data[k]; });
     if(Object.keys(patch).length) op.rowPatch.push({ id, patch });
-    if(p.tc_no !== v.tc_no) op.rowNo.push({ id, tc_no: v.tc_no, from: p.tc_no });
+    if(p.tc_no !== v.tc_no) op.rowNo.push({ id, tc_no: v.tc_no, from: p.tc_no, project: v.project });
   });
   prev.rows.forEach((_, id)=>{ if(!next.rows.has(id)) op.rowDel.push(id); });
   next.history.forEach((d, id)=>{ if(!same(d, prev.history.get(id))) op.histUp.push({ id, data: d }); });
@@ -3783,7 +3826,7 @@ function diffSyncMaps(prev, next){
 // 아직 못 보낸 변경을 서버에서 받은 기준 위에 얹는다 (다시 불러올 때 내 변경이 사라지지 않도록)
 function applyOpToSyncMaps(maps, op){
   op.rowDel.forEach(id=>maps.rows.delete(id));
-  op.rowIns.forEach(r=>maps.rows.set(r.id, { tc_no: r.tc_no, data: clone(r.data) }));
+  op.rowIns.forEach(r=>maps.rows.set(r.id, { tc_no: r.tc_no, project: r.project || '', data: clone(r.data) }));
   op.rowPatch.forEach(x=>{ const r = maps.rows.get(x.id); if(r) r.data = { ...r.data, ...clone(x.patch) }; });
   op.rowNo.forEach(x=>{ const r = maps.rows.get(x.id); if(r) r.tc_no = x.tc_no; });
   op.histDel.forEach(id=>maps.history.delete(id));
@@ -3831,7 +3874,7 @@ const chunksOf = (arr, n) => { const out = []; for(let i=0; i<arr.length; i+=n) 
 
 // 새 TC 행 저장. 연결이 안 될 때 이 브라우저에서 발급한 번호가 다른 사람 번호와 겹치면(23505) 서버에서 새 번호를 받아 다시 저장한다.
 async function insertTcRows(rows){
-  const toRecord = r => ({ id: r.id, tc_no: r.tc_no, data: r.data, updated_by: SYNC_CLIENT_ID });
+  const toRecord = r => ({ id: r.id, tc_no: r.tc_no, project: r.project || '', data: r.data, updated_by: SYNC_CLIENT_ID });
   const ackRows = (data, list) => (data || []).forEach(d=>{
     const r = list.find(x=>x.id === d.id);
     if(r) ackWrite(r.id, d.updated_at, Object.keys(r.data));
@@ -3845,7 +3888,7 @@ async function insertTcRows(rows){
         const one = await sb.from('cvt_tc_rows').upsert([toRecord(r)], { onConflict: 'id' }).select('id,updated_at');
         if(!one.error){ ackRows(one.data, [r]); break; }
         if(one.error.code !== '23505' || attempt >= 3) sbCheck(one);
-        const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1 }));
+        const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: r.project || '' }));
         renumberLocalRow(r.id, no);
         r.tc_no = no;
       }
@@ -3856,7 +3899,7 @@ let syncRenumbered = 0;
 function renumberLocalRow(id, no){
   const row = tcData.find(x=>x._id === id);
   if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId));
-  const sh = syncShadow.rows.get(id);
+  const sh = syncShadow.rows.get(id) || otherRows.get(id); // 저장하는 사이 다른 프로젝트로 옮겼으면 그쪽 행
   if(sh) sh.tc_no = no;
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, no);
   syncRenumbered++;
@@ -3879,7 +3922,7 @@ async function sendSyncOp(op){
   for(const x of [...down, ...up]){
     const res = await sb.from('cvt_tc_rows').update({ tc_no: x.tc_no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id);
     if(res.error && res.error.code === '23505'){
-      const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1 }));
+      const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: x.project || '' }));
       renumberLocalRow(x.id, no);
       sbCheck(await sb.from('cvt_tc_rows').update({ tc_no: no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id));
     }else sbCheck(res);
@@ -3949,8 +3992,9 @@ async function loadFromServer(){
     fetchAllRows('cvt_tc_rows', 'tc_no'), fetchAllRows('cvt_history', 'id'), fetchAllRows('cvt_testers', 'sort_order')
   ]);
   if(syncLoaded) syncChanges(); // 받아오는 사이에 바뀐 것도 싣는다
+  if(rows.length && !('project' in rows[0])) syncErrorMsg = '서버에 프로젝트별 QC 리스트 설정이 아직 없어요(supabase_schema.sql 11번). Supabase SQL Editor에서 먼저 실행해주세요.';
   const S = {
-    rows: new Map(rows.map(r=>[r.id, { tc_no: r.tc_no, data: r.data || {} }])),
+    rows: new Map(rows.map(r=>[r.id, { tc_no: r.tc_no, project: r.project || '', data: r.data || {} }])),
     history: new Map(history.map(h=>[h.id, h.data || {}])),
     testers: new Map(testers.map(t=>[t.name, t.sort_order]))
   };
@@ -3962,15 +4006,17 @@ async function loadFromServer(){
   const localOnlyTesters = S.testers.size ? [] : testerList.filter(n=>!S.testers.has(n)); // 서버 목록이 비어 있을 때(처음 연결)만 올린다
   if(localOnlyTesters.length) testersDirty = true;
 
-  tcData = Array.from(S.rows, ([id, v])=>rowFromServer(id, v.tc_no, v.data))
-    .concat(localOnlyRows)
-    .sort((a,b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
   historyList = Array.from(S.history, ([id, d])=>({ ...d, _id: id }))
     .concat(localOnlyHistory)
     .sort((a,b)=>String(b.date || '').localeCompare(String(a.date || '')));
   testerList = Array.from(S.testers).sort((a,b)=>a[1] - b[1]).map(([n])=>n).concat(localOnlyTesters);
 
-  syncShadow = { rows: new Map(Array.from(S.rows, ([id, v])=>[id, { tc_no: v.tc_no, data: rowDataOf(rowFromServer(id, v.tc_no, v.data)) }])), history: S.history, testers: S.testers };
+  // 화면에는 지금 프로젝트의 행만 꺼낸다(takeProjectRows가 기준 syncShadow.rows도 채운다)
+  otherRows = S.rows;
+  syncShadow = { rows: new Map(), history: S.history, testers: S.testers };
+  tcData = takeProjectRows(loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null)
+    .concat(localOnlyRows)
+    .sort((a,b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber());
   syncLoaded = true;
   afterRemoteApply();
@@ -4022,7 +4068,12 @@ function applyRemoteChange(table, p){
     if(isDelete){
       if(idx > -1) tcData.splice(idx, 1);
       syncShadow.rows.delete(row.id);
+      otherRows.delete(row.id);
       syncAcks.delete(row.id);
+      return;
+    }
+    if((row.project || '') !== currentProjectKey()){ // 다른 프로젝트의 행: 그 프로젝트를 열 때 꺼낸다
+      otherRows.set(row.id, { tc_no: row.tc_no, project: row.project || '', data: row.data || {} });
       return;
     }
     const keep = pendingFieldsFor(row.id);
@@ -4038,7 +4089,7 @@ function applyRemoteChange(table, p){
       const at = tcData.findIndex(r=>tcNumberOf(r.tcId) > row.tc_no);
       tcData.splice(at === -1 ? tcData.length : at, 0, next);
     }
-    syncShadow.rows.set(row.id, { tc_no: row.tc_no, data: rowDataOf(next) });
+    syncShadow.rows.set(row.id, { tc_no: row.tc_no, project: row.project, data: rowDataOf(next) });
     lastIssuedTcNumber = Math.max(lastIssuedTcNumber, row.tc_no);
   }else if(table === 'cvt_history'){
     const idx = historyList.findIndex(h=>h._id === row.id);
@@ -4085,9 +4136,12 @@ function afterRemoteApply(){
     localStorage.setItem('cvt_uat_history', JSON.stringify(historyList));
     localStorage.setItem('cvt_testers', JSON.stringify(testerList));
   }catch(e){ /* ignore */ }
-  renderTesterChips();
-  renderTable();
-  renderHistory();
+  remoteApplying = true; // 받은 변경을 그리는 동안에는 실시간 저장(프로젝트 저장본 쓰기)을 하지 않는다
+  try{
+    renderTesterChips();
+    renderTable();
+    renderHistory();
+  }finally{ remoteApplying = false; }
 }
 
 let rtChannel = null;
@@ -4157,7 +4211,7 @@ document.getElementById('appDialogInput').addEventListener('keydown', e=>{
 async function allocateTcIds(n, name){
   if(SYNC_ENABLED && sb && n > 0){
     try{
-      const nos = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: n }));
+      const nos = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: n, p_project: currentProjectKey() }));
       if(Array.isArray(nos) && nos.length === n){
         lastIssuedTcNumber = Math.max(lastIssuedTcNumber, ...nos);
         return nos.map(no=>formatTcId(no, name));
@@ -4165,11 +4219,6 @@ async function allocateTcIds(n, name){
     }catch(e){ /* 아래에서 이 브라우저 번호로 대신한다 */ }
   }
   return Array.from({ length: n }, ()=>nextTcId(name));
-}
-// "TC 생성하기"(새로 생성): 팀 공용 TC 리스트와 서버 번호를 비운다. 실패해도 생성은 계속한다(지운 행은 비교 저장으로 지워진다).
-async function resetSharedDraft(){
-  if(!SYNC_ENABLED || !sb) return;
-  try{ sbCheck(await sb.rpc('reset_cvt_draft')); }catch(e){ /* ignore */ }
 }
 
 // 동기화 오류·번호 바뀜 안내를 헤더 아래 한 줄(#syncStatus)에 보인다. 저장 상태·접속자 표시는 두지 않는다.
@@ -4265,16 +4314,15 @@ async function offerImport(data, fileName){
     title: 'JSON 백업 가져오기',
     body: (fileName ? `파일: ${fileName}${data.exportedAt ? ` (내보낸 시각 ${formatExportedAt(data.exportedAt)})` : ''}\n` : '')
       + `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `QC ${data.tcData.length}건·테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
+      + `QC ${data.tcData.length}건은 새 프로젝트로 열고, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
       + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
-      + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : '')
-      + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
+      + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : ''),
     okLabel: '가져오기'
   });
   if(ok === null) return false;
-  loadedHistoryId = null;
-  tcData = normalizeTcIds(data.tcData.map(r=>toExportRow(r))); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
   historyList = merged.list;
+  switchProject(null); // 파일의 QC는 새 프로젝트로 연다(지금 프로젝트는 그대로)
+  tcData = normalizeTcIds(data.tcData.map(r=>toExportRow(r))); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
   testerList = Array.from(new Set(data.testerList.map(n=>n.trim())));
   resetTcIdCounter();
   selectedTcIds.clear();
@@ -4352,16 +4400,7 @@ async function openSharedProjectOnce(){
   const entry = historyList[idx];
   // ?project= 링크는 분류 화면을 거쳐 연다(뒤로 가기 = 그 분류의 프로젝트 목록)
   if(!fromHash) goRoute({ view: 'cat', cat: categoryOf(entry) }, true);
-  const same = snapshotsEqual(tcData.map(toExportRow), entry.snapshot);
-  if(tcData.length && !same){
-    const ok = await openDialog({
-      title: '공유된 프로젝트 열기',
-      body: `'${entry.title || entry.fileName}' 프로젝트(QC ${entry.count}건)를 불러올까요?\n지금 QC 리스트(${tcData.length}건)는 이 프로젝트 내용으로 바뀌어요.`
-        + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원 화면의 QC 리스트도 함께 바뀌어요.' : ''),
-      okLabel: '불러오기'
-    });
-    if(ok === null){ if(fromHash) goRoute({ view: 'cat', cat: currentRoute.cat }, true); return; }
-  }
+  // 프로젝트마다 QC 리스트가 따로라 열어도 다른 프로젝트가 바뀌지 않는다(묻지 않고 연다)
   document.getElementById('draftRestoreBanner').style.display = 'none';
   loadHistoryEntry(idx);
 }
@@ -4415,13 +4454,17 @@ function applyRoute(r){
     try{ openHere = sessionStorage.getItem(OPEN_PROJECT_KEY); draft = JSON.parse(localStorage.getItem('cvt_tc_draft') || '[]'); }catch(e){ /* 저장소를 못 쓰면 링크로 연 것처럼 */ }
     if(openHere === r.id && (SYNC_ENABLED || (Array.isArray(draft) && draft.length))){
       // 같은 탭 새로고침: 작업 중이던 리스트(동기화면 서버, 아니면 임시저장)를 그대로 이어 간다
-      loadedHistoryId = r.id;
+      const entry = historyList.find(h=>h._id === r.id);
+      if(SYNC_ENABLED && syncLoaded && entry){ switchProject(entry); renderTable(); }
+      else loadedHistoryId = r.id; // 서버 목록을 받으면 이 프로젝트의 QC를 꺼낸다(loadFromServer)
       if(!SYNC_ENABLED && document.getElementById('draftRestoreBanner').style.display === 'block') document.getElementById('draftRestoreYesBtn').click();
     }else{
       pendingSharedProject = r.id; // 링크로 연 프로젝트: 목록을 받은 뒤(동기화면 서버에서) 확인하고 불러온다
       if(!SYNC_ENABLED || syncLoaded) openSharedProjectOnce();
     }
   }
+  // 프로젝트를 연 채로 새 프로젝트 주소(#/c/분류/p/new)로 오면 빈 새 프로젝트로 옮긴다
+  if(r.view === 'proj' && r.id === 'new' && loadedHistoryId){ switchProject(null); renderTable(); }
   renderHistory();
   if(prevView !== r.view) window.scrollTo(0, 0);
   // QC가 하나도 없는 프로젝트로 들어오면 QC 생성 창을 바로 연다(이어서 작업할 임시저장 안내가 떠 있으면 그대로 둔다)
@@ -4468,18 +4511,9 @@ qcGenModal.addEventListener('mousedown', e=>{
 });
 qcGenModal.addEventListener('keydown', e=>{ if(e.key === 'Escape' && qcGenerating) e.preventDefault(); });
 qcGenModal.addEventListener('cancel', e=>{ if(qcGenerating) e.preventDefault(); });
-// 분류 화면의 "새 프로젝트": 지금 QC 리스트를 비우고 이 분류의 새 프로젝트로 시작한다(내보낸 프로젝트는 그대로)
+// 분류 화면의 "새 프로젝트": 이 분류의 빈 새 프로젝트로 시작한다(지금 프로젝트의 QC는 그대로 남는다)
 async function startNewProject(){
   const cat = currentRoute.cat;
-  if(tcData.length){
-    const ok = await openDialog({
-      title: '새 프로젝트',
-      body: `지금 QC 리스트(${tcData.length}건)를 비우고 '${cat}' 분류에서 새 프로젝트를 시작할까요?\n엑셀(EXCEL)로 내보낸 프로젝트는 그대로 남아요. 내보내지 않은 변경은 사라져요.`
-        + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원 화면의 QC 리스트도 함께 비워져요.' : ''),
-      okLabel: '새로 시작'
-    });
-    if(ok === null) return;
-  }
   await clearWorkingList();
   goRoute({ view: 'proj', cat, id: 'new' });
 }
