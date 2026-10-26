@@ -247,13 +247,113 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .ad-statusboard__item:last-child{border-bottom:none;}
   .ad-table{min-width:900px;}
 }
+
+/* ════════════════════════════════════════════════════════════
+   v2 · 화면 틀(왼쪽 GNB + 위 헤더 + 흰 본문)과 컨트롤 규칙 — DESIGN-v2.md
+   기준 화면: 업무 관리 대시보드(workboard-server/index.html). v1 클래스 값은 그대로 두고,
+   .ad-shell 안에서만 v2 규칙(버튼 높이 등)을 적용해요.
+   ════════════════════════════════════════════════════════════ */
+
+/* ── 셸 ──────────────────────────────────────────────────── */
+.ad-shell{display:flex; min-height:100vh; align-items:stretch; background:var(--panel);}
+.ad-shell__main{flex:1; min-width:0; display:flex; flex-direction:column; background:var(--panel);}
+.ad-main-body{width:100%; padding:28px 100px 48px; display:flex; flex-direction:column; gap:16px;}
+.ad-shell__backdrop{display:none;}
+
+/* ── GNB ─────────────────────────────────────────────────── */
+.ad-gnb{width:236px; flex:none; position:sticky; top:0; height:100vh; overflow-y:auto; z-index:13;
+  display:flex; flex-direction:column; gap:8px; padding:12px; background:var(--bg); color:var(--ink); border-right:1px solid var(--line);}
+.ad-gnb__fold{width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; padding:0; border:0; background:none;
+  color:var(--ink-soft); border-radius:var(--radius-md); cursor:pointer;}
+.ad-gnb__fold:hover{background:var(--grey-100); color:var(--ink);}
+.ad-gnb__fold svg{width:20px; height:20px;}
+.ad-gnb__nav{display:flex; flex-direction:column; gap:4px;}
+.ad-gnb__group{display:flex; flex-direction:column; gap:4px; border-top:1px solid var(--line); padding-top:8px; margin-top:4px;}
+.ad-gnb-item{display:flex; align-items:center; gap:10px; width:100%; height:40px; padding:0 12px; border:0; border-radius:var(--radius-lg);
+  background:none; color:var(--ink); font-family:var(--font-sans); font-size:14px; font-weight:600; text-align:left; text-decoration:none; cursor:pointer;}
+.ad-gnb-item svg{width:18px; height:18px; flex:none; color:var(--ink-soft);}
+.ad-gnb-item:hover{background:var(--grey-100);}
+.ad-gnb-item:hover svg{color:var(--ink);}
+.ad-gnb-item[aria-selected="true"], .ad-gnb-item[aria-current="page"]{background:var(--primary-soft); color:var(--ink); font-weight:700;}
+.ad-gnb-item[aria-selected="true"] svg, .ad-gnb-item[aria-current="page"] svg{color:var(--primary-dark);}
+.ad-gnb-item:focus-visible, .ad-gnb__fold:focus-visible{outline:2px solid var(--primary-dark); outline-offset:-2px;}
+.ad-gnb-brand{margin-top:auto; min-height:48px; display:flex; align-items:center; gap:8px; padding:8px 10px;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg);}
+.ad-gnb-brand__logo{width:24px; height:24px; flex:none;}
+.ad-gnb-brand__name{flex:1; min-width:0; margin:0; font-size:14px; font-weight:800; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+/* 접힘(64px): 아이콘만, 브랜드는 로고만 */
+.ad-shell.is-folded .ad-gnb{width:64px;}
+.ad-shell.is-folded .ad-gnb__fold{align-self:center;}
+.ad-shell.is-folded .ad-gnb-item{width:40px; padding:0; justify-content:center; margin-inline:auto;}
+.ad-shell.is-folded .ad-gnb-item span, .ad-shell.is-folded .ad-gnb-brand__name{display:none;}
+.ad-shell.is-folded .ad-gnb-brand{justify-content:center; padding:8px 0; border-color:transparent; background:none;}
+
+/* ── 헤더 ────────────────────────────────────────────────── */
+.ad-topbar{position:sticky; top:0; z-index:12; min-height:56px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:8px 24px; background:var(--panel); border-bottom:1px solid var(--line);}
+.ad-topbar__menu{display:none;}
+.ad-topbar__title{flex:none; margin:0; font-size:17px; font-weight:800; letter-spacing:-0.01em;}
+.ad-topbar__tools{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
+.ad-topbar__end{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;}
+.ad-topbar__note{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:420px;}
+.ad-topbar__note b{color:var(--ink); font-weight:600;}
+
+/* ── 컨트롤 높이 · 버튼 역할 (셸 안에서만) ─────────────────── */
+.ad-shell .ad-btn{height:32px; padding:0 12px; font-size:13px; line-height:1;}
+.ad-shell .ad-btn--sm{height:28px; padding:0 10px; font-size:12px;}
+.ad-shell .ad-btn--icon{width:32px; padding:0;}
+.ad-shell .ad-btn--primary{background:var(--primary-dark); border-color:var(--primary-dark); color:var(--on-primary);}
+.ad-shell .ad-btn--primary:hover{filter:brightness(.92);}
+.ad-shell .ad-btn--ghost{padding:0 12px; color:var(--ink-soft);}
+.ad-shell .ad-btn--ghost:hover{background:var(--grey-100); color:var(--ink);}
+.ad-shell .ad-btn--danger{color:var(--fatal-text); border-color:var(--fatal-border);}
+.ad-shell .ad-btn--danger:hover{background:var(--fatal-soft); color:var(--fatal-text);}
+.ad-shell .ad-btn:active:not(:disabled){transform:translateY(1px);}
+.ad-shell .ad-btn--primary:active:not(:disabled){filter:brightness(.85);}
+.ad-shell .ad-btn:disabled{opacity:.4; cursor:not-allowed; filter:none;}
+.ad-shell .ad-select, .ad-shell .ad-input{height:32px; padding:0 10px; font-size:13px;}
+.ad-topbar .ad-select, .ad-topbar .ad-input{width:auto;}
+
+/* ── 요약 표 ─────────────────────────────────────────────── */
+.ad-stat-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--panel);}
+.ad-stat-table{width:100%; min-width:560px; border-collapse:collapse; table-layout:fixed;}
+.ad-stat-table th{padding:10px 14px; font-size:12px; font-weight:600; color:var(--muted); text-align:left; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; border-bottom:1px solid var(--line); border-left:1px solid var(--line);}
+.ad-stat-table td{padding:10px 14px; font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink); vertical-align:top; border-left:1px solid var(--line);}
+.ad-stat-table th:first-child, .ad-stat-table td:first-child{border-left:0;}
+.ad-stat-table td small{margin-left:2px; font-size:12px; font-weight:600; color:var(--muted);}
+.ad-stat-table td.is-alert{color:var(--fatal-text);}
+.ad-stat-bar{height:4px; margin-top:6px; background:var(--grey-100); border-radius:2px; overflow:hidden;}
+.ad-stat-bar i{display:block; height:100%; background:var(--pass);}
+
+/* ── 화면 폭 단계: 1200 / 900 / 600 ──────────────────────── */
+@media (max-width:1200px){ .ad-main-body{padding-inline:48px;} }
+@media (max-width:900px){
+  .ad-main-body{padding-inline:24px; padding-top:20px;}
+  .ad-gnb{position:fixed; left:0; top:0; bottom:0; height:auto; width:min(260px, 82vw); z-index:25;
+    transform:translateX(-100%); transition:transform .18s var(--ease, ease); box-shadow:var(--shadow-3);}
+  .ad-shell.is-folded .ad-gnb{width:min(260px, 82vw);}
+  .ad-shell.is-folded .ad-gnb-item{width:auto; padding:0 12px; justify-content:flex-start; margin-inline:0;}
+  .ad-shell.is-folded .ad-gnb-item span, .ad-shell.is-folded .ad-gnb-brand__name{display:revert;}
+  .ad-shell.is-folded .ad-gnb-brand{justify-content:flex-start; padding:8px 10px; border-color:var(--line); background:var(--panel);}
+  .ad-shell.is-drawer .ad-gnb{transform:none;}
+  .ad-shell.is-drawer .ad-shell__backdrop{display:block; position:fixed; inset:0; z-index:24; background:var(--overlay);}
+  .ad-gnb__fold{display:none;}
+  .ad-topbar{padding-inline:16px;}
+  .ad-topbar__menu{display:inline-flex;}
+  .ad-topbar__tools{order:5; flex-basis:100%;}
+  .ad-topbar__note{max-width:100%; white-space:normal;}
+  .ad-shell .ad-btn, .ad-shell .ad-select, .ad-shell .ad-input{height:36px;}
+  .ad-shell .ad-btn--icon{width:36px;}
+  .ad-shell .ad-btn--sm{height:32px;}
+}
+@media (max-width:600px){ .ad-main-body{padding-inline:16px;} .ad-topbar{position:static;} }
+@media (prefers-reduced-motion: reduce){ .ad-gnb{transition:none;} }
 </style>
 <style>
   /* 색·글꼴·간격·모서리는 알닷 디자인 시스템 토큰(alddot-tokens.css)만 쓴다. 여기서는 새 색을 만들지 않는다.
      QA 결과 6단계 색만 이 도구 고유 이름으로 토큰에 연결한다(--major/--critical은 토큰에서 다른 뜻이라 이름을 따로 둔다). */
   :root{
-    --excel-green: #217346; /* 엑셀 내보내기 버튼 전용(엑셀을 떠올리는 초록) */
-    --excel-green-dark: #185c37;
     --result-pass: var(--pass);
     --result-minor: var(--minor-border);
     --result-na: var(--na);
@@ -263,11 +363,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   *{box-sizing:border-box;}
   :root{color-scheme:light;}
-  /* 와이드 레이아웃: 페이지 폭 제한(.ad-page의 1180px)을 풀고 좌우 바깥 여백을 이 토큰 하나로 맞춘다.
-     머리·탭·카드가 모두 .app 안에 있어 함께 맞춰진다. 좁은 화면은 디자인 시스템의 모바일 바깥 여백(16px)으로 줄인다. */
-  :root{--page-gutter:100px;}
-  @media (max-width:1040px){ :root{--page-gutter:var(--space-16);} }
-  .app.ad-page{max-width:none;padding-left:var(--page-gutter);padding-right:var(--page-gutter);}
   body{margin:0;-webkit-font-smoothing:antialiased;}
   /* 이 도구는 밝은 화면 하나로 고정된 디자인이라, 보고 있는 기기/브라우저가 다크 모드여도
      입력창(input/textarea/select)이 검은 배경으로 바뀌지 않도록 배경/글자색을 명시한다.
@@ -278,33 +373,72 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   [hidden]{display:none !important;} /* ad-btn 등 display를 정한 클래스에도 hidden 속성이 이기게 */
 
-  /* Header */
-  /* 머리: 제목·설명 아래에 버튼 한 줄 (JSON 내보내기·가져오기·엑셀 내보내기 → 저장 상태·접속자·지금 동기화) */
-  .header{margin-bottom:18px;}
-  .header-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;}
-  .header-sync, .header-backup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  /* 머리: 왼쪽 프로젝트 셀렉트, 오른쪽 끝에 JSON 버튼·저장 상태·접속자 */
-  .header-actions{justify-content:space-between;}
-  .header-project{display:flex;flex:1 1 360px;max-width:560px;min-width:0;}
-  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto;}
-  .presence-chip{border-radius:var(--radius-pill);}
-  .header-sync{position:relative;}
-  .header-sync .sync-time{font-weight:500;}
-  button.ad-sync{cursor:pointer;}
-  button.ad-sync:hover:not(:disabled){border-color:var(--line);background:var(--panel);}
-  button.ad-sync:disabled{cursor:default;}
-  /* 저장 상태를 누르면 그 아래에 뜨는 접속 이력 창 (이벤트 운영 관리대장의 동기화 기록 창과 같은 방식) */
-  .sync-log{position:absolute;top:calc(100% + 8px);right:0;left:auto;z-index:40;width:min(380px, calc(100vw - 32px));max-height:60vh;text-align:left;}
-  .sync-log-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
-  .sync-log-head .ad-modal__title{margin:0;}
-  .header-sync .sync-time:empty{display:none;}
-  .header-sync-msg{margin-top:8px;}
-  #globalAlertBox:not(:empty){margin-bottom:18px;}
-  .tc-name-input{width:150px;}
-  .header .ad-subtitle{max-width:720px;word-break:keep-all;} /* 한국어는 단어 단위로 줄바꿈 */
+  /* 화면 틀: 알닷 운영툴 디자인 시스템 v2 셸(.ad-shell · .ad-gnb · .ad-topbar · .ad-main-body, DESIGN-v2.md).
+     분류(프로젝트 목록) / 프로젝트(QC 생성) 두 화면을 body[data-view]로 바꾸고, 헤더 도구는 그 화면 것만 보인다 */
+  body[data-view="cat"] .tool-proj, body[data-view="proj"] .tool-cat{display:none;}
+  /* GNB 대메뉴 아코디언(워크보드 .gnbGroup·.gnbHead·.gnbBody): 머리 36px 13px 700 --ink-soft, 소메뉴는 왼쪽 8px 들여 씀 */
+  .gnb-group{display:flex;flex-direction:column;gap:4px;}
+  .gnb-head{display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 12px;border:0;border-radius:var(--radius-lg);background:none;
+    font:inherit;font-size:13px;font-weight:700;color:var(--ink-soft);text-align:left;cursor:pointer;}
+  .gnb-head:hover{background:var(--grey-100);color:var(--ink);}
+  .gnb-head svg{width:18px;height:18px;flex:none;}
+  .gnb-head .lbl{flex:1;min-width:0;}
+  .gnb-head .chev{font-size:11px;transition:transform .12s var(--ease);}
+  .gnb-head[aria-expanded="false"] .chev{transform:rotate(-90deg);}
+  .gnb-head:focus-visible{outline:2px solid var(--primary-dark);outline-offset:-2px;}
+  .gnb-body{display:flex;flex-direction:column;gap:4px;}
+  #gnbQcBody{padding-left:8px;}
+  #gnbQcBody[hidden]{display:none;}
+  .gnb-sub .count{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .gnb-sub[aria-current="page"] .count{color:var(--ink-soft);}
+  .gnb-sub--add{color:var(--ink-soft);font-weight:600;}
+  /* 접힘(64px): 대메뉴 아이콘만, 소메뉴는 숨김 */
+  .ad-shell.is-folded .gnb-head{width:40px;padding:0;justify-content:center;margin-inline:auto;}
+  .ad-shell.is-folded .gnb-head .lbl, .ad-shell.is-folded .gnb-head .chev, .ad-shell.is-folded #gnbQcBody{display:none;}
+  @media (max-width:900px){
+    .ad-shell.is-folded .gnb-head{width:100%;padding:0 12px;justify-content:flex-start;margin-inline:0;}
+    .ad-shell.is-folded .gnb-head .lbl, .ad-shell.is-folded .gnb-head .chev{display:revert;}
+    .ad-shell.is-folded #gnbQcBody:not([hidden]){display:flex;}
+  }
+  /* 분류 탭: 본문 맨 위(워크보드 프로젝트 탭 .ptab: 안쪽 8×12, 600, 선택 = 진한 글자 + 2.5px 밑줄, 건수는 회색 알약) */
+  .cat-tabs{display:flex;align-items:flex-end;gap:4px;border-bottom:1px solid var(--line);}
+  .cat-tabs__list{display:flex;gap:4px;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;}
+  .cat-tabs__list::-webkit-scrollbar, .tester-tabs::-webkit-scrollbar{display:none;}
+  .cat-tab{display:flex;align-items:center;gap:6px;flex-shrink:0;padding:8px 12px;border:0;border-bottom:2.5px solid transparent;
+    background:transparent;font:inherit;font-weight:600;color:var(--muted);white-space:nowrap;cursor:pointer;transition:color .12s var(--ease);}
+  .cat-tab:hover{color:var(--primary-dark);}
+  .cat-tab[aria-current="page"]{color:var(--primary-dark);border-bottom-color:var(--primary);}
+  .cat-tab .count{font-size:12px;font-variant-numeric:tabular-nums;background:var(--grey-100);border-radius:10px;padding:0 6px;}
+  .cat-tab:focus-visible{outline:2px solid var(--primary-dark);outline-offset:-2px;}
+  .cat-tab--add{color:var(--ink-soft);}
+  /* 헤더: 화면 이름(분류 > 프로젝트) → 도구 → 오른쪽 JSON·저장 상태·접속자 */
+  .ad-topbar__title.view-title{display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;max-width:min(480px, 100%);}
+  @media (max-width:900px){ .ad-topbar__title.view-title{font-size:16px;} }
+  .crumb-link{flex-shrink:0;border:none;background:none;padding:2px 4px;margin-left:-4px;border-radius:var(--radius-xs);font:inherit;color:var(--muted);cursor:pointer;}
+  .crumb-link:hover{color:var(--primary-dark);text-decoration:underline;}
+  .crumb-sep{flex-shrink:0;color:var(--muted);font-weight:600;}
+  .crumb-current{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ad-topbar .project-select{max-width:220px;}
+  .ad-topbar .project-search{width:240px;}
+  .ad-topbar .qc-search{width:170px;}
+  .header-sync-msg{flex-basis:100%;margin:0;}
+  /* 내보내기·가져오기: 프로젝트 화면은 셀렉트 바로 오른쪽, 분류 화면은 검색·정렬·새 프로젝트 뒤 */
+  #globalAlertBox:empty{display:none;}
+  @media (max-width:900px){
+    .ad-topbar .project-select, .ad-topbar .project-search{flex:1 1 200px;max-width:none;width:auto;}
+    .ad-topbar .project-select{flex-basis:100%;} /* 셀렉트는 한 줄 전체, 내보내기·가져오기는 그 아래 나란히 */
+    .ad-topbar .qc-search{flex:1 1 100%;width:auto;} /* 프로젝트 화면: QC 검색도 한 줄 전체, 유형·결과·버튼은 그 아래 */
+    .ad-topbar .tool-proj.ad-select:not(.project-select){flex:1 1 40%;min-width:0;} /* 유형·결과 한 줄 */
+    .ad-topbar #qcGenOpenBtn{flex:1 1 0;} /* 내보내기·가져오기·QC 생성 한 줄 */
+    .ad-topbar .json-btn{flex:1 1 0;}
+    .export-menu > summary{width:100%;}
+    .export-menu__list{left:0;right:auto;} /* 좁은 화면: 버튼 왼쪽 기준으로 펼쳐 화면 밖으로 잘리지 않게 */
+  }
+  /* v2: 본문은 흰 바탕, 회색 바탕 + 흰 카드 대신 구분선과 제목으로 구획을 나눈다 */
+  .ad-main-body .panel .card.ad-card{border:none;border-top:1px solid var(--line);border-radius:0;background:none;padding:24px 0 8px;margin:0;}
+  .ad-main-body .panel > .card:first-child{border-top:none;padding-top:0;}
+  .ad-main-body #tcStatsCard + .card{border-top:none;} /* 통계 아래 구분선 없음 */
 
-  /* Tabs */
-  .ad-tabs{margin-bottom:18px;}
   .panel{display:none;}
   .panel.active{display:block;}
 
@@ -313,18 +447,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .card .ad-title{margin-bottom:14px;}
 
   .sub-txt{font-size:12px;color:var(--muted);margin:0;font-family:inherit;}
-  .file-chip{
-    display:inline-flex;align-items:center;gap:8px;
-    background:var(--primary-soft);color:var(--primary-dark);
-    padding:2px 4px 2px 12px;border-radius:6px;font-size:13px;font-weight:600;margin-top:10px;
-    max-width:min(100%, 420px);min-width:0;
-  }
-  .file-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-  .file-chip .sub-txt{white-space:nowrap;}
-  /* 9: 첨부 제거 버튼은 32px 누름 영역 */
-  .file-chip button{
-    color:var(--primary-dark);font-size:13px;font-weight:700;width:32px;height:32px;flex-shrink:0;
-  }
 
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
   .field-inline{display:flex;flex-direction:column;gap:4px;}
@@ -345,52 +467,30 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   #errorBox .ad-alert, #genNoticeBox .ad-callout{margin-top:12px;}
 
-  /* Status distribution bar */
-  .dist-wrap{margin-bottom:8px;}
-  .dist-bar{display:flex;height:6px;border-radius:var(--radius-sm);overflow:hidden;background:var(--line);}
-  .dist-bar span{height:100%;}
-  .dist-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted);}
-  .dist-legend .item{display:flex;align-items:center;gap:5px;}
-  .dist-legend .item.zero{opacity:.45;}
-  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
-  .dist-group{margin-bottom:18px;}
-  .dist-group:last-child{margin-bottom:0;}
-  .dist-group-title{
-    font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:7px;
-    display:flex;align-items:center;gap:6px;
-  }
-  .dist-group-title .count-badge{font-weight:500;color:var(--muted);}
-  .dist-empty{color:var(--muted);font-size:12px;}
+  /* QC 통계 요약 표: "전체" 칸 아래 FO·BO */
+  /* .ad-stat-wrap(overflow-x:auto)은 overflow-y도 auto가 되어, 줄 높이 반올림만으로 세로 스크롤 막대가 생겼다.
+     넘침이 없는 격자로 그린다: 넓으면 7칸 한 줄, 900px 이하 4칸, 600px 이하 2칸. 칸 사이 1px --line(격자 간격 + 바탕) */
+  .stat-grid{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;}
+  .stat-cell{min-width:0;padding-bottom:10px;background:var(--panel);}
+  .stat-label{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stat-value{padding:10px 14px 0;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .stat-value small{margin-left:2px;font-size:12px;font-weight:600;color:var(--muted);}
+  .stat-cell.is-alert .stat-value{color:var(--fatal-text);}
+  .stat-cell > .ad-stat-bar{margin:6px 14px 0;}
+  .stat-sub{margin:2px 14px 0;font-size:12px;font-weight:600;color:var(--muted);}
+  @media (max-width:900px){ .stat-grid{grid-template-columns:repeat(4, minmax(0, 1fr));} .stat-cell--done{grid-column:span 2;} }
+  @media (max-width:600px){ .stat-grid{grid-template-columns:repeat(2, minmax(0, 1fr));} .stat-cell--total{grid-column:span 2;} .stat-cell--done{grid-column:auto;} }
 
-  /* Table */
-  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-md);}
-  table{border-collapse:collapse;width:100%;min-width:1300px;font-size:13px;}
-  thead th{
-    background:var(--primary-soft);color:var(--ink);font-weight:700;font-size:12px;
-    text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);
-    position:sticky;top:0;white-space:nowrap;
-  }
-  tbody td{
-    border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top;
-  }
-  tbody tr:hover{background:var(--bg);}
-  td .cell-edit{
-    outline:none;min-width:70px;line-height:1.45;white-space:pre-wrap;
-  }
-  td .cell-edit:focus{background:var(--primary-soft);border-radius:4px;}
-  td.tcid{font-weight:700;color:var(--primary-dark);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  /* QC 행의 셀렉트(화면유형·진행상태·결과) */
   select.result-select, select.screentype-select, select.status-select{
     border:1px solid var(--line);border-radius:var(--radius-xs);padding:4px 8px;font-size:12px;font-weight:700;
     background:var(--panel);color:var(--ink);font-family:inherit;cursor:pointer;
   }
-  td.action-col{text-align:center;white-space:nowrap;}
   .icon-btn{
     border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px;
     padding:0;min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center;
   }
   .tc-card-head select{min-height:32px;}
-  .ad-btn--sm{min-height:32px;}
-  button.ad-sync{min-height:36px;} /* 11: 옆 버튼(36px)과 높이를 맞춘다 */
   .icon-btn:hover{color:var(--primary-dark);}
 
   .project-select{flex:1 1 auto;width:100%;min-width:0;}
@@ -403,8 +503,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     flex-wrap:wrap;
   }
   .history-item .meta{display:flex;flex-direction:column;gap:3px;}
-  .history-title{appearance:none;background:none;border:1px solid transparent;border-radius:var(--radius-xs);padding:1px 6px;margin-left:-7px;font:inherit;color:inherit;text-align:left;cursor:text;}
-  .history-title:hover{border-color:var(--line);background:var(--panel);}
+  .history-item[data-open]{cursor:pointer;transition:border-color .12s var(--ease);}
+  .history-item[data-open]:hover{border-color:var(--grey-400);}
+  .history-item[data-open]:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .history-title-input{width:min(420px,100%);font-weight:700;}
   .history-item .file-name .ad-badge{margin-left:8px;vertical-align:1px;}
   .history-item .file-name{font-weight:700;font-size:13.5px;overflow-wrap:anywhere;}
@@ -415,55 +516,36 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .history-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
   .history-item.is-editing{border-color:var(--primary);box-shadow:inset 3px 0 0 var(--primary);}
   .project-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  /* 프로젝트 분류: 탭 줄과 항목의 분류 칩 */
-  .category-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-  .category-tab .count{color:var(--muted);font-weight:500;margin-left:4px;}
-  .category-tab[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
-  .category-tab[aria-pressed="true"] .count{color:var(--primary-dark);}
+  /* 프로젝트 항목의 분류 칩 */
   .category-chip{cursor:pointer;border:1px solid transparent;margin-right:8px;vertical-align:1px;}
   .category-chip:hover{border-color:var(--primary);}
   .category-chip.is-none{background:var(--grey-100);color:var(--muted);}
   .category-select{width:auto;min-width:140px;margin-right:8px;}
-  .category-add{color:var(--primary-dark);}
   /* 담당자별 탭(QC 리스트) */
-  .tester-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .tester-tabs{display:flex;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;}
+  .tester-tabs > *{flex-shrink:0;}
   .tester-tab .count{color:var(--muted);font-weight:500;margin-left:6px;}
   .tester-tab[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
   .tester-tab[aria-pressed="true"] .count{color:var(--primary-dark);}
-  @media (max-width:640px){ .tester-tabs{flex-wrap:nowrap;overflow-x:auto;} .tester-tabs > *{flex-shrink:0;} }
   /* 카드 머리 담당자 버튼과 고르기 팝오버 */
-  .tester-pick{min-width:96px;max-width:160px;justify-content:flex-start;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;text-align:left;}
+  .tester-pick{min-width:96px;max-width:160px;justify-content:flex-start;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;text-align:left;line-height:30px;}
   .tester-pick.is-none{color:var(--muted);}
   .tester-pick[aria-expanded="true"]{border-color:var(--primary);}
   @media (max-width:900px){ .tc-card-controls > .tester-pick{width:100%;max-width:none;min-width:0;} }
   .tester-popover{position:fixed;z-index:90;min-width:200px;max-width:min(280px, calc(100vw - 16px));max-height:280px;overflow:auto;padding:10px 12px;box-shadow:var(--shadow-3);}
   .tester-option{display:flex;align-items:center;gap:8px;padding:6px 2px;font-size:13px;color:var(--ink);cursor:pointer;}
-  /* QC 리스트 머리 버튼: 전체 펼치기와 엑셀 내보내기를 같은 크기로 */
-  .qc-list-btn{min-width:140px;min-height:36px;align-self:center;}
-  #tcCollapseAllBtn{margin-left:auto;}
-  @media (max-width:640px){
-    /* 휴대폰: 제목 줄 아래에 두 버튼을 반씩 */
-    .tc-section-head:has(.qc-list-btn){flex-wrap:wrap;}
-    .tc-section-head:has(.qc-list-btn)::after{content:"";flex-basis:100%;order:1;} /* 제목 줄 다음에 줄바꿈 */
-    .tc-section-head .qc-list-btn{flex:1 1 0;min-width:0;order:2;}
-    #tcCollapseAllBtn{margin-left:0;}
-  }
-  .project-tools .ad-input{flex:1;min-width:200px;width:auto;}
+  /* QC 리스트 머리: 전체 펼치기는 제목 줄 오른쪽 끝 */
+  #tcCollapseAllBtn{margin-left:auto;align-self:center;}
+  /* 헤더 내보내기 메뉴: JSON / EXCEL(워크보드 내보내기 메뉴 .menuList와 같은 모양) */
+  .export-menu{position:relative;}
+  .export-menu > summary{list-style:none;}
+  .export-menu > summary::-webkit-details-marker{display:none;}
+  .export-menu[open] > summary{border-color:var(--primary);color:var(--primary-dark);}
+  .export-menu__list{position:absolute;right:0;top:calc(100% + 4px);z-index:30;min-width:150px;display:flex;flex-direction:column;gap:2px;padding:6px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-3);}
+  .export-menu__list .ad-btn{justify-content:flex-start;width:100%;}
+  .export-menu__list .ad-btn:focus-visible{outline-offset:-2px;}
   .project-tools .ad-select{width:auto;}
-  /* 1: 엑셀 내보내기 강조(초록). 코랄 primary와 구분된다 */
-  .excel-btn{display:inline-flex;align-items:center;gap:6px;min-height:36px;background:var(--excel-green);border-color:var(--excel-green);color:var(--on-primary);font-weight:700;}
-  .excel-btn:hover:not(:disabled){background:var(--excel-green-dark);border-color:var(--excel-green-dark);color:var(--on-primary);}
-  .excel-icon rect{fill:var(--on-primary);}
-  .excel-icon path{stroke:var(--excel-green);stroke-width:2.2;stroke-linecap:round;fill:none;}
-  .access-log-list{list-style:none;margin:0;padding:0;}
-  .access-log-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
-  .access-log-list li:last-child{border-bottom:none;}
-  .access-log-list .when{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
-  /* 업로드 방식: 겉모양은 체크박스, 동작은 라디오(한 번에 하나) */
-  .mode-choice{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
-  .mode-option{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
-  /* 모드 라디오: 디자인 시스템 .ad-check와 같은 값 */
-  .mode-option input[type="radio"]{width:17px;height:17px;margin:0;flex-shrink:0;accent-color:var(--primary);cursor:pointer;}
   /* 체크박스: 브라우저·다크 모드에 따라 꺼진 칸이 검게 보이지 않도록 직접 그린다(꺼짐·비활성은 흰 바탕) */
   input[type="checkbox"]{
     appearance:none;-webkit-appearance:none;position:relative;display:inline-block;vertical-align:middle;
@@ -479,20 +561,17 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   input[type="checkbox"]:indeterminate::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:2px;background:var(--on-primary);}
   input[type="checkbox"]:disabled{background:var(--panel);border-color:var(--line);cursor:not-allowed;}
   input[type="checkbox"]:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
-  .mode-option input[type="radio"]:checked + span{color:var(--primary-dark);}
-  #claudeApiKeyStatus:empty{display:none;}
   .figma-screen-name{word-break:break-all;line-height:1.3;}
   .screentype-badge{
     display:inline-block;color:var(--on-primary);font-size:10.5px;font-weight:800;
     padding:2px 7px;border-radius:var(--radius-sm);letter-spacing:.02em;
   }
 
-  .tester-manage{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
-  .tester-manage label{font-size:11.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:8px;}
-  .tester-manage label .sub-txt{display:inline;font-weight:500;margin-left:6px;}
+  .tester-manage label .ad-badge{margin-left:6px;font-weight:600;}
   .tester-input-row{display:flex;gap:8px;}
   .tester-input-row .ad-input{flex:1;min-width:140px;width:auto;}
-  .tester-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .tester-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .tester-chips:empty{display:none;}
   .tester-chip{
     display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);
     color:var(--primary-dark);padding:4px 6px 4px 12px;border-radius:6px;font-size:12.5px;font-weight:600;
@@ -586,45 +665,25 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     .tc-cat-sep{display:none;}
     .bulk-bar.show{flex-wrap:nowrap;overflow-x:auto;}
     .bulk-bar > *{flex-shrink:0;}
-    /* 3: 생성 버튼 줄이 화면 밖으로 넘치지 않게 */
-    .toolbar-actions{margin-left:0;width:100%;flex-wrap:wrap;}
-    .toolbar-actions .tc-name-input{flex:1 1 100%;width:auto;}
-    .toolbar-actions .ad-btn{flex:1 1 0;}
-    /* 5: 머리 버튼: 셀렉트는 한 줄 전체, 버튼 세 개는 한 줄 */
-    .header-project{flex:1 1 100%;max-width:none;}
-    .header-right{width:100%;}
-    .header-backup .ad-btn{padding:7px 8px;font-size:12px;white-space:nowrap;}
+    /* 5: 머리 버튼: 좁은 화면에서는 글자를 줄인다 */
   }
   .tc-card-footer .tc-footer-item{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
   .tc-card-footer .tc-footer-item label{font-size:11px;font-weight:700;white-space:nowrap;width:112px;flex-shrink:0;letter-spacing:.02em;}
   .tc-card-footer .tc-editable{flex:1;min-height:auto;}
   .tc-card-footer .icon-btn{margin-left:auto;font-size:15px;}
-  .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
+  /* 펼침 버튼: 36px 원(v2 셸의 버튼 높이 32보다 우선) */
+  .ad-shell .row-toggle-btn{color:var(--ink);background:var(--panel);border:1px solid var(--line);flex-shrink:0;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
   .row-toggle-btn svg{width:20px;height:20px;transition:transform .18s ease;} /* 디자인 시스템 .ad-btn svg(15px)보다 크게 */
-  .excel-btn .excel-icon{width:16px;height:16px;}
   .row-toggle-btn[aria-expanded="false"] svg{transform:rotate(-90deg);}
-  .row-toggle-btn[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
-  .row-toggle-btn:hover{border-color:var(--primary);color:var(--primary-dark);}
+  .ad-shell .row-toggle-btn[aria-expanded="true"]{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
+  .ad-shell .row-toggle-btn:hover{border-color:var(--primary);color:var(--primary-dark);}
   .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
   .conflict-badge{
     font-size:10.5px;font-weight:700;color:var(--on-primary);background:var(--fatal);
     padding:2px 8px;border-radius:var(--radius-sm);white-space:nowrap;
   }
 
-  /* Compact toolbar (upload button + filters + actions) */
-  .toolbar-card{padding:18px 20px;}
-  .toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .upload-btn{
-    display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
-    background:var(--panel);border-radius:var(--radius-md);padding:9px 16px;font-weight:700;font-size:13.5px;
-    color:var(--ink);cursor:pointer;font-family:inherit;
-    transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease);white-space:nowrap;
-  }
-  .upload-btn:hover{border-color:var(--primary);background:var(--primary-soft);}
-  .upload-btn.has-file{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-dark);}
-  .toolbar-actions{display:flex;gap:8px;margin-left:auto;align-items:center;}
-  .toolbar-file-chip:empty{display:none;}
-  .toolbar-file-chip .file-chip{margin-top:0;}
 
   /* GitHub 외부 저장 - 한 줄짜리 단계 가이드(콤팩트) */
   .github-step-row{display:flex;align-items:center;gap:8px;padding:8px 0;flex-wrap:wrap;}
@@ -659,15 +718,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .details-block[open] summary{color:var(--ink);}
   .details-block .details-body{margin-top:12px;}
 
-  .dist-details{cursor:pointer;}
-  .dist-summary{
-    font-size:15px;font-weight:700;list-style:none;cursor:pointer;user-select:none;
-    display:flex;align-items:center;gap:6px;
-  }
-  .dist-summary::-webkit-details-marker{display:none;}
-  .dist-summary::before{content:'▸';color:var(--primary-dark);font-size:12px;}
-  details[open] .dist-summary::before{content:'▾';}
-  .dist-summary .sub-txt{font-weight:500;}
 
   .tc-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;}
   .tc-section-head h2{margin:0;}
@@ -675,9 +725,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     font-size:12px;font-weight:700;color:var(--primary-dark);background:var(--primary-soft);
     padding:2px 10px;border-radius:6px;
   }
-  .tc-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-  .tc-filter-bar .ad-select{width:auto;cursor:pointer;}
-  .tc-filter-bar .ad-input{flex:1;min-width:180px;width:auto;}
+  .tc-filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;} /* 담당자 탭 줄(검색·필터는 헤더) */
   .dup-badge{
     font-size:10.5px;font-weight:700;color:var(--minor-text);background:var(--minor-soft);
     padding:2px 8px;border-radius:var(--radius-sm);white-space:nowrap;
@@ -712,18 +760,43 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #syncStatus[data-state="error"]{color:var(--fatal-text);}
 
   /* 이름 입력·가져오기 확인 대화상자 (알닷 ad-modal을 native dialog에 씌움) */
-  .app-dialog{border:none;color:var(--ink);}
-  .app-dialog::backdrop{background:var(--overlay);}
-  .app-dialog .ad-modal__body{white-space:pre-line;}
-  .app-dialog .ad-input{margin:-6px 0 18px;}
+  .wb-modal{border:none;padding:0;margin:auto;width:calc(100% - 32px);max-width:560px;max-height:calc(100vh - 48px);overflow-y:auto;
+    background:var(--panel);color:var(--ink);border-radius:var(--radius-xl);box-shadow:var(--shadow-3);}
+  .wb-modal::backdrop{background:var(--overlay);}
+  .wb-modal header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);}
+  .wb-modal header h2{margin:0;font-size:16px;font-weight:700;}
+  .wb-modal .body{padding:16px 20px;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px 16px;}
+  .wb-modal footer{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap;}
+  .wb-modal footer .r{display:flex;gap:8px;margin-left:auto;}
+  .wb-modal .f{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .wb-modal .f.full{grid-column:1/-1;}
+  .wb-modal .f label{font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .wb-modal .f label b{color:var(--fatal);}
+  .wb-modal .ad-input{width:100%;height:auto;padding:9px 10px;}
+  .wb-modal .hint{font-size:12px;color:var(--muted);}
+  .wb-modal .body--one{grid-template-columns:1fr;}
+  .wb-modal .err{font-size:12px;color:var(--fatal-text);}
+  .wb-modal .err:empty{display:none;}
+  .proj-add-modal{max-width:480px;}
+  .proj-manage-info{margin:0;font-size:13px;color:var(--ink);}
+  .proj-manage-info .sub-txt{display:block;margin-top:4px;}
+  .proj-confirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--fatal-border);border-radius:var(--radius-md);background:var(--fatal-soft);font-size:13px;color:var(--fatal-text);}
+  .proj-confirm span{flex:1 1 200px;}
+  /* 탭 옆 ⋯(워크보드 .ptabMore): 마우스를 올리거나 포커스가 있을 때만, 터치 기기는 항상 */
+  .cat-tab-wrap{display:inline-flex;align-items:center;flex-shrink:0;}
+  .cat-tab__more{width:24px;height:24px;margin-left:-8px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-soft);font:inherit;font-weight:700;cursor:pointer;opacity:0;}
+  .cat-tab-wrap:hover .cat-tab__more, .cat-tab-wrap:focus-within .cat-tab__more{opacity:1;}
+  .cat-tab__more:hover{background:var(--grey-100);color:var(--ink);}
+  .cat-tab__more:focus-visible{outline:2px solid var(--primary-dark);outline-offset:-2px;}
+  @media (hover:none){ .cat-tab__more{opacity:1;} }
+  .wb-modal #errorBox:empty, .wb-modal #genNoticeBox:empty{display:none;}
+  @media (max-width:600px){ .wb-modal .body{grid-template-columns:1fr;} .wb-modal footer .r{width:100%;} .wb-modal footer .r .ad-btn{flex:1 1 0;} }
+  .app-dialog{max-width:420px;}
+  .app-dialog__text{margin:0;font-size:13px;line-height:1.6;color:var(--ink-soft);white-space:pre-line;}
 
   /* ── 상태 표시·키보드 포커스·누름 피드백 ─────────────────────────── */
-  #claudeApiKeyStatus{display:flex;align-items:center;gap:6px;}
-  #claudeApiKeyStatus[data-state]::before{content:"";flex-shrink:0;width:8px;height:8px;border-radius:50%;}
-  #claudeApiKeyStatus[data-state="ok"]::before{background:var(--pass);}
-  #claudeApiKeyStatus[data-state="warn"]::before{background:var(--minor);}
   button:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
-  button:active:not(:disabled), .upload-btn:active{transform:translateY(1px);}
+  button:active:not(:disabled){transform:translateY(1px);}
   button, a, select, summary, input[type="checkbox"]{touch-action:manipulation;}
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{transition:none !important;}
@@ -733,9 +806,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     -webkit-appearance:none;appearance:none;
     background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
     background-size:5px 5px, 5px 5px;background-repeat:no-repeat;
-    background-position:calc(100% - 19px) 52%, calc(100% - 14px) 52%;
-    padding-left:14px;padding-right:36px;
+    background-position:calc(100% - 17px) 52%, calc(100% - 12px) 52%;
+    padding-left:10px;padding-right:30px;
   }
+  .ad-shell select.ad-select{padding-left:10px;padding-right:30px;}
   /* 카드·일괄 변경 바의 작은 셀렉트는 여백을 줄인다 */
   .tc-card-head select, select.tester-select, .bulk-bar select.ad-select{
     background-position:calc(100% - 15px) 52%, calc(100% - 10px) 52%;
@@ -751,147 +825,104 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
-  <div class="app ad-page">
-
-  <div class="header">
-    <div class="header-text">
-      <h1 class="ad-display">테스트 시나리오(QC) 생성 자동화</h1>
-      <p class="ad-subtitle">기획안(PDF·피그마)을 업로드하면 아래에서 CVT 테스트 케이스가 자동으로 생성됩니다. 생성된 QC는 바로 편집·배정하고, 엑셀로 내보내거나 프로젝트로 관리할 수 있습니다.</p>
-    </div>
-    <div class="header-actions">
-      <div class="header-project">
-        <select class="ad-select project-select" id="projectSelect" aria-label="프로젝트 불러오기">
-          <option value="">프로젝트 선택</option>
-        </select>
-      </div>
-      <div class="header-right">
-      <div class="header-backup">
-        <button type="button" class="ad-btn" id="jsonExportBtn"><span aria-hidden="true">↓</span> JSON 내보내기</button>
-        <button type="button" class="ad-btn" id="jsonImportBtn"><span aria-hidden="true">↑</span> JSON 가져오기</button>
-        <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
-      </div>
-      <div class="header-sync" id="syncBar">
-        <button type="button" class="ad-sync" id="syncIndicator" aria-live="polite" aria-expanded="false" aria-controls="accessLogCard" disabled><span class="ad-sync__dot" id="syncDot" aria-hidden="true"></span><span id="syncLabel">이 브라우저에만 저장</span><span class="sync-time" id="syncTime"></span></button>
-        <div class="ad-modal sync-log" id="accessLogCard" role="dialog" aria-labelledby="accessLogTitle" hidden>
-          <div class="sync-log-head">
-            <h2 class="ad-modal__title" id="accessLogTitle">접속 이력</h2>
-            <button type="button" class="ad-btn ad-btn--sm" id="accessLogClose">닫기</button>
-          </div>
-          <p class="sub-txt" style="margin:0 0 10px;">최근 50건을 최신순으로 보여요.</p>
-          <ol class="access-log-list" id="accessLogList"></ol>
-          <div id="accessLogEmpty" class="ad-empty">아직 접속 기록이 없어요.</div>
+  <div class="ad-shell" id="appShell">
+  <!-- 알닷 운영툴 디자인 시스템 v2 셸: 왼쪽 GNB(QC 관리) + 위 헤더 + 흰 본문 -->
+  <aside class="ad-gnb" id="sideNav" aria-label="메뉴">
+    <button class="ad-gnb__fold" id="gnbFold" type="button" aria-label="메뉴 접기" title="메뉴 접기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+    <nav class="ad-gnb__nav" aria-label="화면">
+      <div class="gnb-group" id="gnbQcGroup">
+        <button class="gnb-head" id="gnbQcBtn" type="button" aria-expanded="true" aria-controls="gnbQcBody" title="QC 관리"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">QC 관리</span><span class="chev" aria-hidden="true">▾</span></button>
+        <div class="gnb-body" id="gnbQcBody">
+          <div class="gnb-body" id="gnbCatList" aria-label="프로젝트"></div>
+          <button class="ad-gnb-item gnb-sub gnb-sub--add" id="gnbCatAddBtn" type="button" title="프로젝트 추가"><span>+ 프로젝트 추가</span></button>
         </div>
-        <button type="button" class="ad-btn ad-btn--sm presence-chip" id="presenceChip" hidden>접속 1명</button>
       </div>
-      </div>
+    </nav>
+  </aside>
+  <div class="ad-shell__backdrop" id="gnbBackdrop"></div>
+
+  <div class="ad-shell__main">
+  <header class="ad-topbar">
+    <button class="ad-btn ad-btn--ghost ad-btn--icon ad-topbar__menu" id="gnbMenu" type="button" aria-label="메뉴 열기">☰</button>
+    <h1 class="ad-topbar__title view-title" id="viewTitle"></h1>
+    <!-- 화면마다 그 화면의 도구만: 분류 = 정렬·검색·내보내기·가져오기·새 프로젝트, 프로젝트 = 셀렉트·내보내기·가져오기·QC 생성 -->
+    <div class="ad-topbar__tools">
+      <select class="ad-select project-select tool-proj" id="projectSelect" aria-label="프로젝트 불러오기">
+        <option value="">프로젝트 선택</option>
+      </select>
+      <input type="search" class="ad-input qc-search tool-proj" id="tcSearchInput" aria-label="QC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
+      <select class="ad-select tool-proj" id="tcFilterType" aria-label="화면유형 필터">
+        <option value="ALL">전체 유형</option>
+        <option value="FO">FO</option>
+        <option value="BO">BO</option>
+      </select>
+      <select class="ad-select tool-proj" id="tcFilterResult" aria-label="결과 필터">
+        <option value="ALL">전체 결과</option>
+        <option value="PASS">PASS</option>
+        <option value="MINOR">MINOR</option>
+        <option value="N/A">N/A</option>
+        <option value="MAJOR">MAJOR</option>
+        <option value="FATAL">FATAL</option>
+        <option value="CRITICAL">CRITICAL</option>
+      </select>
+      <select class="ad-select tool-cat" id="projectSort" aria-label="프로젝트 정렬">
+        <option value="recent">최근 수정순</option>
+        <option value="name">이름순</option>
+      </select>
+      <input type="search" class="ad-input project-search tool-cat" id="projectSearch" aria-label="프로젝트 검색" autocomplete="off" placeholder="프로젝트 이름·날짜 검색…" />
+      <details class="export-menu json-btn" id="exportMenu">
+        <summary class="ad-btn" aria-label="내보내기 형식 고르기"><span aria-hidden="true">↓</span> 내보내기</summary>
+        <div class="export-menu__list" role="menu">
+          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonExportBtn" title="QC 리스트·프로젝트·테스터를 JSON 파일로 내보내요">JSON</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBtn" title="QC 리스트를 엑셀 파일로 내보내고 프로젝트로 저장해요" disabled>EXCEL</button>
+        </div>
+      </details>
+      <details class="export-menu json-btn" id="importMenu">
+        <summary class="ad-btn" aria-label="가져오기 형식 고르기"><span aria-hidden="true">↑</span> 가져오기</summary>
+        <div class="export-menu__list" role="menu">
+          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonImportBtn" title="JSON 백업 파일을 가져와요(QC 리스트·프로젝트·테스터)">JSON</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="excelImportBtn" title="이 도구에서 내보낸 엑셀의 QC 리스트를 가져와요">EXCEL</button>
+        </div>
+      </details>
+      <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
+      <input type="file" id="excelImportInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+      <button type="button" class="ad-btn ad-btn--primary tool-cat" id="newProjectBtn">+ 새 프로젝트</button>
+      <button type="button" class="ad-btn ad-btn--primary tool-proj" id="qcGenOpenBtn" aria-haspopup="dialog" aria-controls="qcGenModal">+ QC 생성</button>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
-  </div>
+  </header>
 
+  <main class="ad-main-body">
+  <nav class="cat-tabs" aria-label="분류">
+    <div class="cat-tabs__list" id="projectCategoryTabs"></div>
+    <button type="button" class="cat-tab cat-tab--add" id="categoryAddBtn">+ 프로젝트 추가</button>
+  </nav>
   <div id="globalAlertBox" role="alert"></div>
 
   <div class="card ad-card ad-panel" id="draftRestoreBanner" style="display:none;border-color:var(--primary);background:var(--primary-soft);">
     <p class="sub-txt" id="draftRestoreMsg" style="margin:0 0 10px;color:var(--ink);font-weight:600;"></p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="ad-btn ad-btn--primary ad-btn--sm" id="draftRestoreYesBtn" type="button">이어서 작업하기</button>
+      <button class="ad-btn ad-btn--sm" id="draftRestoreYesBtn" type="button">이어서 작업하기</button>
       <button class="ad-btn ad-btn--sm" id="draftRestoreNoBtn" type="button">새로 시작하기 (임시저장 삭제)</button>
     </div>
   </div>
 
-  <div class="ad-tabs" role="tablist" aria-label="화면 탭">
-    <button class="tab-btn ad-tab active" data-tab="gen" role="tab" aria-selected="true">QC 생성</button>
-    <button class="tab-btn ad-tab" data-tab="hist" role="tab" aria-selected="false">프로젝트 관리</button>
-  </div>
-
-  <!-- ===================== TAB 1: 생성 ===================== -->
-  <div class="panel active" id="panel-gen">
-
-    <div class="card ad-card ad-panel">
-      <div class="tc-section-head">
-        <h2 class="ad-title">기획안 입력</h2>
-      </div>
-      <p class="sub-txt" id="claudeApiKeyStatus" style="margin:0 0 12px;line-height:1.5;"></p>
-      <div class="mode-choice" id="uploadModeToggle" role="radiogroup" aria-label="기획안 입력 방식">
-        <label class="mode-option"><input type="radio" name="uploadMode" value="file" data-upmode="file" checked /><span>기획안 업로드</span></label>
-        <label class="mode-option"><input type="radio" name="uploadMode" value="figma" data-upmode="figma" /><span>피그마 URL 가져오기</span></label>
-      </div>
-      <div class="toolbar-row">
-        <button type="button" class="upload-btn ad-btn" id="uploadBtn"><span id="uploadBtnLabel">파일 선택</span></button>
-        <input type="file" id="fileInput" accept="application/pdf,image/png,image/jpeg,image/webp" style="display:none" />
-
-        <div id="figmaImportWrap" style="display:none;gap:8px;flex-wrap:wrap;flex:1;">
-          <input type="url" id="figmaUrlInput" class="ad-input" aria-label="피그마 화면 링크" autocomplete="off" spellcheck="false" placeholder="화면 선택 후 '링크 복사'한 URL (https://www.figma.com/design/…)" style="flex:1;min-width:220px;" />
-        </div>
-
-        <div id="fileChipWrap" class="toolbar-file-chip"></div>
-
-        <div class="toolbar-actions">
-          <input type="text" class="ad-input tc-name-input" id="tcNameInput" aria-label="QC 이름 (QC-이름-001 형식, 비우면 QC-001)" title="새 QC ID 가운데에 넣을 이름이에요. 비우면 QC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN…" />
-          <button class="ad-btn ad-btn--primary" id="genBtn" disabled>QC 생성하기</button>
-          <button class="ad-btn" id="appendBtn" disabled>QC 추가 생성</button>
-        </div>
-      </div>
-
-      <div id="uploadModeSettingsFile"></div>
-
-      <div id="uploadModeSettingsFigma" style="display:none;">
-        <p class="sub-txt" style="margin-top:10px;">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</p>
-      </div>
-
-      <div id="errorBox" role="alert"></div>
-      <div id="genNoticeBox" aria-live="polite"></div>
-    </div>
-
-    <div class="card ad-card ad-panel">
-      <div class="tc-section-head">
-        <h2 class="ad-title">테스터 관리</h2>
-        <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span>
-      </div>
-      <div class="tester-manage" style="margin-top:0;padding-top:0;border-top:none;">
-        <label for="testerNameInput">테스터 이름</label>
-        <div class="tester-input-row">
-          <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
-          <button class="ad-btn ad-btn--sm" id="addTesterBtn" type="button">+ 추가</button>
-        </div>
-        <div class="tester-chips" id="testerChips"></div>
-      </div>
-    </div>
-
+  <!-- ===================== 프로젝트: QC 통계 + QC 리스트 ===================== -->
+  <div class="panel" id="panel-gen">
     <div class="card ad-card ad-panel" id="tcStatsCard">
-      <div class="tc-section-head">
-        <h2 class="ad-title">QC 통계</h2>
-      </div>
-      <div class="dist-wrap" id="distWrap" style="display:none;">
-        <div id="distGroups"></div>
-      </div>
-      <div id="distEmpty" class="ad-empty">QC를 생성하면 전체·FO·BO별 결과 통계가 여기에 보여요.</div>
+      <div class="stat-grid" id="distWrap" role="group" aria-label="QC 통계" hidden></div>
+      <div id="distEmpty" class="ad-empty">QC를 생성하면 결과 통계가 여기에 보여요.</div>
     </div>
 
     <div class="card ad-card ad-panel">
       <div class="tc-section-head">
         <h2 class="ad-title">QC 리스트</h2>
         <span class="ad-badge ad-badge--brand" id="tcCountBadge" style="display:none;">0건</span>
-        <button class="ad-btn qc-list-btn" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
-        <button class="ad-btn excel-btn qc-list-btn" id="exportBtn" type="button" disabled><svg class="excel-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/><path d="M5.2 5.2l5.6 5.6M10.8 5.2l-5.6 5.6"/></svg>엑셀로 내보내기</button>
+        <button class="ad-btn" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
       </div>
 
-      <div class="tester-tabs" id="testerTabs" role="group" aria-label="담당자별 보기"></div>
       <div class="tc-filter-bar">
-        <input type="search" class="ad-input" id="tcSearchInput" aria-label="QC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
-        <select class="ad-select" id="tcFilterType" aria-label="화면유형 필터">
-          <option value="ALL">전체 유형</option>
-          <option value="FO">FO</option>
-          <option value="BO">BO</option>
-        </select>
-        <select class="ad-select" id="tcFilterResult" aria-label="결과 필터">
-          <option value="ALL">전체 결과</option>
-          <option value="PASS">PASS</option>
-          <option value="MINOR">MINOR</option>
-          <option value="N/A">N/A</option>
-          <option value="MAJOR">MAJOR</option>
-          <option value="FATAL">FATAL</option>
-          <option value="CRITICAL">CRITICAL</option>
-        </select>
+        <div class="tester-tabs" id="testerTabs" role="group" aria-label="담당자별 보기"></div>
       </div>
 
       <div class="select-all-row">
@@ -935,39 +966,88 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     </div>
   </div>
 
-  <!-- ===================== TAB 2: 프로젝트 관리 ===================== -->
+  <!-- ===================== 분류: 프로젝트 목록 ===================== -->
   <div class="panel" id="panel-hist">
     <div class="card ad-card ad-panel">
       <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
-      <div class="category-tabs" id="projectCategoryTabs" role="group" aria-label="프로젝트 분류"></div>
-      <div class="project-tools">
-        <input type="search" class="ad-input" id="projectSearch" aria-label="프로젝트 검색" autocomplete="off" placeholder="프로젝트 이름·날짜 검색…" />
-        <select class="ad-select" id="projectSort" aria-label="프로젝트 정렬">
-          <option value="recent">최근 수정순</option>
-          <option value="name">이름순</option>
-        </select>
-      </div>
       <div id="historyList"></div>
       <div id="historyNoMatch" class="ad-empty" hidden>검색 결과가 없어요.</div>
-      <div id="historyEmpty" class="ad-empty" style="display:none;">아직 프로젝트가 없어요. 엑셀로 내보내면 프로젝트로 저장돼요.</div>
+      <div id="historyEmpty" class="ad-empty" style="display:none;">이 분류에 아직 프로젝트가 없어요. '새 프로젝트'로 QC를 만들고 내보내기에서 EXCEL을 고르면 여기에 저장돼요.</div>
     </div>
   </div>
 
   <div class="undo-toast ad-toast" id="undoToast" role="status" aria-live="polite"></div>
 
-  <dialog class="ad-modal app-dialog" id="appDialog" aria-labelledby="appDialogTitle">
-    <form method="dialog">
-      <h2 class="ad-modal__title" id="appDialogTitle"></h2>
-      <p class="ad-modal__body" id="appDialogBody"></p>
-      <input type="text" class="ad-input" id="appDialogInput" autocomplete="off" maxlength="20" aria-labelledby="appDialogTitle" hidden />
-      <div class="ad-modal__actions">
-        <button class="ad-btn" value="cancel" formnovalidate>취소</button>
-        <button class="ad-btn" value="ok" id="appDialogOk">확인</button>
+  <!-- QC 생성: 워크보드 "업무 등록" 모달과 같은 구조(머리 = 제목 + 닫기, 본문 = 2열 칸, 아래 = 오른쪽 버튼 묶음) -->
+  <dialog class="wb-modal qc-gen-modal" id="qcGenModal" aria-labelledby="qcGenTitle">
+    <header><h2 id="qcGenTitle">QC 생성</h2><button type="button" class="ad-btn ad-btn--ghost" id="qcGenClose">닫기</button></header>
+    <div class="body">
+      <div class="f full">
+        <label for="figmaUrlInput">피그마 화면 링크 <b>*</b></label>
+        <input type="url" id="figmaUrlInput" class="ad-input" autocomplete="off" spellcheck="false" placeholder="화면 선택 후 '링크 복사'한 URL (https://www.figma.com/design/…)" />
+        <span class="hint">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</span>
       </div>
+      <div class="f">
+        <label for="tcNameInput">QC ID 이름</label>
+        <input type="text" class="ad-input" id="tcNameInput" title="새 QC ID 가운데에 넣을 이름이에요. 비우면 QC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (QC-LOGIN-001)" />
+      </div>
+      <div class="f full tester-manage">
+        <label for="testerNameInput">테스터 관리 <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span></label>
+        <div class="tester-input-row">
+          <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
+          <button class="ad-btn" id="addTesterBtn" type="button">+ 추가</button>
+        </div>
+        <div class="tester-chips" id="testerChips"></div>
+      </div>
+      <div class="f full">
+        <div id="errorBox" role="alert"></div>
+        <div id="genNoticeBox" aria-live="polite"></div>
+      </div>
+    </div>
+    <footer>
+      <div class="r">
+        <button class="ad-btn" id="appendBtn" type="button" disabled>QC 추가 생성</button>
+        <button class="ad-btn ad-btn--primary" id="genBtn" type="button" disabled>QC 생성하기</button>
+      </div>
+    </footer>
+  </dialog>
+
+  <!-- 프로젝트 추가: 워크보드 프로젝트 탭 "+ 프로젝트" 창과 같은 구조 -->
+  <dialog class="wb-modal proj-add-modal" id="projAddModal" aria-labelledby="projAddTitle">
+    <form id="projAddForm" novalidate>
+      <header><h2 id="projAddTitle">프로젝트 추가</h2><button type="button" class="ad-btn ad-btn--ghost" id="projAddClose">닫기</button></header>
+      <div class="body body--one">
+        <p class="f proj-manage-info" id="projManageInfo" hidden></p>
+        <div id="projConfirm"></div>
+        <div class="f" id="projAddField">
+          <label for="projAddName">프로젝트명 <b>*</b></label>
+          <input type="text" class="ad-input" id="projAddName" maxlength="20" autocomplete="off" placeholder="예: 기업, 알닷, 로밍" aria-describedby="projAddHint projAddErr" />
+          <span class="hint" id="projAddHint">20자 이내로 적어 주세요. 저장하면 위 탭 끝에 생기고 그 탭으로 이동해요.</span>
+        </div>
+      </div>
+      <footer><button type="button" class="ad-btn ad-btn--danger" id="projDelBtn" hidden>삭제</button><span class="err" id="projAddErr" role="alert"></span><div class="r"><button type="button" class="ad-btn" id="projAddCancel">취소</button><button type="submit" class="ad-btn ad-btn--primary" id="projAddSave">저장</button></div></footer>
     </form>
   </dialog>
 
-</div>
+  <dialog class="wb-modal app-dialog" id="appDialog" aria-labelledby="appDialogTitle">
+    <form method="dialog">
+      <header><h2 id="appDialogTitle"></h2></header>
+      <div class="body">
+        <p class="f full app-dialog__text" id="appDialogBody"></p>
+        <input type="text" class="ad-input f full" id="appDialogInput" autocomplete="off" maxlength="20" aria-labelledby="appDialogTitle" hidden />
+      </div>
+      <footer>
+        <div class="r">
+          <button class="ad-btn" value="cancel" formnovalidate>취소</button>
+          <button class="ad-btn" value="ok" id="appDialogOk">확인</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+</main>
+  </div>
+  </div>
 <script>
 if(window.pdfjsLib){
   // pdf.js는 실제 PDF 파싱을 별도의 웹 워커(worker) 스레드에서 수행하고, 이를 위해 워커 스크립트를
@@ -1152,8 +1232,8 @@ const RESULT_COLOR = {
   PASS:'var(--result-pass)', MINOR:'var(--result-minor)', 'N/A':'var(--result-na)',
   MAJOR:'var(--result-major)', FATAL:'var(--result-fatal)', CRITICAL:'var(--result-critical)'
 };
-// TC 카드의 선택 컨트롤(FO/BO·진행상태·결과)은 모두 grey 테두리형으로 통일하고,
-// 색은 결과 옆 상태 점(RESULT_COLOR)에만 쓴다.
+// QC 행의 결과 셀렉트는 글자색(style_content.html select.result-select[data-result])으로 구분하고,
+// 이 색(RESULT_COLOR)은 프로젝트 목록의 결과 막대에 쓴다.
 const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['작성중','개발 검토중','완료'];
 
@@ -1197,8 +1277,7 @@ let selectedTcIds = new Set(); // 일괄 수정을 위해 선택된 tcData 인�
 let expandedTcRows = new Set(); // 펼친 TC 행의 tcId 목록 (기본은 모두 접힌 한 줄 요약)
 let figmaUrl = '';
 
-/* ---------- 피그마 URL로 기획안 가져오기 (파일 업로드의 대안 경로) ---------- */
-let uploadMode = 'file'; // 'file' | 'figma'
+/* ---------- 피그마 URL로 기획안 가져오기 ---------- */
 let figmaFileKey = '';
 let figmaFileName = '';
 
@@ -1241,28 +1320,9 @@ document.getElementById('tcFilterResult').addEventListener('change', e=>{
   renderTable();
 });
 
-/* ---------- Tabs ---------- */
-const TAB_PANEL_MAP = {gen:'panel-gen', hist:'panel-hist'};
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    btn.setAttribute('aria-selected','true');
-    document.getElementById(TAB_PANEL_MAP[btn.dataset.tab]).classList.add('active');
-    if(btn.dataset.tab==='hist') renderHistory();
-  });
-});
-
-/* ---------- Upload (PDF 또는 이미지 - 피그마에서 내보낸 PNG/JPG도 첨부 가능) ---------- */
-const uploadBtn = document.getElementById('uploadBtn');
-const fileInput = document.getElementById('fileInput');
+/* ---------- 파일(PDF·이미지) 기획안 처리 ----------
+   화면에서는 피그마 URL만 받는다. handleFile은 E2E가 생성 흐름을 서버 없이 시험하는 데 쓰므로 남겨 둔다. */
 const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-// "파일 선택" 버튼은 "기획안 업로드" 방식일 때만 보이며, 파일 선택창만 연다(방식 전환은 라디오가 담당).
-uploadBtn.addEventListener('click', ()=>fileInput.click());
-fileInput.addEventListener('change', e=>{
-  if(e.target.files[0]) handleFile(e.target.files[0]);
-});
 
 function clearPdfState(){
   if(currentPdfDoc){ try{ currentPdfDoc.destroy(); }catch(e){ /* ignore */ } }
@@ -1407,10 +1467,6 @@ async function handleFile(file){
   currentFileChunks = [];
   currentFilePageCount = null;
   clearPdfState();
-  uploadBtn.disabled = true;
-  uploadBtn.classList.add('has-file');
-  document.getElementById('uploadBtnLabel').textContent = isPdf ? 'PDF 준비 중…' : '이미지 준비 중…';
-  document.getElementById('fileChipWrap').innerHTML = '';
   showError('');
   showGenNotice('');
 
@@ -1423,14 +1479,12 @@ async function handleFile(file){
       // (그보다 훨씬 큰 해상도로) 줄여 보내도 인식 품질에는 차이가 없다.
       let uploadFile = file;
       if(file.size > MAX_ATTACHMENT_BYTES){
-        document.getElementById('uploadBtnLabel').textContent = '고화질 이미지 압축 중…';
         uploadFile = await downscaleImageForUpload(file);
         downscaledFrom = (file.size/1024/1024).toFixed(1);
       }
       if(imagesPerChunkBudget()){
         currentFileChunks = [{kind:'image', blob: uploadFile, byteSize: uploadFile.size, label: ''}];
       }else{
-        document.getElementById('uploadBtnLabel').textContent = '글자 인식 중…';
         const text = await ocrImage(uploadFile);
         if(text.replace(/\s+/g, '').length < MIN_PAGE_TEXT_CHARS) throw new Error('이미지에서 글자를 읽지 못했어요. 이 화면에서는 이미지를 Claude에 보낼 수 없어 글자 인식(OCR)으로 읽는데, 읽힌 내용이 거의 없어요. 글자가 더 선명한 이미지나 PDF로 올려주세요.');
         currentFileChunks = [{kind:'image', blob: null, text, textSource: 'ocr', byteSize: new TextEncoder().encode(text).length, label: file.name}];
@@ -1445,13 +1499,10 @@ async function handleFile(file){
         // 실패)이거나 손상된 파일이다. 원인을 감추지 않고 그대로 안내한다.
         throw new Error('PDF를 여는 중 오류가 발생했습니다(' + (e.message || e) + '). PDF 내용과는 무관한 일시적인 문제일 수 있으니 다시 한번 시도해보시고, 계속 실패하면 다른 PDF 파일로 시도해주세요.');
       }
-      document.getElementById('uploadBtnLabel').textContent = `텍스트 추출 중 (${pdf.numPages}페이지)…`;
       currentPdfPageTexts = await extractPdfPageTexts(pdf);
       // 이미지를 보낼 수 없는 화면이면, 글자가 그림으로 된 페이지를 글자 인식(OCR)으로 읽는다
       if(!imagesPerChunkBudget()){
-        const ocrPages = await ocrPdfPages(pdf, currentPdfPageTexts, (k, n, part)=>{
-          document.getElementById('uploadBtnLabel').textContent = `글자 인식 중 (${k}/${n}페이지${part})…`;
-        });
+        const ocrPages = await ocrPdfPages(pdf, currentPdfPageTexts, ()=>{});
         if(ocrPages.length) ocrNotice = `글자가 그림으로 된 ${ocrPages.length}개 페이지(p.${formatPageList(ocrPages)})는 글자 인식(OCR)으로 읽었어요. 인식 오류가 있을 수 있어요.`;
       }
       currentPdfDoc = pdf;
@@ -1459,13 +1510,6 @@ async function handleFile(file){
       replanPdfChunks();
     }
 
-    document.getElementById('uploadBtnLabel').textContent = '파일 변경';
-    const sizeMb = (file.size/1024/1024).toFixed(1);
-    const pageInfo = currentFilePageCount ? ` · 총 ${currentFilePageCount}페이지` : '';
-    const chunkInfo = currentFileChunks.length > 1 ? ` · ${currentFileChunks.length}개 조각` : '';
-    document.getElementById('fileChipWrap').innerHTML =
-      `<div class="file-chip" title="${escapeHtml(file.name)}"><span class="file-chip-name">${escapeHtml(file.name)}</span> <span class="sub-txt" style="color:inherit;">(${sizeMb}MB${pageInfo}${chunkInfo})</span> <button id="removeFile" class="ad-btn ad-btn--ghost ad-btn--icon" type="button" aria-label="첨부 제거">✕</button></div>`;
-    document.getElementById('removeFile').addEventListener('click', resetUploadSource);
 
     if(downscaledFrom){
       const compressedMb = (currentFileChunks[0].byteSize/1024/1024).toFixed(1);
@@ -1482,10 +1526,7 @@ async function handleFile(file){
     currentFileChunks = [];
     currentFilePageCount = null;
     clearPdfState();
-    uploadBtn.classList.remove('has-file');
-    document.getElementById('uploadBtnLabel').textContent = '파일 선택';
   }finally{
-    uploadBtn.disabled = false;
     updateButtons();
   }
 }
@@ -1498,44 +1539,9 @@ function updateButtons(){
   document.getElementById('genBtn').disabled = qcGenerating || !ready;
   document.getElementById('appendBtn').disabled = qcGenerating || !(ready && tcData.length>0);
   document.getElementById('exportBtn').disabled = !tcData.length;
+  document.getElementById('qcGenClose').disabled = qcGenerating; // 생성하는 동안에는 QC 생성 창을 닫지 못한다
 }
 
-// 파일 업로드/피그마 가져오기 두 경로가 공유하는 "기획안 선택 상태"를 모두 초기화한다.
-// (모드를 전환하거나 ✕로 제거할 때 호출 - 두 경로가 섞이지 않도록 한쪽 상태가 남지 않게 함)
-function resetUploadSource(){
-  currentFile = null;
-  currentFileChunks = [];
-  currentFilePageCount = null;
-  clearPdfState();
-  figmaUrl = '';
-  figmaFileKey = '';
-  figmaFileName = '';
-  const urlInput = document.getElementById('figmaUrlInput');
-  if(urlInput) urlInput.value = '';
-  uploadBtn.classList.remove('has-file');
-  document.getElementById('uploadBtnLabel').textContent = '파일 선택';
-  document.getElementById('fileChipWrap').innerHTML = '';
-  showGenNotice('');
-  showError('');
-  updateButtons();
-}
-
-/* ---------- 업로드 방식 전환: 파일 업로드 ↔ 피그마 URL 가져오기 ---------- */
-function activateUploadMode(mode){
-  if(mode === uploadMode) return;
-  uploadMode = mode;
-  document.querySelectorAll('#uploadModeToggle [data-upmode]').forEach(r=>{
-    r.checked = r.dataset.upmode === uploadMode;
-  });
-  uploadBtn.style.display = uploadMode === 'file' ? '' : 'none';
-  document.getElementById('figmaImportWrap').style.display = uploadMode === 'figma' ? 'flex' : 'none';
-  document.getElementById('uploadModeSettingsFile').style.display = uploadMode === 'file' ? 'block' : 'none';
-  document.getElementById('uploadModeSettingsFigma').style.display = uploadMode === 'figma' ? 'block' : 'none';
-  resetUploadSource();
-}
-document.querySelectorAll('#uploadModeToggle [data-upmode]').forEach(r=>{
-  r.addEventListener('change', ()=>{ if(r.checked) activateUploadMode(r.dataset.upmode); });
-});
 
 // 피그마 링크에서 파일 키와 노드 ID(선택된 화면/프레임)를 뽑아낸다.
 // 지원 형태: https://www.figma.com/design/:fileKey/... , https://www.figma.com/file/:fileKey/...
@@ -1668,7 +1674,7 @@ function uniqueScreenNames(names){
 function figmaImportNeeded(){
   const input = document.getElementById('figmaUrlInput');
   const url = input ? input.value.trim() : '';
-  return uploadMode === 'figma' && !!url && url !== figmaUrl;
+  return !!url && url !== figmaUrl;
 }
 document.getElementById('figmaUrlInput').addEventListener('input', updateButtons);
 document.getElementById('figmaUrlInput').addEventListener('keydown', e=>{
@@ -1767,11 +1773,6 @@ async function importFigmaScreens(progressBtn){
     };
     figmaUrl = url;
 
-    uploadBtn.classList.add('has-file');
-    document.getElementById('fileChipWrap').innerHTML =
-      `<div class="file-chip" title="화면: ${chunks.map(c=>escapeHtml(c.label)).join(', ')}"><span class="file-chip-name">${escapeHtml(currentFile.name)}</span> <button id="removeFile" class="ad-btn ad-btn--ghost ad-btn--icon" type="button" aria-label="첨부 제거">✕</button></div>`;
-    document.getElementById('removeFile').addEventListener('click', resetUploadSource);
-
     const noticeSuffix = failedNames.length ? ` (${failedNames.map(escapeHtml).join(', ')}는 가져오지 못해 제외됨)` : '';
     showGenNotice(`"${figmaFileName || '피그마 파일'}"에서 화면 ${chunks.length}개를 자동으로 인식해서 가져왔습니다${noticeSuffix}. 화면마다 별도로 생성되며, 같은 화면 안에서는 이미 다룬 시험항목을 자동으로 피해서 이어 생성합니다.${specNotice}${claudeSampleImageLimit ? '' : ' 이 화면에서는 이미지를 Claude에 보낼 수 없어 피그마 화면 안의 글자(텍스트 레이어)로 생성해요.'}`);
     updateButtons();
@@ -1855,7 +1856,6 @@ async function initClaudeSample(){
       claudeSampleImageLimit = null;
     }
   }
-  renderClaudeApiKeyStatus();
   updateButtons();
 }
 /* ---------- Claude 연결 상태 ----------
@@ -1865,13 +1865,6 @@ function getActiveClaudeBackend(){
   return claudeSample ? 'sample' : null;
 }
 
-function renderClaudeApiKeyStatus(){
-  const status = document.getElementById('claudeApiKeyStatus');
-  if(!status) return;
-  // 연결 여부와 관계없이 상태 문구는 표시하지 않는다(연결이 없을 때의 안내는 runGeneration()의 오류 문구가 담당).
-  delete status.dataset.state;
-  status.textContent = '';
-}
 function hasClaudeConnectionConfigured(){
   return !!getActiveClaudeBackend();
 }
@@ -2204,6 +2197,15 @@ const ROUNDS_PER_FIGMA_SCREEN = 1; // 화면당 묶음 QC: 같은 화면을 여�
 const ROUNDS_PER_PDF_CHUNK_WHEN_SPLIT = 2; // PDF가 여러 조각이면 조각 수만큼 호출이 늘어나므로 조각당 라운드를 줄인다
 const PER_ROUND_TYPE_COUNT = 3;
 
+// QC 리스트를 비우고 새로 시작한다("QC 생성하기"와 분류 화면의 "새 프로젝트"가 같이 쓴다)
+async function clearWorkingList(){
+  await resetSharedDraft(); // 팀 동기화 중이면 서버의 공용 TC 리스트와 번호도 비운다
+  loadedHistoryId = null; renderHistory(); // 새로 만든 QC는 불러온 이력과 별개다
+  tcData = [];
+  resetTcIdCounter();
+  selectedTcIds.clear();
+  renderTable();
+}
 async function runGeneration(startFresh){
   if(!currentFile) return;
   if(!hasClaudeConnectionConfigured()){
@@ -2224,14 +2226,7 @@ async function runGeneration(startFresh){
   const originalLabel = btn.textContent;
   showError('');
 
-  if(startFresh){
-    await resetSharedDraft(); // 팀 동기화 중이면 서버의 공용 TC 리스트와 번호도 비운다
-    loadedHistoryId = null; renderHistory(); // 새로 만든 QC는 불러온 이력과 별개다
-    tcData = [];
-    resetTcIdCounter();
-    selectedTcIds.clear();
-    renderTable();
-  }
+  if(startFresh) await clearWorkingList();
 
   const startCount = tcData.length;
   const totalChunks = currentFileChunks.length;
@@ -2330,6 +2325,7 @@ async function runGeneration(startFresh){
   btn.textContent = originalLabel;
   qcGenerating = false;
   updateButtons();
+  if(madeCount && !roundErrors.length && closeQcGen()) document.getElementById('tcCardList').closest('.card').scrollIntoView({ block: 'start' });
 }
 
 // 피그마 URL만 넣고 생성 버튼을 누르면 화면을 먼저 가져온 뒤 바로 생성한다
@@ -2567,6 +2563,7 @@ function renderTable(){
     sel.addEventListener('change', ()=>{
       const idx = +sel.dataset.idx;
       tcData[idx].status = sel.value;
+      renderDistribution(); // 완료율
     });
   });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
@@ -2782,46 +2779,29 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
   renderTable();
 });
 
-/* ---------- Distribution bar ---------- */
-// 0건 항목은 흐리게 표시해 실제 분포가 먼저 읽히게 한다
-function legendItemsHtml(counts){
-  return RESULT_OPTIONS.map(o=>
-    `<div class="item${counts[o] ? '' : ' zero'}"><span class="dot" style="background:${RESULT_COLOR[o]}"></span>${o} ${counts[o]}</div>`
-  ).join('');
+/* ---------- QC 통계: 요약 표 한 줄(워크보드 요약 표) ---------- */
+// 결과별 건수·FO/BO·완료율 (순수 함수)
+function qcStats(rows){
+  const n = r=>rows.filter(x=>x.result === r).length;
+  const done = rows.filter(r=>r.status === '완료').length;
+  return {
+    total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
+    pass: n('PASS'), minor: n('MINOR'), na: n('N/A'), major: n('MAJOR'), fatal: n('FATAL') + n('CRITICAL'),
+    donePct: rows.length ? Math.round(done / rows.length * 100) : 0
+  };
 }
-function buildDistBlock(label, rows){
-  const counts = {};
-  RESULT_OPTIONS.forEach(o=>counts[o]=0);
-  rows.forEach(r=>{ counts[r.result] = (counts[r.result]||0)+1; });
-  const total = rows.length;
-
-  const bar = total
-    ? RESULT_OPTIONS.map(o=>{
-        const pct = counts[o]/total*100;
-        return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}" title="${o}: ${counts[o]}"></span>` : '';
-      }).join('')
-    : '';
-
-  const legend = total ? legendItemsHtml(counts) : '<span class="dist-empty">데이터 없음</span>';
-
-  return `<div class="dist-group">
-    <div class="dist-group-title">${label} <span class="count-badge">${total}건</span></div>
-    <div class="dist-wrap"><div class="dist-bar">${bar}</div></div>
-    <div class="dist-legend">${legend}</div>
-  </div>`;
-}
-
 function renderDistribution(){
-  const wrap = document.getElementById('distWrap');
-  document.getElementById('distEmpty').hidden = !!tcData.length; // TC가 없으면 영역은 두고 안내 문구만 보인다
-  if(!tcData.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-
-  // 전체 / FO / BO 블록을 모두 펼친 상태로 보인다(0건 블록은 "데이터 없음")
-  document.getElementById('distGroups').innerHTML =
-    buildDistBlock('전체', tcData) +
-    buildDistBlock('FO', tcData.filter(r=>r.screenType !== 'BO')) +
-    buildDistBlock('BO', tcData.filter(r=>r.screenType === 'BO'));
+  document.getElementById('distEmpty').hidden = !!tcData.length; // QC가 없으면 표 대신 안내 문구
+  document.getElementById('distWrap').hidden = !tcData.length;
+  if(!tcData.length) return;
+  const s = qcStats(tcData);
+  // 칸 = 이름 + 값(+ 보조 줄). 표 대신 격자라 화면이 좁으면 4칸·2칸으로 줄바꿈되고 넘치지 않는다
+  const cell = (label, v, unit, cls = '', extra = '')=>`<div class="stat-cell${cls}"><div class="stat-label">${label}</div><div class="stat-value">${v}<small>${unit}</small></div>${extra}</div>`;
+  document.getElementById('distWrap').innerHTML =
+    cell('전체', s.total, '건', ' stat-cell--total', `<div class="stat-sub">FO ${s.fo} · BO ${s.bo}</div>`)
+    + cell('PASS', s.pass, '건') + cell('MINOR', s.minor, '건') + cell('N/A', s.na, '건') + cell('MAJOR', s.major, '건')
+    + cell('FATAL·CRITICAL', s.fatal, '건', s.fatal ? ' is-alert' : '')
+    + cell('완료율', s.donePct, '%', ' stat-cell--done', `<div class="ad-stat-bar"><i style="width:${s.donePct}%"></i></div>`);
 }
 /* ---------- Export helpers ---------- */
 function formatDate(){
@@ -2846,6 +2826,8 @@ function isSameHistoryEntry(a, b){
 // "불러오기"한 이력(지금 편집 중인 이력)의 _id. 저장하기·엑셀 내보내기는 이 이력에 덮어쓴다.
 // 새로 생성·새 파일·피그마 가져오기·JSON 가져오기·그 이력 삭제 때 지운다.
 let loadedHistoryId = null;
+// 지금 화면: 분류(프로젝트 목록) / 프로젝트(QC 생성·리스트). 주소 #/c/분류, #/c/분류/p/프로젝트ID와 같이 움직인다
+let currentRoute = { view: 'cat', cat: null };
 // 편집 중인 이력(id)에 지금 내용(entry)을 덮어쓴다. 없으면 null(새로 쌓는다) (순수 함수)
 // 덮어쓰는 칸: snapshot·count·counts·summary·date. _id·fileName·figmaUrl·title·type은 유지하고 맨 위로 올린다.
 function overwriteHistory(list, id, entry){
@@ -3099,6 +3081,74 @@ function addQcListSheet(workbook, rows, title){
   return ws;
 }
 
+// 엑셀 가져오기: addQcListSheet가 만든 시트(4행 열 머리 "QC ID", 구분 행 "[FO] …", 데이터 행)를 QC 행으로 읽는다 (순수 함수)
+// grid: 시트 칸 글자, grid[행][열](0부터, A열 = 0). B~H = QC ID·유형·대분류·중분류·시험 절차·시험 내역·기대 결과,
+// I~L = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
+function parseQcSheet(grid){
+  const head = (grid || []).findIndex(r=>String((r || [])[1] || '').trim() === 'QC ID');
+  if(head < 0) return null;
+  const cell = (r, c)=>String(r[c] == null ? '' : r[c]).trim();
+  const rows = [];
+  for(let i = head + 1; i < grid.length; i++){
+    const r = grid[i] || [];
+    const tcId = cell(r, 1);
+    if(!TC_ID_RE.test(tcId)) continue; // 구분 행·빈 행
+    let tester = cell(r, 8), testNote = cell(r, 9), result = cell(r, 10).toUpperCase();
+    for(let c = 12; c < r.length && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
+      if(!testNote && cell(r, c + 1)) testNote = cell(r, c + 1);
+      if(!result && cell(r, c + 2)){ result = cell(r, c + 2).toUpperCase(); if(!tester) tester = cell(r, c); }
+    }
+    rows.push({
+      tcId, screenType: cell(r, 2).toUpperCase() === 'BO' ? 'BO' : 'FO', category: cell(r, 3), subCategory: cell(r, 4),
+      procedure: cell(r, 5), testDetail: cell(r, 6), expected: cell(r, 7),
+      tester, testNote, result: RESULT_OPTIONS.includes(result) ? result : 'N/A'
+    });
+  }
+  return rows;
+}
+// 가져온 행을 지금 QC 리스트에 맞춘다: 같은 QC ID는 기존 행(동기화 정보·화면 구분·태그·진행상태)을 두고 엑셀 값만 바꾼다 (순수 함수)
+function mergeExcelRows(current, imported){
+  const byId = new Map((current || []).map(r=>[r.tcId, r]));
+  return imported.map(r=>{
+    const old = byId.get(r.tcId);
+    return old ? { ...old, ...r } : { screen: '', constraintTag: '없음', integrationTag: '없음', status: '작성중', ...r };
+  });
+}
+async function handleExcelImportFile(file){
+  showGlobalError('');
+  let rows;
+  try{
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await file.arrayBuffer());
+    const ws = wb.getWorksheet('QC 리스트') || wb.worksheets[0];
+    const grid = [];
+    if(ws) ws.eachRow({ includeEmpty: true }, (row, n)=>{ grid[n - 1] = Array.from({ length: ws.columnCount }, (_, c)=>row.getCell(c + 1).text); });
+    rows = parseQcSheet(grid);
+  }catch(e){ showGlobalError(`엑셀 파일을 읽지 못했어요(${e.message}). .xlsx 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
+  if(!rows || !rows.length){ showGlobalError('엑셀에서 QC 리스트를 찾지 못했어요. 이 도구의 내보내기 > EXCEL로 만든 파일인지 확인해주세요.'); return; }
+  const same = rows.filter(r=>tcData.some(t=>t.tcId === r.tcId)).length;
+  const ok = await openDialog({
+    title: '엑셀 가져오기',
+    body: `파일: ${file.name}\n엑셀에서 QC ${rows.length}건을 찾았어요. 지금 QC 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
+      + `QC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`
+      + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원의 화면도 함께 바뀌어요.' : ''),
+    okLabel: '가져오기'
+  });
+  if(ok === null) return false;
+  const before = tcData;
+  const apply = next=>{
+    tcData = next;
+    resetTcIdCounter();
+    selectedTcIds.clear();
+    saveDraftNow();
+    renderTable();
+    syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
+  };
+  apply(normalizeTcIds(mergeExcelRows(tcData, rows)));
+  showUndoToast(`엑셀에서 QC ${rows.length}건을 가져왔어요.`, ()=>apply(before));
+  return true;
+}
+
 // 지금 TC 리스트를 이력(프로젝트) 한 건으로 만든다(엑셀 내보내기가 쓴다)
 function currentHistoryEntry(){
   const counts = {};
@@ -3242,7 +3292,14 @@ function loadHistoryEntry(idx){
   resetTcIdCounter();
   selectedTcIds.clear();
   renderTable();
-  document.querySelector('.tab-btn[data-tab="gen"]').click();
+  goRoute({ view: 'proj', cat: categoryOf(entry), id: entry._id }, currentRoute.view === 'proj'); // 프로젝트끼리 옮길 때는 뒤로 가기 기록을 늘리지 않는다
+}
+// 분류 화면에서 프로젝트 항목을 누르면 연다. 지금 편집 중인 프로젝트는 다시 불러오지 않고 화면만 옮긴다
+function openProjectItem(idx){
+  const entry = historyList[idx];
+  if(!entry) return;
+  if(entry._id && entry._id === loadedHistoryId) goRoute({ view: 'proj', cat: categoryOf(entry), id: entry._id });
+  else loadHistoryEntry(idx);
 }
 // ---------- 프로젝트 분류(기업/알닷/로밍 등) ----------
 // category는 프로젝트 데이터 안의 문자열이다(서버 cvt_history.data, 스키마 변경 없음). 없으면 "미분류"로 보이고 저장하지 않는다.
@@ -3255,38 +3312,121 @@ function sanitizeCategory(s){
 function categoryOf(h){
   return (h && sanitizeCategory(h.category)) || UNCATEGORIZED;
 }
-// added: 사용자가 "분류 추가"로 만든 분류(프로젝트가 없어도 목록에 나온다)
-function categoryList(list, added){
+// added: 사용자가 "프로젝트 추가"(분류 탭 끝)로 만든 분류(프로젝트가 없어도 목록에 나온다)
+// hidden: 지운 기본 분류(그 분류의 프로젝트가 남아 있으면 그대로 보인다)
+function categoryList(list, added, hidden){
+  const defaults = DEFAULT_CATEGORIES.filter(c=>!(hidden || []).includes(c) || (list || []).some(h=>categoryOf(h) === c));
   const extra = [];
   const push = c=>{ if(c && c !== UNCATEGORIZED && !DEFAULT_CATEGORIES.includes(c) && !extra.includes(c)) extra.push(c); };
   (added || []).forEach(c=>push(sanitizeCategory(c)));
   (list || []).forEach(h=>push(categoryOf(h)));
-  return [...DEFAULT_CATEGORIES, ...extra, UNCATEGORIZED];
+  return [...defaults, ...extra, UNCATEGORIZED];
 }
 let addedCategories = [];
 try{ addedCategories = (JSON.parse(localStorage.getItem('cvt_project_categories') || '[]') || []).filter(c=>typeof c === 'string'); }catch(e){ addedCategories = []; }
-// "분류 추가": 이름을 받아 목록에 넣고 그 분류 탭을 고른다(이후 새로 내보내는 프로젝트가 이 분류가 된다)
-async function addProjectCategory(){
-  const name = await openDialog({ title: '분류 추가', body: '새 분류 이름을 20자 이내로 적어주세요. 이 분류 탭을 고른 상태에서 엑셀로 내보내면 그 프로젝트가 이 분류가 돼요.', input: '', okLabel: '추가' });
-  const v = sanitizeCategory(name);
-  if(name === null || !v || v === UNCATEGORIZED) return;
-  if(!categoryList(historyList, addedCategories).includes(v)){
-    addedCategories.push(v);
-    try{ localStorage.setItem('cvt_project_categories', JSON.stringify(addedCategories)); }catch(e){ /* 저장 공간이 없으면 이번 화면에서만 쓴다 */ }
-    showUndoToast(`'${v}' 분류를 추가했어요.`, ()=>{
-      addedCategories = addedCategories.filter(c=>c !== v);
-      try{ localStorage.setItem('cvt_project_categories', JSON.stringify(addedCategories)); }catch(e){ /* ignore */ }
-      if(projectCategory === v) projectCategory = 'ALL';
-      renderHistory();
-    });
-  }
-  projectCategory = v;
-  renderHistory();
+let hiddenCategories = [];
+try{ hiddenCategories = (JSON.parse(localStorage.getItem('cvt_hidden_categories') || '[]') || []).filter(c=>typeof c === 'string'); }catch(e){ hiddenCategories = []; }
+function saveCategoryLists(){
+  try{
+    localStorage.setItem('cvt_project_categories', JSON.stringify(addedCategories));
+    localStorage.setItem('cvt_hidden_categories', JSON.stringify(hiddenCategories));
+  }catch(e){ /* 저장 공간이 없으면 이번 화면에서만 쓴다 */ }
 }
+// "프로젝트 추가"(분류 탭 끝): 워크보드처럼 창을 띄워 이름을 받고, 저장하면 탭에 넣고 그 탭으로 간다
+// (이후 그 탭에서 새로 내보내는 프로젝트가 이 분류가 된다)
+const projAddModal = document.getElementById('projAddModal');
+let projManageCat = null; // 관리 창으로 연 분류(추가 창이면 null)
+function setProjModalMode(cat){
+  projManageCat = cat;
+  const manage = cat !== null;
+  document.getElementById('projAddTitle').textContent = manage ? '프로젝트 관리' : '프로젝트 추가';
+  document.getElementById('projAddField').hidden = manage;
+  document.getElementById('projManageInfo').hidden = !manage;
+  document.getElementById('projDelBtn').hidden = !manage;
+  document.getElementById('projAddSave').hidden = manage;
+  document.getElementById('projAddCancel').textContent = manage ? '닫기' : '취소';
+  document.getElementById('projConfirm').innerHTML = '';
+  document.getElementById('projAddErr').textContent = '';
+}
+function addProjectCategory(){
+  setProjModalMode(null);
+  document.getElementById('projAddName').value = '';
+  if(!projAddModal.open) projAddModal.showModal();
+  document.getElementById('projAddName').focus();
+}
+// 탭 옆 ⋯: 그 프로젝트(분류)를 관리하는 창. 지금은 삭제만
+function openProjectManage(cat){
+  setProjModalMode(cat);
+  const n = filterByCategory(historyList, cat).length;
+  document.getElementById('projManageInfo').innerHTML = `<b>${escapeHtml(cat)}</b><span class="sub-txt">QC 프로젝트 ${n}건</span>`;
+  if(!projAddModal.open) projAddModal.showModal();
+  document.getElementById('projDelBtn').focus();
+}
+// 프로젝트(분류) 삭제: 탭과 그 안의 QC 프로젝트를 지우고 첫 탭으로 간다. 되돌리기로 모두 돌아온다
+async function deleteProjectCategory(cat){
+  const removed = historyList.map((row, index)=>({ row, index })).filter(x=>categoryOf(x.row) === cat);
+  const prevLoaded = loadedHistoryId, prevAdded = addedCategories.slice(), prevHidden = hiddenCategories.slice();
+  if(removed.some(x=>x.row._id && x.row._id === loadedHistoryId)) loadedHistoryId = null;
+  historyList = historyList.filter(h=>categoryOf(h) !== cat);
+  addedCategories = addedCategories.filter(c=>c !== cat);
+  if(DEFAULT_CATEGORIES.includes(cat) && !hiddenCategories.includes(cat)) hiddenCategories.push(cat);
+  saveCategoryLists();
+  await saveHistory();
+  goRoute({ view: 'main' }); // 첫 탭(프로젝트가 있는 첫 분류)으로
+  showUndoToast(`'${cat}' 프로젝트${removed.length ? `와 QC 프로젝트 ${removed.length}건` : ''}을 삭제했어요.`, async ()=>{
+    restoreRemovedItems(historyList, removed);
+    addedCategories = prevAdded; hiddenCategories = prevHidden; loadedHistoryId = prevLoaded;
+    saveCategoryLists();
+    await saveHistory();
+    goRoute({ view: 'cat', cat });
+  });
+}
+document.getElementById('projDelBtn').addEventListener('click', ()=>{
+  const cat = projManageCat, n = filterByCategory(historyList, cat).length;
+  const box = document.getElementById('projConfirm');
+  box.innerHTML = `<div class="proj-confirm"><span>'${escapeHtml(cat)}' 프로젝트${n ? `와 그 안의 QC 프로젝트 ${n}건` : ''}을 삭제할까요?</span><button type="button" class="ad-btn ad-btn--danger" id="projDelYes">삭제</button><button type="button" class="ad-btn ad-btn--ghost" id="projDelNo">취소</button></div>`;
+  document.getElementById('projDelNo').addEventListener('click', ()=>{ box.innerHTML = ''; document.getElementById('projDelBtn').focus(); });
+  document.getElementById('projDelYes').addEventListener('click', ()=>{ projAddModal.close(); deleteProjectCategory(cat); });
+  document.getElementById('projDelYes').focus();
+});
+document.getElementById('projAddClose').addEventListener('click', ()=>projAddModal.close());
+document.getElementById('projAddCancel').addEventListener('click', ()=>projAddModal.close());
+projAddModal.addEventListener('mousedown', e=>{ // 창 바깥(뒤 배경)을 누르면 닫는다
+  const r = projAddModal.getBoundingClientRect();
+  if(e.target === projAddModal && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) projAddModal.close();
+});
+document.getElementById('projAddForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  if(projManageCat !== null) return; // 관리 창에서는 저장하지 않는다
+  const input = document.getElementById('projAddName');
+  const err = document.getElementById('projAddErr');
+  const v = sanitizeCategory(input.value);
+  const fail = msg=>{ err.textContent = msg; input.focus(); };
+  if(!v) return fail('프로젝트명을 입력해 주세요.');
+  if(v === UNCATEGORIZED) return fail(`"${UNCATEGORIZED}"는 프로젝트명으로 쓸 수 없어요.`);
+  if(categoryList(historyList, addedCategories, hiddenCategories).includes(v)) return fail(`"${v}" 프로젝트가 이미 있어요.`);
+  const wasHidden = hiddenCategories.includes(v);
+  if(wasHidden) hiddenCategories = hiddenCategories.filter(c=>c !== v); else addedCategories.push(v);
+  saveCategoryLists();
+  projAddModal.close();
+  goRoute({ view: 'cat', cat: v });
+  showUndoToast(`'${v}' 프로젝트를 추가했어요.`, ()=>{
+    if(wasHidden) hiddenCategories.push(v); else addedCategories = addedCategories.filter(c=>c !== v);
+    saveCategoryLists();
+    if(currentRoute.cat === v) goRoute({ view: 'main' }); else renderHistory();
+  });
+});
 function filterByCategory(list, cat){
   return (!cat || cat === 'ALL') ? list : list.filter(h=>categoryOf(h) === cat);
 }
-let projectCategory = 'ALL'; // 프로젝트 관리 탭에서 고른 분류
+let projectCategory = 'ALL'; // 지금 들어와 있는 분류(분류·프로젝트 화면). 새로 내보내는 프로젝트가 이 분류가 된다
+// 분류별 프로젝트 수와 QC 수(GNB 분류 목록). 미분류는 프로젝트가 있을 때만 (순수 함수)
+function categoryStats(list, added, hidden){
+  return categoryList(list, added, hidden).map(cat=>{
+    const items = filterByCategory(list || [], cat);
+    return { cat, projects: items.length, qc: items.reduce((n, h)=>n + (+h.count || 0), 0) };
+  }).filter(s=>s.cat !== UNCATEGORIZED || s.projects > 0);
+}
 // 프로젝트 분류를 바꾼다(미분류를 고르면 필드를 지운다). 저장하면 팀 동기화로 전달된다.
 async function setProjectCategory(idx, cat){
   const entry = historyList[idx];
@@ -3307,25 +3447,42 @@ function renderProjectSelect(){
     return `<option value="${idx}" title="${escapeHtml(name)} (${escapeHtml(h.date)})"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(short(name))} · ${escapeHtml(String(h.date || '').slice(5, 10))}</option>`;
   };
   // 분류별로 묶는다(기업, 알닷, 로밍, 다른 분류, 미분류). 프로젝트가 없는 분류는 묶음을 만들지 않는다
-  sel.innerHTML = '<option value="">프로젝트 선택</option>' + categoryList(historyList, addedCategories).map(cat=>{
+  sel.innerHTML = '<option value="">프로젝트 선택</option>' + categoryList(historyList, addedCategories, hiddenCategories).map(cat=>{
     const items = historyList.map((h, idx)=>[h, idx]).filter(([h])=>categoryOf(h) === cat);
     return items.length ? `<optgroup label="${escapeHtml(cat)}">${items.map(([h, idx])=>optionOf(h, idx)).join('')}</optgroup>` : '';
   }).join('');
   sel.title = sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].title : '';
 }
 document.getElementById('projectSearch').addEventListener('input', ()=>renderHistory());
-// 분류 탭 줄: 전체 + 분류 목록(건수 포함, 0건인 기본 분류도 보인다)
+// 본문 맨 위 분류 탭(워크보드 프로젝트 탭 모양): 프로젝트 수, 지금 분류 강조(프로젝트 화면이면 그 프로젝트의 분류). 0건인 기본 분류도 보인다
 function renderCategoryTabs(){
-  const wrap = document.getElementById('projectCategoryTabs');
-  if(!wrap) return;
-  const cats = categoryList(historyList, addedCategories);
-  if(projectCategory !== 'ALL' && !cats.includes(projectCategory)) projectCategory = 'ALL';
-  wrap.innerHTML = [['ALL', '전체', historyList.length], ...cats.map(c=>[c, c, filterByCategory(historyList, c).length])]
-    .map(([v, label, n])=>`<button type="button" class="ad-btn ad-btn--sm category-tab" data-cat="${escapeHtml(v)}" aria-pressed="${v === projectCategory}">${escapeHtml(label)}<span class="count">${n}</span></button>`).join('')
-    + '<button type="button" class="ad-btn ad-btn--sm ad-btn--ghost category-add" id="categoryAddBtn">+ 분류 추가</button>';
-  wrap.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click', ()=>{ projectCategory = b.dataset.cat; renderHistory(); }));
-  document.getElementById('categoryAddBtn').addEventListener('click', addProjectCategory);
+  const stats = categoryStats(historyList, addedCategories, hiddenCategories);
+  const cur = currentRoute.cat;
+  if(cur && !stats.some(s=>s.cat === cur)) stats.push({ cat: cur, projects: 0, qc: 0 }); // 다른 브라우저에서 추가한 분류·빈 미분류로 들어와도 보이게
+  const nav = document.getElementById('projectCategoryTabs');
+  nav.innerHTML = stats.map(s=>`<span class="cat-tab-wrap"><button type="button" class="cat-tab category-tab" data-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)} (프로젝트 ${s.projects}개 · QC ${s.qc}건)"${s.cat === cur ? ' aria-current="page"' : ''}>${escapeHtml(s.cat)}<span class="count">${s.projects}</span></button>`
+    + (s.cat === UNCATEGORIZED ? '' : `<button type="button" class="cat-tab__more" data-cat-more="${escapeHtml(s.cat)}" aria-label="${escapeHtml(s.cat)} 프로젝트 관리" title="프로젝트 관리(삭제)">⋯</button>`) + '</span>').join('');
+  nav.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click', ()=>goRoute({ view: 'cat', cat: b.dataset.cat })));
+  nav.querySelectorAll('[data-cat-more]').forEach(b=>b.addEventListener('click', ()=>openProjectManage(b.dataset.catMore)));
+  // GNB "QC 관리" 소메뉴: 같은 분류 목록(지금 분류 강조, 프로젝트 수)
+  const sub = document.getElementById('gnbCatList');
+  sub.innerHTML = stats.map(s=>`<button type="button" class="ad-gnb-item gnb-sub" data-gnb-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)}"${s.cat === cur ? ' aria-current="page"' : ''}><span>${escapeHtml(s.cat)}</span><span class="count">${s.projects}</span></button>`).join('');
+  sub.querySelectorAll('[data-gnb-cat]').forEach(b=>b.addEventListener('click', ()=>goRoute({ view: 'cat', cat: b.dataset.gnbCat })));
 }
+// GNB "QC 관리"(대메뉴): 누르면 소메뉴를 펼치고 접는다(브라우저에 기억). 메뉴를 접은 상태(64px)면 메뉴를 펼친다
+const gnbQcBtn = document.getElementById('gnbQcBtn'), gnbQcBody = document.getElementById('gnbQcBody');
+function setGnbQcOpen(open){
+  gnbQcBtn.setAttribute('aria-expanded', String(open));
+  gnbQcBody.hidden = !open;
+  try{ localStorage.setItem('ad-gnb-qc', open ? '' : '0'); }catch(e){ /* 기억하지 못해도 이번 화면에서는 동작 */ }
+}
+try{ if(localStorage.getItem('ad-gnb-qc') === '0') setGnbQcOpen(false); }catch(e){ /* ignore */ }
+gnbQcBtn.addEventListener('click', ()=>{
+  if(document.getElementById('appShell').classList.contains('is-folded') && innerWidth > 900){ setGnbFold(false); setGnbQcOpen(true); return; }
+  setGnbQcOpen(gnbQcBtn.getAttribute('aria-expanded') !== 'true');
+});
+document.getElementById('gnbCatAddBtn').addEventListener('click', ()=>addProjectCategory());
+document.getElementById('categoryAddBtn').addEventListener('click', addProjectCategory);
 document.getElementById('projectSort').addEventListener('change', ()=>renderHistory());
 document.getElementById('projectSelect').addEventListener('change', e=>{
   if(e.target.value !== '') loadHistoryEntry(+e.target.value);
@@ -3340,7 +3497,9 @@ function renderHistory(){
   const q = (document.getElementById('projectSearch').value || '').trim().toLowerCase();
   const nameOf = h => h.title || h.fileName || '';
   renderCategoryTabs();
-  const filtered = filterByCategory(historyList, projectCategory)
+  renderViewTitle();
+  const inCategory = filterByCategory(historyList, projectCategory);
+  const filtered = inCategory
     .filter(h => !q || `${nameOf(h)} ${h.date || ''}`.toLowerCase().includes(q))
     .sort(document.getElementById('projectSort').value === 'name'
       ? (a, b) => nameOf(a).localeCompare(nameOf(b), 'ko')
@@ -3348,12 +3507,12 @@ function renderHistory(){
     .sort((a, b) => (b._id === loadedHistoryId && !!loadedHistoryId) - (a._id === loadedHistoryId && !!loadedHistoryId));
 
   const heading = document.getElementById('historyCountHeading');
-  if(heading) heading.textContent = `프로젝트 (${historyList.length}건)`;
+  if(heading) heading.textContent = `프로젝트 (${inCategory.length}건)`;
 
-  document.getElementById('historyNoMatch').hidden = !(historyList.length && !filtered.length);
+  document.getElementById('historyNoMatch').hidden = !(inCategory.length && !filtered.length);
   if(!filtered.length){
     wrap.innerHTML = '';
-    empty.style.display = historyList.length ? 'none' : 'block';
+    empty.style.display = inCategory.length ? 'none' : 'block';
     return;
   }
   empty.style.display = 'none';
@@ -3371,27 +3530,26 @@ function renderHistory(){
       : '';
     const name = h.title || h.fileName;
     const isEditing = !!h._id && h._id === loadedHistoryId;
-    // 편집 중인 프로젝트는 "불러오기" 대신 "편집 중" 표시만 둔다
-    const loadBtn = isEditing
-      ? '<span class="ad-badge ad-badge--neutral">편집 중</span>'
-      : `<button class="ad-btn" data-load="${idx}">불러오기</button>`;
     const testerCount = (Array.isArray(h.testers) ? h.testers : testerList).length;
-    return `<div class="history-item${isEditing ? ' is-editing' : ''}">
+    return `<div class="history-item${isEditing ? ' is-editing' : ''}" data-open="${idx}" tabindex="0" title="눌러서 프로젝트 열기">
       <div class="meta">
-        <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><button type="button" class="history-title" data-rename="${idx}" title="눌러서 이름 바꾸기" aria-label="프로젝트 이름 바꾸기: ${escapeHtml(name)}">${escapeHtml(name)}</button></div>
+        <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
         <div class="date">${escapeHtml(h.date)} · QC ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
         <div class="history-mini-bar">${bar}</div>
       </div>
       <div class="history-actions">
-        ${loadBtn}
+        ${isEditing ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : ''}
+        <button class="ad-btn ad-btn--ghost" data-rename="${idx}" aria-label="프로젝트 이름 변경: ${escapeHtml(name)}">이름 변경</button>
         <button class="ad-btn ad-btn--ghost" data-share="${idx}" title="이 프로젝트를 바로 여는 링크를 복사해요">링크 복사</button>
         <button class="ad-btn ad-btn--ghost" data-remove="${idx}">삭제</button>
       </div>
     </div>`;
   }).join('');
 
-  wrap.querySelectorAll('[data-load]').forEach(btn=>{
-    btn.addEventListener('click', ()=>loadHistoryEntry(+btn.dataset.load));
+  // 항목 어디를 눌러도(분류 칩·버튼·링크·입력칸 제외) 그 프로젝트를 연다. 키보드는 항목에서 Enter
+  wrap.querySelectorAll('[data-open]').forEach(item=>{
+    item.addEventListener('click', e=>{ if(!e.target.closest('button, a, input, select')) openProjectItem(+item.dataset.open); });
+    item.addEventListener('keydown', e=>{ if(e.key === 'Enter' && e.target === item){ e.preventDefault(); openProjectItem(+item.dataset.open); } });
   });
   wrap.querySelectorAll('[data-share]').forEach(btn=>{
     btn.addEventListener('click', ()=>copyProjectLink(+btn.dataset.share));
@@ -3403,7 +3561,7 @@ function renderHistory(){
       const sel = document.createElement('select');
       sel.className = 'ad-select category-select cell-edit'; // cell-edit: 고르는 동안 받은 변경 반영을 미룬다
       sel.setAttribute('aria-label', '분류 선택');
-      sel.innerHTML = categoryList(historyList, addedCategories).map(c=>`<option value="${escapeHtml(c)}"${c === categoryOf(historyList[idx]) ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')
+      sel.innerHTML = categoryList(historyList, addedCategories, hiddenCategories).map(c=>`<option value="${escapeHtml(c)}"${c === categoryOf(historyList[idx]) ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')
         + '<option value="__new">새 분류 입력…</option>';
       chip.replaceWith(sel);
       sel.focus();
@@ -3428,7 +3586,7 @@ function renderHistory(){
       input.maxLength = 50;
       input.value = entry.title || entry.fileName;
       input.setAttribute('aria-label', '프로젝트 이름');
-      btn.replaceWith(input);
+      btn.closest('.history-item').querySelector('.history-title').replaceWith(input);
       input.focus();
       input.select();
       let done = false;
@@ -3487,7 +3645,7 @@ let sb = null;
 let syncShadow = { rows: new Map(), history: new Map(), testers: new Map() }; // 서버에 반영됐거나 대기열에 실린 기준
 let syncQueue = [];
 let syncFlushing = false, syncLoaded = false, syncRtUp = false, syncRtEverUp = false;
-let syncErrorMsg = '', syncConflictMsg = '', syncLastSavedAt = null, syncRetryTimer = null;
+let syncErrorMsg = '', syncConflictMsg = '', syncRetryTimer = null;
 let syncResyncWanted = false;
 let rtHold = true;          // 서버에서 전체를 받는 동안에는 실시간 이벤트를 모아 두었다가 나중에 적용한다
 const rtPending = [];
@@ -3711,7 +3869,6 @@ async function flushSyncQueue(){
       await sendSyncOp(syncQueue[0]);
       syncQueue.shift();
       persistSyncQueue();
-      syncLastSavedAt = new Date();
       syncErrorMsg = '';
     }
   }catch(err){
@@ -3778,7 +3935,6 @@ async function loadFromServer(){
   syncShadow = { rows: new Map(Array.from(S.rows, ([id, v])=>[id, { tc_no: v.tc_no, data: rowDataOf(rowFromServer(id, v.tc_no, v.data)) }])), history: S.history, testers: S.testers };
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber());
   syncLoaded = true;
-  syncLastSavedAt = new Date();
   afterRemoteApply();
   openSharedProjectOnce(); // 공유 링크(?project=)로 열었으면 서버 목록을 받은 뒤 그 프로젝트를 불러온다
   syncChanges(); // 이 브라우저에만 있던 데이터를 올린다
@@ -3794,7 +3950,6 @@ async function resyncFromServer(){
     await flushSyncQueue();
     await loadFromServer();
     if(!syncQueue.length) syncErrorMsg = '';
-    loadAccessLog();
   }catch(err){
     syncErrorMsg = `서버에서 불러오지 못했습니다(${err.message || err}).`;
   }finally{
@@ -3899,9 +4054,10 @@ function afterRemoteApply(){
 
 let rtChannel = null;
 function subscribeRealtime(){
-  // presence key = 탭 식별자 (접속자 칩이 탭 단위로 센다)
+  // presence key = 탭 식별자. 접속자 수는 화면에 보이지 않지만, 함께 접속 중인 팀원이 있는지(canRenumberAfterCreate) 판단에 쓴다.
+  // (presence 이벤트를 하나라도 구독해야 presence 상태를 받는다)
   rtChannel = sb.channel('cvt-db', { config: { presence: { key: SYNC_CLIENT_ID } } });
-  rtChannel.on('presence', { event: 'sync' }, renderPresence);
+  rtChannel.on('presence', { event: 'sync' }, ()=>{});
   ['cvt_tc_rows', 'cvt_history', 'cvt_testers'].forEach(table=>{
     rtChannel.on('postgres_changes', { event: '*', schema: 'public', table }, p=>onRealtime(table, p));
   });
@@ -3913,7 +4069,6 @@ function onRealtimeStatus(status){
     syncRtUp = syncRtEverUp = true;
     renderSyncStatus();
     trackPresence();
-    maybeLogAccess();
     if(reconnected) resyncFromServer(); // 끊겨 있던 동안 놓친 변경을 다시 받는다
   }else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
     syncRtUp = false;
@@ -3930,75 +4085,7 @@ function trackPresence(){
   if(!rtChannel) return;
   try{ const r = rtChannel.track({ name: myName() || '이름 없음' }); if(r && r.catch) r.catch(()=>{}); }catch(e){ /* 연결 전이면 무시 */ }
 }
-function renderPresence(){
-  const chip = document.getElementById('presenceChip');
-  if(!chip || !rtChannel) return;
-  const peers = Object.entries(rtChannel.presenceState())
-    .filter(([k])=>k !== SYNC_CLIENT_ID)
-    .map(([, metas])=>(metas[metas.length - 1] || {}).name || '이름 없음');
-  chip.textContent = `접속 ${peers.length + 1}명`;
-  chip.title = [`나: ${myName() || '이름 없음'}`, ...peers].join('\n') + '\n(누르면 내 이름을 바꿀 수 있어요)';
-}
-let askingName = false;
-async function askName(){
-  askingName = true;
-  const v = await openDialog({ title: '팀원에게 보일 내 이름을 입력해주세요', input: myName(), okLabel: '저장' });
-  askingName = false;
-  if(v !== null && v.trim()){
-    try{ localStorage.setItem(DISPLAY_NAME_KEY, v.trim().slice(0, 20)); }catch(e){ /* ignore */ }
-    trackPresence();
-    renderPresence();
-  }
-  maybeLogAccess();
-}
-
-/* ---------- 접속 이력 (cvt_access_log, 탭을 열고 처음 연결됐을 때 한 줄) ---------- */
-let accessLogged = false;
-// 처음 연결된 뒤, 이름 입력창이 닫혀 있을 때 한 번만 기록한다(이름을 받은 뒤 기록하려고)
-async function maybeLogAccess(){
-  if(accessLogged || askingName || !syncRtEverUp || !sb) return;
-  accessLogged = true;
-  try{
-    sbCheck(await sb.from('cvt_access_log').insert({ client_id: SYNC_CLIENT_ID, name: myName() || '이름 없음' }));
-  }catch(e){ accessLogged = false; return; } // 다음 연결 때 다시 시도한다
-  loadAccessLog();
-}
-function fmtDateTime(iso){
-  const d = new Date(iso);
-  if(isNaN(d)) return '';
-  const p = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${d.toTimeString().slice(0, 8)}`;
-}
-async function loadAccessLog(){
-  if(!SYNC_ENABLED || !sb) return;
-  let rows;
-  try{
-    rows = sbCheck(await sb.from('cvt_access_log').select('name,joined_at').order('joined_at', { ascending: false }).limit(50));
-  }catch(e){ return; } // 테이블이 아직 없으면(예전 스키마) 비어 있는 채로 둔다
-  document.getElementById('accessLogList').innerHTML = (rows || []).map(r=>
-    `<li><span>${escapeHtml(r.name || '이름 없음')}</span><span class="when">${escapeHtml(fmtDateTime(r.joined_at))}</span></li>`
-  ).join('');
-  document.getElementById('accessLogEmpty').hidden = !!(rows && rows.length);
-}
-
-// 저장 상태(동기화 시각)를 누르면 접속 이력 창을 열고 닫는다. 열 때마다 최근 50건을 새로 받는다.
-function toggleAccessLog(open){
-  const card = document.getElementById('accessLogCard');
-  const ind = document.getElementById('syncIndicator');
-  const willOpen = open === undefined ? card.hidden : open;
-  card.hidden = !willOpen;
-  ind.setAttribute('aria-expanded', String(willOpen));
-  if(willOpen) loadAccessLog();
-}
-document.getElementById('syncIndicator').addEventListener('click', ()=>toggleAccessLog());
-document.getElementById('accessLogClose').addEventListener('click', ()=>{ toggleAccessLog(false); document.getElementById('syncIndicator').focus(); });
-document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && !document.getElementById('accessLogCard').hidden) toggleAccessLog(false); });
-document.addEventListener('click', e=>{
-  const card = document.getElementById('accessLogCard');
-  if(!card.hidden && !card.contains(e.target) && !document.getElementById('syncIndicator').contains(e.target)) toggleAccessLog(false);
-});
-
-/* ---------- 이름 입력·확인 대화상자 (native dialog). 확인이면 입력값(입력칸이 없으면 ''), 취소면 null ---------- */
+/* ---------- 입력·확인 대화상자 (native dialog). 확인이면 입력값(입력칸이 없으면 ''), 취소면 null ---------- */
 function openDialog({ title, body = '', input = null, okLabel = '확인', maxLength = 20 }){
   const dlg = document.getElementById('appDialog');
   const inp = document.getElementById('appDialogInput');
@@ -4047,29 +4134,8 @@ async function resetSharedDraft(){
   try{ sbCheck(await sb.rpc('reset_cvt_draft')); }catch(e){ /* ignore */ }
 }
 
-// 페이지 머리의 저장 상태(ad-sync): 저장됨 / 저장 중(--saving) / 연결 끊김(--offline) + 마지막 동기화 시각.
-// 오류·번호 바뀜 안내는 그 아래 한 줄(#syncStatus)에 보인다. 동기화가 꺼져 있으면 "이 브라우저에만 저장"만 보인다.
+// 동기화 오류·번호 바뀜 안내를 헤더 아래 한 줄(#syncStatus)에 보인다. 저장 상태·접속자 표시는 두지 않는다.
 function renderSyncStatus(){
-  const ind = document.getElementById('syncIndicator');
-  if(!ind) return;
-  document.getElementById('presenceChip').hidden = !SYNC_ENABLED;
-  ind.disabled = !SYNC_ENABLED; // 팀 동기화 중일 때만 눌러서 접속 이력을 본다
-  if(!SYNC_ENABLED) toggleAccessLog(false);
-  document.getElementById('syncDot').hidden = !SYNC_CONFIGURED;
-  let label, state = '', title = '';
-  if(!SYNC_CONFIGURED){ label = '이 브라우저에만 저장'; title = '팀 동기화 설정이 비어 있어 이 브라우저의 저장소에만 저장해요.'; }
-  else if(!SYNC_ENABLED){ label = '연결 끊김'; state = 'offline'; }
-  else if(!syncLoaded){ label = syncErrorMsg ? '연결 끊김' : '불러오는 중…'; state = syncErrorMsg ? 'offline' : 'saving'; }
-  else if(syncErrorMsg || !syncRtUp){ label = '연결 끊김'; state = 'offline'; title = syncRtUp ? '' : '실시간 연결이 끊겨 30초마다 새로 받아와요.'; }
-  else if(syncQueue.length || syncFlushing){ label = '저장 중…'; state = 'saving'; }
-  else label = '저장됨';
-  if(SYNC_ENABLED && syncQueue.length) title = [title, `보내지 못한 변경 ${syncQueue.length}건`].filter(Boolean).join(' ');
-  ind.classList.toggle('ad-sync--saving', state === 'saving');
-  ind.classList.toggle('ad-sync--offline', state === 'offline');
-  ind.title = title;
-  document.getElementById('syncLabel').textContent = label;
-  document.getElementById('syncTime').textContent = (SYNC_ENABLED && syncLastSavedAt) ? '마지막 동기화 ' + syncLastSavedAt.toTimeString().slice(0, 8) : '';
-
   const msg = !SYNC_CONFIGURED ? ''
     : !SYNC_ENABLED ? 'Supabase 라이브러리를 불러오지 못해 팀 동기화를 쓸 수 없어요. 네트워크(CDN) 차단 여부를 확인해주세요.'
     : [syncErrorMsg, syncConflictMsg].filter(Boolean).join(' ');
@@ -4080,7 +4146,6 @@ function renderSyncStatus(){
 }
 
 if(SYNC_ENABLED){
-  document.getElementById('presenceChip').addEventListener('click', askName);
   // 편집 중이라 미뤄둔 받기·다시 불러오기는 포커스가 빠진 직후에 한다.
   document.addEventListener('focusout', ()=>{
     setTimeout(()=>{
@@ -4110,7 +4175,7 @@ function buildBackup(){
 }
 // 백업 파일 형식 검사. 문제가 없으면 '', 있으면 원인과 다음 행동을 담은 문구 (순수 함수)
 function validateBackup(d){
-  const next = ' 이 도구의 "JSON 내보내기"로 만든 파일인지 확인하고 다시 가져와주세요.';
+  const next = ' 이 도구의 "내보내기"로 만든 파일인지 확인하고 다시 가져와주세요.';
   if(!d || typeof d !== 'object' || Array.isArray(d)) return '백업 파일의 내용이 객체 형식이 아니에요.' + next;
   if(d.schema !== 1) return `지원하지 않는 백업 형식이에요(schema: ${JSON.stringify(d.schema)}).` + next;
   for(const k of ['tcData', 'historyList', 'testerList']){
@@ -4185,6 +4250,20 @@ async function offerImport(data, fileName){
   return true;
 }
 document.getElementById('jsonExportBtn').addEventListener('click', handleJsonExport);
+// 내보내기·가져오기 메뉴: 항목을 고르거나 바깥을 누르거나 Esc면 닫는다. 하나를 열면 다른 하나는 닫는다
+const fileMenus = [document.getElementById('exportMenu'), document.getElementById('importMenu')];
+fileMenus.forEach(menu=>{
+  menu.querySelectorAll('[role="menuitem"]').forEach(b=>b.addEventListener('click', ()=>{ menu.open = false; }));
+  menu.addEventListener('toggle', ()=>{ if(menu.open) fileMenus.forEach(m=>{ if(m !== menu) m.open = false; }); });
+  menu.addEventListener('keydown', e=>{ if(e.key === 'Escape' && menu.open){ menu.open = false; menu.querySelector('summary').focus(); } });
+});
+document.addEventListener('click', e=>fileMenus.forEach(m=>{ if(m.open && !m.contains(e.target)) m.open = false; }));
+document.getElementById('excelImportBtn').addEventListener('click', ()=>document.getElementById('excelImportInput').click());
+document.getElementById('excelImportInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(file) handleExcelImportFile(file);
+  e.target.value = '';
+});
 document.getElementById('jsonImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
 document.getElementById('jsonImportInput').addEventListener('change', e=>{
   const file = e.target.files[0];
@@ -4221,13 +4300,20 @@ let pendingSharedProject = (()=>{
 async function openSharedProjectOnce(){
   if(!pendingSharedProject) return;
   const dlg = document.getElementById('appDialog');
-  if(dlg.open){ dlg.addEventListener('close', ()=>setTimeout(openSharedProjectOnce, 50), { once: true }); return; } // 이름 입력 창이 먼저 떠 있으면 닫힌 뒤
+  if(dlg.open){ dlg.addEventListener('close', ()=>setTimeout(openSharedProjectOnce, 50), { once: true }); return; } // 다른 창이 먼저 떠 있으면 닫힌 뒤
   const id = pendingSharedProject;
   pendingSharedProject = null;
-  try{ history.replaceState(null, '', location.pathname); }catch(e){ /* 주소를 바꿀 수 없는 화면이면 그대로 */ }
+  const fromHash = currentRoute.view === 'proj' && currentRoute.id === id; // #/c/분류/p/ID로 열었으면 주소는 이미 프로젝트 화면
+  try{ history.replaceState(null, '', location.pathname + location.hash); }catch(e){ /* 주소를 바꿀 수 없는 화면이면 그대로 */ }
   const idx = historyList.findIndex(h=>h._id === id);
-  if(idx < 0){ showGlobalError('공유된 프로젝트를 찾지 못했어요. 삭제되었거나 다른 서버의 프로젝트일 수 있어요.'); return; }
+  if(idx < 0){
+    showGlobalError('공유된 프로젝트를 찾지 못했어요. 삭제되었거나 다른 서버의 프로젝트일 수 있어요.');
+    if(fromHash) goRoute({ view: 'cat', cat: currentRoute.cat }, true);
+    return;
+  }
   const entry = historyList[idx];
+  // ?project= 링크는 분류 화면을 거쳐 연다(뒤로 가기 = 그 분류의 프로젝트 목록)
+  if(!fromHash) goRoute({ view: 'cat', cat: categoryOf(entry) }, true);
   const same = snapshotsEqual(tcData.map(toExportRow), entry.snapshot);
   if(tcData.length && !same){
     const ok = await openDialog({
@@ -4236,17 +4322,151 @@ async function openSharedProjectOnce(){
         + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원 화면의 QC 리스트도 함께 바뀌어요.' : ''),
       okLabel: '불러오기'
     });
-    if(ok === null) return;
+    if(ok === null){ if(fromHash) goRoute({ view: 'cat', cat: currentRoute.cat }, true); return; }
   }
   document.getElementById('draftRestoreBanner').style.display = 'none';
   loadHistoryEntry(idx);
 }
 
+/* ---------- 화면 이동: 분류 → 프로젝트 ----------
+   주소: #/c/분류 (그 분류의 프로젝트 목록), #/c/분류/p/프로젝트ID (QC 생성·리스트, 아직 내보내지 않은 프로젝트는 new).
+   QC 리스트는 여전히 하나(지금 작업 중인 리스트)이고, 화면 전환은 보이는 영역만 바꾼다. */
+// 주소의 해시 → 화면. 주소가 없거나 형식이 틀리면 {view:'main'}(기본 분류로 연다) (순수 함수)
+function parseRoute(hash){
+  const m = /^#\/(?:c\/([^/]+)(?:\/p\/([^/]+))?)?$/.exec(hash || '');
+  if(!m || !m[1]) return { view: 'main' };
+  let cat, id;
+  try{ cat = sanitizeCategory(decodeURIComponent(m[1])); id = m[2] ? decodeURIComponent(m[2]) : null; }catch(e){ return { view: 'main' }; }
+  if(!cat) return { view: 'main' };
+  return id ? { view: 'proj', cat, id } : { view: 'cat', cat };
+}
+// 화면 → 주소의 해시 (순수 함수)
+function routeHash(r){
+  if(!r || r.view === 'main' || !r.cat) return '#/';
+  const c = '#/c/' + encodeURIComponent(r.cat);
+  return r.view === 'proj' ? `${c}/p/${encodeURIComponent(r.id || 'new')}` : c;
+}
+const OPEN_PROJECT_KEY = 'cvt_open_project'; // 이 탭에서 열려 있던 프로젝트(sessionStorage: 새로고침과 새로 연 링크를 가른다)
+function goRoute(r, replace){
+  const hash = routeHash(r);
+  if(location.hash !== hash){
+    try{ history[replace ? 'replaceState' : 'pushState'](null, '', location.pathname + location.search + hash); }catch(e){ /* 주소를 바꿀 수 없는 화면이면 화면만 바꾼다 */ }
+  }
+  applyRoute(r);
+}
+// 주소가 없거나 틀리면 여는 분류: 프로젝트가 있는 첫 분류(없으면 첫 기본 분류)
+function defaultCategory(){
+  const stats = categoryStats(historyList, addedCategories, hiddenCategories);
+  return (stats.find(s=>s.projects) || stats[0] || { cat: UNCATEGORIZED }).cat; // 탭을 모두 지웠으면 미분류
+}
+function applyRoute(r){
+  if(r.view === 'main'){
+    r = { view: 'cat', cat: defaultCategory() };
+    try{ history.replaceState(null, '', location.pathname + location.search + routeHash(r)); }catch(e){ /* 화면만 바꾼다 */ }
+  }
+  setGnbDrawer(false);
+  const prevView = currentRoute.view;
+  currentRoute = r;
+  if(r.view !== 'proj') closeQcGen();
+  document.body.dataset.view = r.view;
+  projectCategory = r.cat;
+  document.getElementById('panel-gen').classList.toggle('active', r.view === 'proj');
+  document.getElementById('panel-hist').classList.toggle('active', r.view === 'cat');
+  if(r.view === 'proj' && r.id !== 'new' && r.id !== loadedHistoryId && !pendingSharedProject){
+    let openHere = null, draft = [];
+    try{ openHere = sessionStorage.getItem(OPEN_PROJECT_KEY); draft = JSON.parse(localStorage.getItem('cvt_tc_draft') || '[]'); }catch(e){ /* 저장소를 못 쓰면 링크로 연 것처럼 */ }
+    if(openHere === r.id && (SYNC_ENABLED || (Array.isArray(draft) && draft.length))){
+      // 같은 탭 새로고침: 작업 중이던 리스트(동기화면 서버, 아니면 임시저장)를 그대로 이어 간다
+      loadedHistoryId = r.id;
+      if(!SYNC_ENABLED && document.getElementById('draftRestoreBanner').style.display === 'block') document.getElementById('draftRestoreYesBtn').click();
+    }else{
+      pendingSharedProject = r.id; // 링크로 연 프로젝트: 목록을 받은 뒤(동기화면 서버에서) 확인하고 불러온다
+      if(!SYNC_ENABLED || syncLoaded) openSharedProjectOnce();
+    }
+  }
+  renderHistory();
+  if(prevView !== r.view) window.scrollTo(0, 0);
+  // QC가 하나도 없는 프로젝트로 들어오면 QC 생성 창을 바로 연다(이어서 작업할 임시저장 안내가 떠 있으면 그대로 둔다)
+  if(r.view === 'proj' && prevView !== 'proj' && !tcData.length && document.getElementById('draftRestoreBanner').style.display !== 'block') openQcGen();
+}
+// 머리 제목을 그리고, 프로젝트 화면이면 주소를 지금 프로젝트에 맞춘다(내보내기로 새 프로젝트가 되거나, 새로 생성해 프로젝트에서 벗어날 때)
+function renderViewTitle(){
+  const title = document.getElementById('viewTitle');
+  const r = currentRoute;
+  if(r.view === 'proj' && !pendingSharedProject){
+    const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
+    const next = { view: 'proj', cat: entry ? categoryOf(entry) : r.cat, id: loadedHistoryId || 'new' };
+    if(next.cat !== r.cat || next.id !== r.id){
+      currentRoute = next; projectCategory = next.cat;
+      try{ history.replaceState(null, '', location.pathname + location.search + routeHash(next)); }catch(e){ /* 화면만 맞춘다 */ }
+    }
+    try{ sessionStorage.setItem(OPEN_PROJECT_KEY, next.id); }catch(e){ /* ignore */ }
+  }
+  const { view, cat } = currentRoute;
+  if(view === 'cat'){ title.textContent = `${cat} 프로젝트`; return; }
+  const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
+  const name = entry ? (entry.title || entry.fileName) : (currentRoute.id === 'new' ? '새 프로젝트' : '프로젝트 불러오는 중');
+  title.innerHTML = `<button type="button" class="crumb-link" id="crumbCategory">${escapeHtml(cat)}</button><span class="crumb-sep" aria-hidden="true">&gt;</span><span class="crumb-current" title="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
+  document.getElementById('crumbCategory').addEventListener('click', ()=>goRoute({ view: 'cat', cat }));
+}
+// QC 생성 창(워크보드 "업무 등록" 모달처럼 헤더의 "+ QC 생성"으로 연다). 생성하는 동안에는 닫기·Esc·바깥 클릭으로 닫히지 않는다
+const qcGenModal = document.getElementById('qcGenModal');
+function openQcGen(){
+  if(!qcGenModal.open) qcGenModal.showModal();
+  document.getElementById('figmaUrlInput').focus();
+}
+// 닫았으면(또는 이미 닫혀 있으면) true
+function closeQcGen(){
+  if(qcGenerating) return false;
+  if(qcGenModal.open) qcGenModal.close();
+  return true;
+}
+document.getElementById('qcGenOpenBtn').addEventListener('click', openQcGen);
+document.getElementById('qcGenClose').addEventListener('click', closeQcGen);
+// 창 바깥(뒤 배경)을 누르면 닫는다. 창 안의 스크롤 막대를 누른 것은 빼고
+qcGenModal.addEventListener('mousedown', e=>{
+  const r = qcGenModal.getBoundingClientRect();
+  if(e.target === qcGenModal && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) closeQcGen();
+});
+qcGenModal.addEventListener('keydown', e=>{ if(e.key === 'Escape' && qcGenerating) e.preventDefault(); });
+qcGenModal.addEventListener('cancel', e=>{ if(qcGenerating) e.preventDefault(); });
+// 분류 화면의 "새 프로젝트": 지금 QC 리스트를 비우고 이 분류의 새 프로젝트로 시작한다(내보낸 프로젝트는 그대로)
+async function startNewProject(){
+  const cat = currentRoute.cat;
+  if(tcData.length){
+    const ok = await openDialog({
+      title: '새 프로젝트',
+      body: `지금 QC 리스트(${tcData.length}건)를 비우고 '${cat}' 분류에서 새 프로젝트를 시작할까요?\n엑셀(EXCEL)로 내보낸 프로젝트는 그대로 남아요. 내보내지 않은 변경은 사라져요.`
+        + (SYNC_ENABLED ? '\n팀 동기화 중이라 다른 팀원 화면의 QC 리스트도 함께 비워져요.' : ''),
+      okLabel: '새로 시작'
+    });
+    if(ok === null) return;
+  }
+  await clearWorkingList();
+  goRoute({ view: 'proj', cat, id: 'new' });
+}
+document.getElementById('newProjectBtn').addEventListener('click', startNewProject);
+// GNB 접기(브라우저에 기억) · 900px 이하 서랍(☰로 열고, 바깥·Esc·분류를 고르면 닫힘)
+const appShell = document.getElementById('appShell'), gnbFold = document.getElementById('gnbFold');
+function setGnbFold(on){
+  appShell.classList.toggle('is-folded', on);
+  const label = on ? '메뉴 펼치기' : '메뉴 접기';
+  gnbFold.setAttribute('aria-label', label); gnbFold.title = label;
+  try{ localStorage.setItem('ad-gnb-fold', on ? '1' : ''); }catch(e){ /* 기억하지 못해도 이번 화면에서는 접힌다 */ }
+}
+try{ if(localStorage.getItem('ad-gnb-fold') === '1') setGnbFold(true); }catch(e){ /* ignore */ }
+gnbFold.addEventListener('click', ()=>setGnbFold(!appShell.classList.contains('is-folded')));
+function setGnbDrawer(on){ appShell.classList.toggle('is-drawer', on); }
+document.getElementById('gnbMenu').addEventListener('click', ()=>setGnbDrawer(!appShell.classList.contains('is-drawer')));
+document.getElementById('gnbBackdrop').addEventListener('click', ()=>setGnbDrawer(false));
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') setGnbDrawer(false); });
+window.addEventListener('popstate', ()=>applyRoute(parseRoute(location.hash))); // 뒤로·앞으로 가기, 주소 직접 고치기
+document.body.dataset.view = 'cat';
+
 /* ---------- Init ---------- */
 (async function init(){
   initClaudeSample();
   initClaudeDownloads();
-  renderClaudeApiKeyStatus();
   await loadHistory();
   await loadTesters();
   if(SYNC_ENABLED){
@@ -4260,7 +4480,7 @@ async function openSharedProjectOnce(){
   }
   renderTesterChips();
   renderTable();
-  renderHistory(); // 머리의 프로젝트 셀렉트를 처음부터 채운다(동기화가 없으면 탭을 열기 전엔 그려지지 않았다)
+  applyRoute(parseRoute(location.hash)); // 주소의 화면으로 연다(목록·셀렉트도 이때 처음 그린다)
   if(!SYNC_ENABLED) openSharedProjectOnce();
   renderSyncStatus();
   lastSavedDraftSnapshot = currentDraftSnapshot();
@@ -4273,7 +4493,6 @@ async function openSharedProjectOnce(){
     });
     subscribeRealtime(); // 먼저 구독해 두고, 전체를 받는 동안 온 이벤트는 모아 두었다가 적용한다
     resyncFromServer();
-    if(!myName()) askName();
   }
 })();
 </script>
