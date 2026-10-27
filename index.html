@@ -647,6 +647,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   /* 담당자가 여럿이면 테스터마다 한 줄: 이름 · 결과 · 테스트 내역 */
   .tester-note-row{display:grid;grid-template-columns:96px 104px 128px 1fr;gap:8px;align-items:start;}
   .tester-note-row + .tester-note-row{margin-top:8px;}
+  .tester-note-row.is-own{grid-template-columns:96px 1fr;} /* 테스터 탭: 이름 + 내역(결과·작성 상태는 카드 머리) */
   .tester-note-name{padding-top:8px;font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .tester-note-row .tc-editable{min-height:38px;}
   .tester-note-row select.tester-result-select, .tester-note-row select.tester-status-select{min-height:38px;width:100%;}
@@ -2562,7 +2563,8 @@ function renderTable(){
     const rowEditable = tcFilterTester === 'NONE';
     const resultLocked = !rowEditable;
     const statusLocked = !rowEditable && (!!tabTester || assigned.some(n=>STATUS_OPTIONS.includes(row['ts:' + n])));
-    paintResult(card, result);
+    const ownResult = tabTester ? testerValue(row, tabTester, 'tr') : '', ownStatus = tabTester ? testerValue(row, tabTester, 'ts') : '';
+    paintResult(card, tabTester ? ownResult : result);
     const testerOptions = testers.length
       ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '미배정')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '미배정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
       : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tester">${escapeHtml(row.tester)}</div>`;
@@ -2588,13 +2590,21 @@ function renderTable(){
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
-        ${statusLocked || tcFilterTester === 'ALL'
+        ${tabTester
+          ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
+          <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===ownStatus?'selected':''}>${o}</option>`).join('')}
+        </select>`
+          : statusLocked || tcFilterTester === 'ALL'
           ? `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '진행상태는 미배정 탭에서 바꿔요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`
           : `<select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
         </select>`}
-        <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[result]}"></span>
-        ${resultLocked
+        <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
+        ${tabTester
+          ? `<select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
+          <option value="">결과</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
+        </select>`
+          : resultLocked
           ? `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 보기만 해요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '-')}</span>`
           : `<select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과">
           ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
@@ -2637,18 +2647,12 @@ function renderTable(){
 
       <div class="tc-card-footer">
         <div class="tc-footer-item">
-          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역${tabTester ? `<span class="tc-footer-sub">${escapeHtml(tabTester)} 님의 결과·작성 상태·내역을 적어요</span>` : tcFilterTester === 'ALL' && assigned.length ? '<span class="tc-footer-sub">입력은 담당자 탭에서 해요</span>' : ''}</label>
-          ${tabTester ? `<div class="tester-note-row">
+          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역${tabTester ? `<span class="tc-footer-sub">결과·작성 상태는 위 카드 머리에서 골라요</span>` : tcFilterTester === 'ALL' && assigned.length ? '<span class="tc-footer-sub">입력은 담당자 탭에서 해요</span>' : ''}</label>
+          ${tabTester ? `<div class="tester-note-row is-own">
             <span class="tester-note-name" title="${escapeHtml(tabTester)}">${escapeHtml(tabTester)}</span>
-            <select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
-              <option value="">결과</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===testerValue(row, tabTester, 'tr')?'selected':''}>${o}</option>`).join('')}
-            </select>
-            <select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
-              <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===testerValue(row, tabTester, 'ts')?'selected':''}>${o}</option>`).join('')}
-            </select>
             <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(tabTester)}" data-placeholder="${escapeHtml(tabTester)} 님이 확인한 내용을 적어주세요">${escapeHtml(testerValue(row, tabTester, 'tn'))}</div>
           </div>`
-          : tcFilterTester === 'ALL' && assigned.length ? assigned.map(n=>{
+          : tcFilterTester === 'ALL' && assigned.length ? assigned.slice().sort((a, b)=>RESULT_SEVERITY.indexOf(testerValue(row, b, 'tr')) - RESULT_SEVERITY.indexOf(testerValue(row, a, 'tr'))).map(n=>{
             const r = testerValue(row, n, 'tr'), st = testerValue(row, n, 'ts'), note = testerValue(row, n, 'tn');
             return `<div class="tester-note-row is-view">
             <span class="tester-note-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span>
@@ -2811,9 +2815,11 @@ document.getElementById('bulkTesterRemove').addEventListener('change', (e)=>{
 function renderTesterTabs(names){
   const wrap = document.getElementById('testerTabs');
   if(!wrap) return;
-  const stat = rows=>`<span class="count">${rows.length} · 완료 ${rows.filter(r=>r.status === '완료').length}</span>`;
-  const tabs = [['ALL', '전체', tcData], ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n))]), ['NONE', '미배정', tcData.filter(r=>!testersOf(r).length)]];
-  wrap.innerHTML = tabs.map(([v, label, rows])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${stat(rows)}</button>`).join('');
+  const stat = (rows, done)=>`<span class="count">${rows.length} · 완료 ${rows.filter(done).length}</span>`;
+  const tabs = [['ALL', '전체', tcData, r=>effectiveStatus(r) === '완료'],
+    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료']),
+    ['NONE', '미배정', tcData.filter(r=>!testersOf(r).length), r=>r.status === '완료']];
+  wrap.innerHTML = tabs.map(([v, label, rows, done])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${stat(rows, done)}</button>`).join('');
   wrap.querySelectorAll('[data-tester]').forEach(b=>b.addEventListener('click', ()=>{
     tcFilterTester = b.dataset.tester;
     try{ localStorage.setItem('cvt_tester_tab', tcFilterTester); }catch(e){ /* 기억하지 못해도 이번 화면에서는 동작 */ }
