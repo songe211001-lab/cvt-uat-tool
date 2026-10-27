@@ -482,7 +482,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (max-width:600px){ .stat-grid{grid-template-columns:repeat(2, minmax(0, 1fr));} .stat-cell--total{grid-column:span 2;} .stat-cell--done{grid-column:auto;} }
 
   /* QC 행의 셀렉트(화면유형·진행상태·결과) */
-  select.result-select, select.screentype-select, select.status-select, select.tester-result-select{
+  select.result-select, select.screentype-select, select.status-select, select.tester-result-select, select.tester-status-select{
     border:1px solid var(--line);border-radius:var(--radius-xs);padding:4px 8px;font-size:12px;font-weight:700;
     background:var(--panel);color:var(--ink);font-family:inherit;cursor:pointer;
   }
@@ -645,15 +645,23 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-card-footer .tc-editable:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
   .tc-card-footer .tc-footer-sub{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--muted);}
   /* 담당자가 여럿이면 테스터마다 한 줄: 이름 · 결과 · 테스트 내역 */
-  .tester-note-row{display:grid;grid-template-columns:96px 104px 1fr;gap:8px;align-items:start;}
+  .tester-note-row{display:grid;grid-template-columns:96px 104px 128px 1fr;gap:8px;align-items:start;}
   .tester-note-row + .tester-note-row{margin-top:8px;}
   .tester-note-name{padding-top:8px;font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .tester-note-row .tc-editable{min-height:38px;}
-  .tester-note-row select.tester-result-select{min-height:38px;width:100%;}
+  .tester-note-row select.tester-result-select, .tester-note-row select.tester-status-select{min-height:38px;width:100%;}
+  /* 전체 탭: 테스터별 값을 보기만 한다 */
+  .tester-note-val{display:flex;align-items:center;gap:6px;padding-top:9px;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .tester-note-text{min-height:38px;padding:8px 10px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
   @media (max-width:640px){
-    .tester-note-row{grid-template-columns:1fr auto;}
-    .tester-note-row .tc-editable{grid-column:1 / -1;}
+    .tester-note-row{grid-template-columns:1fr auto auto;}
+    .tester-note-row .tc-editable, .tester-note-row .tester-note-text{grid-column:1 / -1;}
   }
+  /* 공유 내용·테스트 계정(통계 밑) */
+  .share-card{display:flex;flex-direction:column;gap:6px;}
+  .share-label{font-size:13px;font-weight:700;color:var(--ink);}
+  .share-input{width:100%;min-height:72px;resize:vertical;font-family:inherit;line-height:1.6;}
+  .share-card .hint{font-size:11.5px;color:var(--muted);}
   /* 결과 색(--tc-res, 카드에 data-result가 있을 때만): 카드 테두리와 테스트 내역 박스를 그 결과 색으로 */
   .tc-card[data-result]{border-color:var(--tc-res);box-shadow:inset 3px 0 0 var(--tc-res);}
   .tc-card[data-result] .tc-card-footer{border-color:var(--tc-res);background:color-mix(in oklch, var(--tc-res) 9%, var(--panel));}
@@ -823,7 +831,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     *, *::before, *::after{transition:none !important;}
   }
   /* 셀렉트 공통: 기본 화살표 대신 토큰 색의 작은 꺾쇠, 왼쪽 14px·오른쪽 화살표 자리 36px */
-  select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select{
+  select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select, select.tester-status-select{
     -webkit-appearance:none;appearance:none;
     background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
     background-size:5px 5px, 5px 5px;background-repeat:no-repeat;
@@ -933,6 +941,13 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     <div class="card ad-card ad-panel" id="tcStatsCard">
       <div class="stat-grid" id="distWrap" role="group" aria-label="QC 통계" hidden></div>
       <div id="distEmpty" class="ad-empty">QC를 생성하면 결과 통계가 여기에 보여요.</div>
+    </div>
+
+    <!-- 공유 내용·테스트 계정: 프로젝트마다 따로, 팀원에게 동기화된다(프로젝트 data.share) -->
+    <div class="card ad-card ad-panel share-card" id="shareCard">
+      <label class="share-label" for="projectShareInput">공유 내용 · 테스트 계정</label>
+      <textarea id="projectShareInput" class="ad-input share-input" rows="3" spellcheck="false" placeholder="예: 테스트 계정 qa01 / 테스트 서버 주소 / 이번 회차에 꼭 확인할 점" aria-describedby="projectShareHint"></textarea>
+      <span class="hint" id="projectShareHint">이 내용은 이 도구를 여는 누구나 볼 수 있어요. 개인 비밀번호는 적지 마세요.</span>
     </div>
 
     <div class="card ad-card ad-panel">
@@ -1281,17 +1296,29 @@ function toExportRow(row){
   Object.keys(row || {}).forEach(k=>{ if(TESTER_KEY_RE.test(k)) out[k] = row[k]; });
   return out;
 }
-/* 테스터별 결과·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'tn:이름'(테스트 내역).
+/* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
    테스터마다 칸이 따로라, 두 테스터가 같은 QC에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
-   담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 결과에서만 뺀다. */
-const TESTER_KEY_RE = /^t[rn]:/;
+   담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 값에서만 뺀다. */
+const TESTER_KEY_RE = /^t[rns]:/;
 const RESULT_SEVERITY = ['N/A', 'PASS', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
-// 대표 결과: 담당자가 2명 이상이고 테스터별 결과가 하나라도 있으면 그중 가장 심각한 값, 아니면 행의 결과 (순수 함수)
+const assigneesOf = row => String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
+// 대표 결과: 담당 테스터의 결과 중 가장 심각한 값. 테스터별 결과가 하나도 없으면 행의 결과(예전 데이터·미배정 QC) (순수 함수)
 function effectiveResult(row){
-  const names = String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
-  const rs = names.length > 1 ? names.map(n=>row['tr:' + n]).filter(r=>RESULT_SEVERITY.includes(r)) : [];
+  const rs = assigneesOf(row).map(n=>row['tr:' + n]).filter(r=>RESULT_SEVERITY.includes(r));
   if(!rs.length) return row ? row.result : undefined;
   return rs.reduce((w, r)=>RESULT_SEVERITY.indexOf(r) > RESULT_SEVERITY.indexOf(w) ? r : w);
+}
+// 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토중 < 완료). 없으면 행의 진행상태 (순수 함수)
+function effectiveStatus(row){
+  const ss = assigneesOf(row).map(n=>row['ts:' + n]).filter(s=>STATUS_OPTIONS.includes(s));
+  if(!ss.length) return row ? row.status : undefined;
+  return ss.reduce((w, s)=>STATUS_OPTIONS.indexOf(s) < STATUS_OPTIONS.indexOf(w) ? s : w);
+}
+// 테스터 n의 값(k = 'tr' 결과 | 'ts' 작성 상태 | 'tn' 테스트 내역). 담당자가 1명이고 그 칸이 아직 없으면 행의 값(예전 데이터) (순수 함수)
+function testerValue(row, n, k){
+  const v = row[k + ':' + n];
+  if(v != null && v !== '') return v;
+  return assigneesOf(row).length === 1 ? (row[{ tr: 'result', ts: 'status', tn: 'testNote' }[k]] || '') : '';
 }
 
 /* ---------- 팀 동기화 (Supabase) 설정 ----------
@@ -2522,10 +2549,14 @@ function renderTable(){
     card.className = 'tc-card' + (isSelected ? ' selected' : '');
 
     const assigned = testersOf(row);
-    // 대표 결과(담당자가 여럿이면 테스터별 결과 중 가장 심각한 값). N/A가 아니면 카드 테두리·테스트 내역 박스를 그 결과 색으로
+    // 대표 결과·진행상태(담당 테스터 값 중 가장 심각한 결과, 가장 덜 진행된 상태). N/A가 아니면 카드 테두리·테스트 내역 박스를 그 결과 색으로
     const result = effectiveResult(row);
-    const perTester = assigned.length > 1;
-    const resultLocked = perTester && assigned.some(n=>RESULT_SEVERITY.includes(row['tr:' + n]));
+    const status = STATUS_OPTIONS.includes(effectiveStatus(row)) ? effectiveStatus(row) : '작성중';
+    // 담당자 탭별 화면: 테스터 탭 = 그 테스터의 줄만 입력, 전체 탭 = 보기만, 미배정 탭 = 행 하나의 결과·진행상태·테스트 내역 입력
+    const tabTester = tcFilterTester !== 'ALL' && tcFilterTester !== 'NONE' && assigned.includes(tcFilterTester) ? tcFilterTester : null;
+    const rowEditable = tcFilterTester === 'NONE';
+    const resultLocked = !rowEditable;
+    const statusLocked = !rowEditable && (!!tabTester || assigned.some(n=>STATUS_OPTIONS.includes(row['ts:' + n])));
     paintResult(card, result);
     const testerOptions = testers.length
       ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '미배정')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '미배정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
@@ -2533,7 +2564,6 @@ function renderTable(){
 
     const dupKey = `${(row.screen||'').trim().toLowerCase()}|${(row.category||'').trim().toLowerCase()}`;
     const isDup = dupKeyCount[dupKey] > 1;
-    const status = STATUS_OPTIONS.includes(row.status) ? row.status : '작성중';
     const constraintTag = CONSTRAINT_TAG_OPTIONS.includes(row.constraintTag) ? row.constraintTag : '없음';
     const integrationTag = INTEGRATION_TAG_OPTIONS.includes(row.integrationTag) ? row.integrationTag : '없음';
     const conflictNames = assigned.filter(t=>conflictTesters.includes(t));
@@ -2553,11 +2583,11 @@ function renderTable(){
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
-        <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
+        <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태"${statusLocked ? ' disabled title="담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요"' : ''}>
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
         </select>
         <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[result]}"></span>
-        <select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과"${resultLocked ? ' disabled title="테스터별 결과 중 가장 심각한 결과예요"' : ''}>
+        <select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과"${resultLocked ? ` disabled title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 볼 수만 있어요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}"` : ''}>
           ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
         </select>
         <button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
@@ -2598,14 +2628,26 @@ function renderTable(){
 
       <div class="tc-card-footer">
         <div class="tc-footer-item">
-          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역${perTester ? '<span class="tc-footer-sub">테스터마다 자기 줄에 적어요</span>' : ''}</label>
-          ${perTester ? assigned.map(n=>`<div class="tester-note-row">
-            <span class="tester-note-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span>
-            <select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(n)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(n)} 결과">
-              <option value="">결과</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===row['tr:' + n]?'selected':''}>${o}</option>`).join('')}
+          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역${tabTester ? `<span class="tc-footer-sub">${escapeHtml(tabTester)} 님의 결과·작성 상태·내역을 적어요</span>` : tcFilterTester === 'ALL' && assigned.length ? '<span class="tc-footer-sub">입력은 담당자 탭에서 해요</span>' : ''}</label>
+          ${tabTester ? `<div class="tester-note-row">
+            <span class="tester-note-name" title="${escapeHtml(tabTester)}">${escapeHtml(tabTester)}</span>
+            <select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
+              <option value="">결과</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===testerValue(row, tabTester, 'tr')?'selected':''}>${o}</option>`).join('')}
             </select>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(n)}" data-placeholder="${escapeHtml(n)} 님이 확인한 내용을 적어주세요">${escapeHtml(row['tn:' + n] || '')}</div>
-          </div>`).join('')
+            <select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
+              <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===testerValue(row, tabTester, 'ts')?'selected':''}>${o}</option>`).join('')}
+            </select>
+            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(tabTester)}" data-placeholder="${escapeHtml(tabTester)} 님이 확인한 내용을 적어주세요">${escapeHtml(testerValue(row, tabTester, 'tn'))}</div>
+          </div>`
+          : tcFilterTester === 'ALL' && assigned.length ? assigned.map(n=>{
+            const r = testerValue(row, n, 'tr'), st = testerValue(row, n, 'ts'), note = testerValue(row, n, 'tn');
+            return `<div class="tester-note-row is-view">
+            <span class="tester-note-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span>
+            <span class="tester-note-val">${r ? `<span class="dot" aria-hidden="true" style="background:${RESULT_COLOR[r]}"></span>${escapeHtml(r)}` : '<span class="sub-txt">결과 없음</span>'}</span>
+            <span class="tester-note-val">${st ? escapeHtml(st) : '<span class="sub-txt">상태 없음</span>'}</span>
+            <div class="tester-note-text">${note ? escapeHtml(note) : '<span class="sub-txt">아직 없어요</span>'}</div>
+          </div>`;}).join('')
+          : tcFilterTester === 'ALL' ? `<div class="tester-note-text">${row.testNote ? escapeHtml(row.testNote) : '<span class="sub-txt">아직 없어요. 미배정 탭에서 입력해요</span>'}</div>`
           : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote" data-placeholder="테스트하면서 확인한 내용을 적어주세요">${escapeHtml(row.testNote)}</div>`}
         </div>
       </div>
@@ -2650,12 +2692,13 @@ function renderTable(){
       renderDistribution();
     });
   });
-  // 테스터별 결과: 그 테스터의 칸에만 쓰고, 행의 결과는 대표 결과로 맞춘다(카드 머리·통계·테두리 색이 바뀌므로 다시 그린다)
-  list.querySelectorAll('.tester-result-select').forEach(sel=>{
+  // 테스터별 결과·작성 상태: 그 테스터의 칸에만 쓰고, 행의 결과·진행상태는 대표 값으로 맞춘다(카드 머리·통계·테두리 색이 바뀌므로 다시 그린다)
+  list.querySelectorAll('.tester-result-select, .tester-status-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
       const row = tcData[+sel.dataset.idx];
-      row['tr:' + sel.dataset.name] = sel.value;
+      row[(sel.classList.contains('tester-status-select') ? 'ts:' : 'tr:') + sel.dataset.name] = sel.value;
       row.result = effectiveResult(row);
+      row.status = effectiveStatus(row);
       renderTable();
       renderDistribution();
     });
@@ -2884,7 +2927,7 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 // 결과별 건수·FO/BO·완료율 (순수 함수)
 function qcStats(rows){
   const n = r=>rows.filter(x=>effectiveResult(x) === r).length;
-  const done = rows.filter(r=>r.status === '완료').length;
+  const done = rows.filter(r=>effectiveStatus(r) === '완료').length;
   return {
     total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
     pass: n('PASS'), minor: n('MINOR'), na: n('N/A'), major: n('MAJOR'), fatal: n('FATAL') + n('CRITICAL'),
@@ -3160,7 +3203,7 @@ function addQcListSheet(workbook, rows, title){
         xlsStyleCell(cell, {align: i >= 4 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
       });
       // 취합 영역: 담당 테스터/테스트 내역/대표 결과(테스터별 결과 중 가장 심각한 값)
-      const aggVals = [r.tester || '', r.testNote || '', effectiveResult(r) || '', ''];
+      const aggVals = [r.tester || '', r.testNote || '', effectiveResult(r) || '', effectiveStatus(r) || '']; // 비고 = 대표 진행상태
       aggVals.forEach((v, i)=>{
         const cell = ws.getCell(rowNum, aggStartCol + i);
         cell.value = v;
@@ -3170,7 +3213,7 @@ function addQcListSheet(workbook, rows, title){
       // 테스터별 블록: 이름과 그 테스터가 화면에 적은 테스트 내역·결과(없으면 비워 두고 엑셀에서 각자 기입)
       testerGroups.forEach((name, gi)=>{
         const startCol = aggStartCol + (gi + 1) * 4;
-        [name, r['tn:' + name] || '', r['tr:' + name] || '', ''].forEach((v, i)=>{
+        [name, r['tn:' + name] || '', r['tr:' + name] || '', r['ts:' + name] || ''].forEach((v, i)=>{ // 비고 = 그 테스터의 작성 상태
           const cell = ws.getCell(rowNum, startCol + i);
           cell.value = v;
           const isResult = i === 2;
@@ -3190,7 +3233,7 @@ function addQcListSheet(workbook, rows, title){
 // 엑셀 가져오기: addQcListSheet가 만든 시트(4행 열 머리 "QC ID", 구분 행 "[FO] …", 데이터 행)를 QC 행으로 읽는다 (순수 함수)
 // grid: 시트 칸 글자, grid[행][열](0부터, A열 = 0). B~H = QC ID·유형·대분류·중분류·시험 절차·시험 내역·기대 결과,
 // I~L = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
-// 테스터별 블록에 적힌 값은 그 테스터의 칸(tn:이름·tr:이름)으로도 읽는다.
+// 테스터별 블록에 적힌 값은 그 테스터의 칸(tn:이름·tr:이름, 비고가 진행상태 값이면 ts:이름)으로도 읽는다.
 function parseQcSheet(grid){
   const head = (grid || []).findIndex(r=>String((r || [])[1] || '').trim() === 'QC ID');
   if(head < 0) return null;
@@ -3207,10 +3250,11 @@ function parseQcSheet(grid){
     }
     const perTester = {};
     for(let c = 12; c < r.length; c += 4){
-      const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase();
+      const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3);
       if(!name) continue;
       if(note) perTester['tn:' + name] = note;
       if(RESULT_OPTIONS.includes(res)) perTester['tr:' + name] = res;
+      if(STATUS_OPTIONS.includes(st)) perTester['ts:' + name] = st;
     }
     rows.push({
       tcId, screenType: cell(r, 2).toUpperCase() === 'BO' ? 'BO' : 'FO', category: cell(r, 3), subCategory: cell(r, 4),
@@ -3304,12 +3348,27 @@ function createProjectFromList(){
   const entry = currentHistoryEntry();
   if(projectCategory && projectCategory !== 'ALL' && projectCategory !== UNCATEGORIZED) entry.category = projectCategory;
   entry._id = draftProjectKey;
+  if(pendingShare){ entry.share = pendingShare; pendingShare = ''; } // 프로젝트가 되기 전에 적어 둔 공유 내용
   addHistoryEntry(entry);
   loadedHistoryId = entry._id;
   saveHistory();
   renderHistory();
   return entry;
 }
+/* 공유 내용·테스트 계정(통계 밑): 열려 있는 프로젝트의 share에 실시간 저장한다. 아직 프로젝트가 아니면(QC 0건) 적어 두었다가 만들어질 때 넣는다.
+   적는 동안에는 받은 변경으로 덮어쓰지 않는다(isEditingCell) */
+let pendingShare = '';
+const shareInput = document.getElementById('projectShareInput');
+function renderShareBox(){
+  if(document.activeElement === shareInput) return;
+  const p = editingProject();
+  shareInput.value = p ? (p.share || '') : pendingShare;
+}
+shareInput.addEventListener('input', ()=>{
+  const p = editingProject();
+  if(p){ p.share = shareInput.value; saveHistory(); scheduleAutoSave(); }
+  else pendingShare = shareInput.value;
+});
 // 열려 있는 프로젝트의 저장본을 지금 QC 리스트로 맞춘다(목록 순서는 그대로, 수정 시각은 지금으로)
 function saveProjectSnapshot(){
   const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
@@ -3460,7 +3519,7 @@ function switchProject(entry){
     syncShadow.rows = new Map();
   }
   loadedHistoryId = entry ? entry._id : null;
-  if(!entry) draftProjectKey = newRowId();
+  if(!entry){ draftProjectKey = newRowId(); pendingShare = ''; }
   tcData = takeProjectRows(entry);
   resetTcIdCounter();
   selectedTcIds.clear();
@@ -3678,6 +3737,7 @@ document.getElementById('projectSelect').addEventListener('change', e=>{
 });
 
 function renderHistory(){
+  renderShareBox();
   renderProjectSelect();
   renderTesterChips(); // 편집 중인 프로젝트가 바뀌면 테스터 목록도 바뀐다
   const wrap = document.getElementById('historyList');
@@ -4164,7 +4224,7 @@ async function resyncFromServer(){
 
 function isEditingCell(){
   const el = document.activeElement;
-  return !!(el && el.closest && el.closest('.cell-edit'));
+  return !!(el && el.closest && (el.closest('.cell-edit') || el.id === 'projectShareInput'));
 }
 
 // 대기열에 아직 남아 있는 이 행의 내 변경 칸 (받아온 값으로 덮어쓰지 않는다)
@@ -4221,6 +4281,8 @@ function applyRemoteChange(table, p){
     }
     if(ackedAtOrAfter('h:' + row.id, '*', evTs)) return; // 내가 그 뒤에 저장한 이력
     const entry = { ...(row.data || {}), _id: row.id };
+    // 아직 못 보낸 내 공유 내용은 받은 값으로 덮지 않는다(프로젝트 data는 통째로 저장되므로)
+    if(idx > -1 && syncQueue.some(op=>op.histUp.some(h=>h.id === row.id))) entry.share = historyList[idx].share;
     if(idx > -1) historyList[idx] = entry; else historyList.push(entry);
     historyList.sort((a,b)=>String(b.date || '').localeCompare(String(a.date || '')));
     syncShadow.history.set(row.id, historyDataOf(entry));
