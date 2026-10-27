@@ -944,6 +944,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div class="tc-filter-bar">
         <div class="tester-tabs" id="testerTabs" role="group" aria-label="담당자별 보기"></div>
+        <button class="ad-btn ad-btn--sm" id="testerAddOpenBtn" type="button" aria-haspopup="dialog">+ 테스터 추가</button>
       </div>
 
       <div class="select-all-row">
@@ -1012,14 +1013,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <label for="tcNameInput">QC ID 이름</label>
         <input type="text" class="ad-input" id="tcNameInput" title="새 QC ID 가운데에 넣을 이름이에요. 비우면 QC-001 형식이에요." autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (QC-LOGIN-001)" />
       </div>
-      <div class="f full tester-manage">
-        <label for="testerNameInput">테스터 관리 <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span></label>
-        <div class="tester-input-row">
-          <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
-          <button class="ad-btn" id="addTesterBtn" type="button">+ 추가</button>
-        </div>
-        <div class="tester-chips" id="testerChips"></div>
-      </div>
       <div class="f full">
         <div id="errorBox" role="alert"></div>
         <div id="genNoticeBox" aria-live="polite"></div>
@@ -1031,6 +1024,23 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <button class="ad-btn ad-btn--primary" id="genBtn" type="button" disabled>QC 생성하기</button>
       </div>
     </footer>
+  </dialog>
+
+  <!-- 테스터 추가: QC 리스트 담당자 탭 옆 "+ 테스터 추가"로 연다(워크보드 창 구조). 칩의 ✕로 삭제도 여기서 한다 -->
+  <dialog class="wb-modal tester-modal" id="testerModal" aria-labelledby="testerModalTitle">
+    <header><h2 id="testerModalTitle">테스터 추가</h2><button type="button" class="ad-btn ad-btn--ghost" id="testerModalClose">닫기</button></header>
+    <div class="body body--one">
+      <div class="f tester-manage">
+        <label for="testerNameInput">테스터 이름 <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span></label>
+        <div class="tester-input-row">
+          <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
+          <button class="ad-btn ad-btn--primary" id="addTesterBtn" type="button">+ 추가</button>
+        </div>
+        <span class="hint">추가한 테스터는 담당자 탭과 담당자 고르기에 바로 보여요. ✕를 누르면 삭제돼요.</span>
+        <div class="tester-chips" id="testerChips"></div>
+      </div>
+    </div>
+    <footer><div class="r"><button type="button" class="ad-btn" id="testerModalDone">완료</button></div></footer>
   </dialog>
 
   <!-- 프로젝트 추가: 워크보드 프로젝트 탭 "+ 프로젝트" 창과 같은 구조 -->
@@ -1851,7 +1861,27 @@ function renderTesterChips(){
     `<span class="tester-chip">${escapeHtml(t)}<button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
   wrap.querySelectorAll('[data-tdel]').forEach(btn=>{
-    btn.addEventListener('click', ()=>changeTesters(list=>{ list.splice(+btn.dataset.tdel, 1); return list; }));
+    btn.addEventListener('click', ()=>removeTester(activeTesters()[+btn.dataset.tdel]));
+  });
+}
+// 테스터 삭제: 목록에서 빼고, 지금 QC 리스트의 담당자에서도 뺀다(그대로 두면 담당자 탭·고르기 목록·카드에 계속 보였다).
+// 그 테스터가 적은 결과·테스트 내역 칸은 지우지 않는다(되돌리면 다시 보인다)
+async function removeTester(name){
+  if(!name) return;
+  const before = new Map(tcData.map(r=>[r.tcId, r.tester]));
+  await changeTesters(list=>list.filter(n=>n !== name));
+  let n = 0;
+  tcData.forEach(r=>{
+    const ts = testersOf(r);
+    if(ts.includes(name)){ r.tester = ts.filter(t=>t !== name).join(', '); n++; }
+  });
+  renderTable();
+  renderDistribution();
+  showUndoToast(`'${name}' 테스터를 삭제했어요${n ? `(담당 QC ${n}건에서도 뺐어요)` : ''}.`, async ()=>{
+    await changeTesters(list=>list.includes(name) ? list : list.concat(name));
+    tcData.forEach(r=>{ if(before.has(r.tcId)) r.tester = before.get(r.tcId); });
+    renderTable();
+    renderDistribution();
   });
 }
 async function addTesterFromInput(){
@@ -1861,6 +1891,14 @@ async function addTesterFromInput(){
   input.value = '';
   await changeTesters(list=>list.includes(name) ? list : list.concat(name));
 }
+// 테스터 추가 창: QC 리스트 담당자 탭 옆 "+ 테스터 추가"로 연다(QC 생성 창에서 옮겨 옴)
+const testerModal = document.getElementById('testerModal');
+document.getElementById('testerAddOpenBtn').addEventListener('click', ()=>{
+  renderTesterChips();
+  testerModal.showModal();
+  document.getElementById('testerNameInput').focus();
+});
+['testerModalClose', 'testerModalDone'].forEach(id=>document.getElementById(id).addEventListener('click', ()=>testerModal.close()));
 document.getElementById('addTesterBtn').addEventListener('click', addTesterFromInput);
 document.getElementById('testerNameInput').addEventListener('keydown', e=>{
   if(e.key === 'Enter'){ e.preventDefault(); addTesterFromInput(); }
