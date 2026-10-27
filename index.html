@@ -657,6 +657,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     .tester-note-row{grid-template-columns:1fr auto auto;}
     .tester-note-row .tc-editable, .tester-note-row .tester-note-text{grid-column:1 / -1;}
   }
+  /* 카드 머리의 보기 전용 결과·진행상태(전체 탭·테스터 탭): 셀렉트 대신 배지 */
+  .result-badge{display:inline-flex;align-items:center;justify-content:center;min-width:76px;height:32px;padding:0 12px;border-radius:var(--radius-xs);
+    font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--ink);background:color-mix(in srgb, var(--res) 14%, var(--panel));border:1px solid color-mix(in srgb, var(--res) 45%, var(--panel));}
+  .status-badge{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:32px;padding:0 10px;border-radius:var(--radius-xs);
+    font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);white-space:nowrap;}
   /* 공유 내용·테스트 계정(통계 밑) */
   .share-card{display:flex;flex-direction:column;gap:6px;}
   .share-label{font-size:13px;font-weight:700;color:var(--ink);}
@@ -664,12 +669,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .share-card .hint{font-size:11.5px;color:var(--muted);}
   /* 결과 색(--tc-res, 카드에 data-result가 있을 때만): 카드 테두리와 테스트 내역 박스를 그 결과 색으로 */
   .tc-card[data-result]{border-color:var(--tc-res);box-shadow:inset 3px 0 0 var(--tc-res);}
-  .tc-card[data-result] .tc-card-footer{border-color:var(--tc-res);background:color-mix(in oklch, var(--tc-res) 9%, var(--panel));}
+  .tc-card[data-result] .tc-card-footer{border-color:var(--tc-res);background:color-mix(in srgb, var(--tc-res) 9%, var(--panel));}
   .tc-card[data-result] .tc-card-footer .tc-footer-item label{color:var(--ink);}
   .tc-card[data-result] .tc-card-footer .tc-footer-item label svg{color:var(--tc-res);}
   .tc-card[data-result] .tc-card-footer .tc-editable:hover,
   .tc-card[data-result] .tc-card-footer .tc-editable:focus{border-color:var(--tc-res);}
-  .tc-card[data-result] .tc-card-footer .tc-editable:focus{box-shadow:0 0 0 3px color-mix(in oklch, var(--tc-res) 18%, transparent);}
+  .tc-card[data-result] .tc-card-footer .tc-editable:focus{box-shadow:0 0 0 3px color-mix(in srgb, var(--tc-res) 18%, transparent);}
   .tc-card.selected[data-result]{border-color:var(--primary);}
   /* 대분류 > 중분류 한 줄(두 칸 모두 편집) */
   .tc-cat-line{display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap;}
@@ -2583,13 +2588,17 @@ function renderTable(){
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
-        <select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태"${statusLocked ? ' disabled title="담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요"' : ''}>
+        ${statusLocked || tcFilterTester === 'ALL'
+          ? `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '진행상태는 미배정 탭에서 바꿔요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`
+          : `<select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
           ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
-        </select>
+        </select>`}
         <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[result]}"></span>
-        <select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과"${resultLocked ? ` disabled title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 볼 수만 있어요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}"` : ''}>
+        ${resultLocked
+          ? `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 보기만 해요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '-')}</span>`
+          : `<select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과">
           ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
-        </select>
+        </select>`}
         <button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
         </div>
       </div>
