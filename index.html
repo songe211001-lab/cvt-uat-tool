@@ -814,6 +814,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .wb-modal .ad-input{width:100%;height:auto;padding:9px 10px;}
   .wb-modal .hint{font-size:12px;color:var(--muted);}
   .wb-modal .body--one{grid-template-columns:1fr;}
+  /* QC 생성 창: 제목 줄을 끌어 옮긴다 */
+  .qc-gen-modal header{cursor:move;user-select:none;touch-action:none;}
+  .qc-gen-modal header .ad-btn{cursor:pointer;}
+  .qc-gen-modal header.is-dragging{cursor:grabbing;}
   .wb-modal .err{font-size:12px;color:var(--fatal-text);}
   .wb-modal .err:empty{display:none;}
   .proj-add-modal{max-width:480px;}
@@ -1027,14 +1031,14 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <!-- QC 생성: 워크보드 "업무 등록" 모달과 같은 구조(머리 = 제목 + 닫기, 본문 = 2열 칸, 아래 = 오른쪽 버튼 묶음) -->
   <dialog class="wb-modal qc-gen-modal" id="qcGenModal" aria-labelledby="qcGenTitle">
-    <header><h2 id="qcGenTitle">QC 생성</h2><button type="button" class="ad-btn ad-btn--ghost" id="qcGenClose">닫기</button></header>
-    <div class="body">
+    <header title="제목 줄을 끌면 창을 옮길 수 있어요"><h2 id="qcGenTitle">QC 생성</h2><button type="button" class="ad-btn ad-btn--ghost" id="qcGenClose">닫기</button></header>
+    <div class="body body--one">
       <div class="f full">
         <label for="figmaUrlInput">피그마 화면 링크 <b>*</b></label>
         <input type="url" id="figmaUrlInput" class="ad-input" autocomplete="off" spellcheck="false" placeholder="화면 선택 후 '링크 복사'한 URL (https://www.figma.com/design/…)" />
         <span class="hint">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</span>
       </div>
-      <div class="f">
+      <div class="f full">
         <label for="tcNameInput">QC ID 이름</label>
         <input type="text" class="ad-input" id="tcNameInput" title="기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요. 비우면 QC-001 형식이에요." aria-describedby="tcNameHint" autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (QC-LOGIN-001)" />
         <span class="hint" id="tcNameHint">기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요.</span>
@@ -4752,7 +4756,7 @@ function renderViewTitle(){
 // QC 생성 창(워크보드 "업무 등록" 모달처럼 헤더의 "+ QC 생성"으로 연다). 생성하는 동안에는 닫기·Esc·바깥 클릭으로 닫히지 않는다
 const qcGenModal = document.getElementById('qcGenModal');
 function openQcGen(){
-  if(!qcGenModal.open) qcGenModal.showModal();
+  if(!qcGenModal.open){ resetQcGenPosition(); qcGenModal.showModal(); }
   document.getElementById('figmaUrlInput').focus();
 }
 // 닫았으면(또는 이미 닫혀 있으면) true
@@ -4761,6 +4765,33 @@ function closeQcGen(){
   if(qcGenModal.open) qcGenModal.close();
   return true;
 }
+// QC 생성 창 옮기기: 제목 줄을 끌면 창이 따라온다(닫기 버튼 제외). 제목 줄이 화면 밖으로 나가지 않게 막고, 다시 열면 가운데에서 열린다
+function resetQcGenPosition(){
+  ['margin', 'left', 'top', 'right', 'bottom'].forEach(k=>qcGenModal.style.removeProperty(k));
+}
+(()=>{
+  const head = qcGenModal.querySelector('header');
+  let drag = null;
+  head.addEventListener('pointerdown', e=>{
+    if(e.button !== 0 || e.target.closest('button')) return;
+    const r = qcGenModal.getBoundingClientRect();
+    drag = { x: e.clientX, y: e.clientY, left: r.left, top: r.top };
+    Object.assign(qcGenModal.style, { margin: '0', right: 'auto', bottom: 'auto', left: `${r.left}px`, top: `${r.top}px` });
+    head.classList.add('is-dragging');
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const w = qcGenModal.offsetWidth, h = head.offsetHeight;
+    const left = Math.min(Math.max(drag.left + e.clientX - drag.x, 80 - w), window.innerWidth - 80);
+    const top = Math.min(Math.max(drag.top + e.clientY - drag.y, 0), window.innerHeight - h);
+    qcGenModal.style.left = `${left}px`;
+    qcGenModal.style.top = `${top}px`;
+  });
+  const end = ()=>{ if(drag){ drag = null; head.classList.remove('is-dragging'); } };
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+})();
 document.getElementById('qcGenOpenBtn').addEventListener('click', openQcGen);
 document.getElementById('qcGenClose').addEventListener('click', closeQcGen);
 // 창 바깥(뒤 배경)을 누르면 닫는다. 창 안의 스크롤 막대를 누른 것은 빼고
