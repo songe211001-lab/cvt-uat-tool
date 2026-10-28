@@ -470,16 +470,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   /* QC 통계 요약 표: "전체" 칸 아래 FO·BO */
   /* .ad-stat-wrap(overflow-x:auto)은 overflow-y도 auto가 되어, 줄 높이 반올림만으로 세로 스크롤 막대가 생겼다.
      넘침이 없는 격자로 그린다: 넓으면 7칸 한 줄, 900px 이하 4칸, 600px 이하 2칸. 칸 사이 1px --line(격자 간격 + 바탕) */
-  .stat-grid{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;}
-  .stat-cell{min-width:0;padding-bottom:10px;background:var(--panel);}
-  .stat-label{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .stat-value{padding:10px 14px 0;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);}
-  .stat-value small{margin-left:2px;font-size:12px;font-weight:600;color:var(--muted);}
-  .stat-cell.is-alert .stat-value{color:var(--fatal-text);}
-  .stat-cell > .ad-stat-bar{margin:6px 14px 0;}
-  .stat-sub{margin:2px 14px 0;font-size:12px;font-weight:600;color:var(--muted);}
-  @media (max-width:900px){ .stat-grid{grid-template-columns:repeat(4, minmax(0, 1fr));} .stat-cell--done{grid-column:span 2;} }
-  @media (max-width:600px){ .stat-grid{grid-template-columns:repeat(2, minmax(0, 1fr));} .stat-cell--total{grid-column:span 2;} .stat-cell--done{grid-column:auto;} }
 
   /* QC 행의 셀렉트(화면유형·진행상태·결과) */
   select.result-select, select.screentype-select, select.status-select, select.tester-result-select, select.tester-status-select{
@@ -587,7 +577,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   /* TC card list (readable card view instead of a dense table) */
   .tc-card{
-    border:1px solid var(--line);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:8px;
+    border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin-bottom:8px;
     background:var(--panel);transition:border-color .12s var(--ease);position:relative;
   }
   .tc-card:hover{border-color:var(--grey-400);}
@@ -634,10 +624,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-editable:focus{border-color:var(--primary);background:var(--panel);}
   /* 테스트 내역: 테스터가 직접 적는 칸이라 coral 박스로 위의 기획 내용과 확실히 구분한다 */
   .tc-card-footer{
-    margin-top:14px;padding:12px 14px;border-radius:10px;
-    background:var(--primary-soft);border:1px solid var(--primary);border-left-width:4px;
+    margin-top:14px;padding:12px 14px;border-radius:4px;
+    background:var(--panel);border:1px solid var(--line); /* 업무 보고 입력 칸처럼 흰 바탕 1px 선 */
   }
-  .tc-card-footer .tc-footer-item label{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--primary-dark);}
+  .tc-card-footer .tc-footer-item label{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--ink);}
   .tc-card-footer .tc-footer-item label svg{width:15px;height:15px;flex-shrink:0;}
   .tc-card-footer .tc-editable{display:block;min-height:56px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
   .tc-card-footer .tc-editable:hover{border-color:var(--primary);}
@@ -668,13 +658,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .role-tag{display:inline-block;margin-left:4px;padding:0 6px;font-size:10.5px;font-weight:700;line-height:18px;border-radius:999px;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);}
   #testerRoleInput{flex:0 0 auto;width:auto;}
   /* 공유 내용·테스트 계정(통계 밑) */
-  .share-card{display:flex;flex-direction:column;gap:6px;}
+  .share-card{display:flex;flex-direction:column;gap:8px;}
   .share-label{font-size:13px;font-weight:700;color:var(--ink);}
   .share-input{width:100%;min-height:72px;resize:vertical;font-family:inherit;line-height:1.6;}
   .share-card .hint{font-size:11.5px;color:var(--muted);}
   /* 결과 색(--tc-res, 카드에 data-result가 있을 때만): 카드 테두리와 테스트 내역 박스를 그 결과 색으로 */
-  .tc-card[data-result]{border-color:var(--tc-res);box-shadow:inset 3px 0 0 var(--tc-res);}
-  .tc-card[data-result] .tc-card-footer{border-color:var(--tc-res);background:color-mix(in srgb, var(--tc-res) 9%, var(--panel));}
+  .tc-card[data-result]{box-shadow:inset 3px 0 0 var(--tc-res);} /* 결과 색은 왼쪽 3px 선과 배지에만 */
   .tc-card[data-result] .tc-card-footer .tc-footer-item label{color:var(--ink);}
   .tc-card[data-result] .tc-card-footer .tc-footer-item label svg{color:var(--tc-res);}
   .tc-card[data-result] .tc-card-footer .tc-editable:hover,
@@ -759,6 +748,22 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
 
   .tc-section-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;}
+  /* 섹션 머리(업무 보고 화면 모양): 굵은 제목 + 옅은 보조 글자 + 오른쪽 작은 테두리 버튼 */
+  .section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .section-head .ad-btn{margin-left:auto;align-self:center;}
+  .section-title{margin:0;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em;}
+  .section-meta{font-size:11.5px;font-weight:500;color:var(--muted);}
+  /* 통계 표: 모든 칸 1px 선, 가운데 정렬, 합계 열 굵게. 테스터가 많으면 표만 가로 스크롤 */
+  .stat-caption{margin:0 0 8px;font-size:12px;color:var(--muted);}
+  .qc-stat-scroll{overflow-x:auto;overflow-y:hidden;}
+  .qc-stat-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;}
+  .qc-stat-table th, .qc-stat-table td{border:1px solid var(--line);height:32px;padding:4px 10px;text-align:center;white-space:nowrap;color:var(--ink);}
+  .qc-stat-table thead th{font-weight:700;background:var(--panel);}
+  .qc-stat-table thead th small{margin-left:4px;font-size:11px;font-weight:500;color:var(--muted);}
+  .qc-stat-table tbody th{font-weight:600;}
+  .qc-stat-table .is-sum{font-weight:800;}
+  .qc-stat-table td.is-zero{color:var(--muted);}
+  .qc-stat-table td.is-alert{color:var(--fatal-text);font-weight:800;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
     font-size:12px;font-weight:700;color:var(--primary-dark);background:var(--primary-soft);
@@ -959,16 +964,16 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
     <!-- 공유 내용·테스트 계정: 프로젝트마다 따로, 팀원에게 동기화된다(프로젝트 data.share) -->
     <div class="card ad-card ad-panel share-card" id="shareCard">
-      <label class="share-label" for="projectShareInput">공유 내용 · 테스트 계정</label>
+      <div class="section-head"><label class="section-title" for="projectShareInput">공유 내용 · 테스트 계정</label><span class="section-meta" id="shareMeta"></span></div>
       <textarea id="projectShareInput" class="ad-input share-input" rows="3" spellcheck="false" placeholder="예: 테스트 계정 qa01 / 테스트 서버 주소 / 이번 회차에 꼭 확인할 점" aria-describedby="projectShareHint"></textarea>
       <span class="hint" id="projectShareHint">이 내용은 이 도구를 여는 누구나 볼 수 있어요. 개인 비밀번호는 적지 마세요.</span>
     </div>
 
     <div class="card ad-card ad-panel">
-      <div class="tc-section-head">
-        <h2 class="ad-title">QC 리스트</h2>
-        <span class="ad-badge ad-badge--brand" id="tcCountBadge" style="display:none;">0건</span>
-        <button class="ad-btn" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
+      <div class="tc-section-head section-head">
+        <h2 class="section-title">QC 리스트</h2>
+        <span class="section-meta" id="tcCountBadge" style="display:none;">0건</span>
+        <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
       </div>
 
       <div class="tc-filter-bar">
@@ -3002,30 +3007,36 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
   renderTable();
 });
 
-/* ---------- QC 통계: 요약 표 한 줄(워크보드 요약 표) ---------- */
-// 결과별 건수·FO/BO·완료율 (순수 함수)
-function qcStats(rows){
-  const n = r=>rows.filter(x=>effectiveResult(x) === r).length;
-  const done = rows.filter(r=>effectiveStatus(r) === '완료').length;
-  return {
-    total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
-    pass: n('PASS'), minor: n('MINOR'), na: n('N/A'), major: n('MAJOR'), fatal: n('FATAL') + n('CRITICAL'),
-    donePct: rows.length ? Math.round(done / rows.length * 100) : 0
-  };
+/* ---------- QC 통계 ---------- */
+/* 통계 표(업무 보고 표 모양): 행 = 결과, 열 = 담당 테스터마다 · 미배정 · 합계 (순수 함수)
+   테스터 열은 그 테스터의 값(testerValue), 미배정 열은 담당자 없는 QC의 행 값, 합계 열은 대표 값(effectiveResult·effectiveStatus) */
+const STAT_ROWS = [['PASS', ['PASS']], ['MINOR', ['MINOR']], ['MAJOR', ['MAJOR']], ['FATAL·CRITICAL', ['FATAL', 'CRITICAL']], ['N/A', ['N/A']]];
+function qcStatTable(rows, testers){
+  const col = (label, list, resultOf, statusOf)=>({
+    label, n: list.length,
+    counts: STAT_ROWS.map(([, keys])=>list.filter(r=>keys.includes(resultOf(r))).length),
+    donePct: list.length ? Math.round(list.filter(r=>statusOf(r) === '완료').length / list.length * 100) : 0
+  });
+  const cols = (testers || []).map(n=>col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'), r=>testerValue(r, n, 'ts')));
+  cols.push(col('미배정', rows.filter(r=>!assigneesOf(r).length), r=>r.result, r=>r.status));
+  cols.push(col('합계', rows, effectiveResult, effectiveStatus));
+  return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length, rows: STAT_ROWS.map(([label])=>label), cols };
 }
 function renderDistribution(){
   scheduleAutoSave(); // QC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
   document.getElementById('distEmpty').hidden = !!tcData.length; // QC가 없으면 표 대신 안내 문구
   document.getElementById('distWrap').hidden = !tcData.length;
   if(!tcData.length) return;
-  const s = qcStats(tcData);
-  // 칸 = 이름 + 값(+ 보조 줄). 표 대신 격자라 화면이 좁으면 4칸·2칸으로 줄바꿈되고 넘치지 않는다
-  const cell = (label, v, unit, cls = '', extra = '')=>`<div class="stat-cell${cls}"><div class="stat-label">${label}</div><div class="stat-value">${v}<small>${unit}</small></div>${extra}</div>`;
+  const testers = Array.from(new Set([...activeTesters(), ...tcData.flatMap(testersOf)]));
+  const t = qcStatTable(tcData, testers);
+  const td = (v, cls = '')=>`<td class="${v === 0 || v === '0%' ? 'is-zero ' : ''}${cls}">${v}</td>`;
   document.getElementById('distWrap').innerHTML =
-    cell('전체', s.total, '건', ' stat-cell--total', `<div class="stat-sub">FO ${s.fo} · BO ${s.bo}</div>`)
-    + cell('PASS', s.pass, '건') + cell('MINOR', s.minor, '건') + cell('N/A', s.na, '건') + cell('MAJOR', s.major, '건')
-    + cell('FATAL·CRITICAL', s.fatal, '건', s.fatal ? ' is-alert' : '')
-    + cell('완료율', s.donePct, '%', ' stat-cell--done', `<div class="ad-stat-bar"><i style="width:${s.donePct}%"></i></div>`);
+    `<p class="stat-caption">전체 QC ${t.total}건 · FO ${t.fo} · BO ${t.bo}</p>
+    <div class="qc-stat-scroll"><table class="qc-stat-table">
+      <thead><tr><th scope="col">구분</th>${t.cols.map(c=>`<th scope="col"${c.label === '합계' ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}${c.label !== '합계' ? `<small>${c.n}건</small>` : ''}</th>`).join('')}</tr></thead>
+      <tbody>${t.rows.map((label, i)=>`<tr><th scope="row">${label}</th>${t.cols.map(c=>td(c.counts[i], (c.label === '합계' ? 'is-sum ' : '') + (label === 'FATAL·CRITICAL' && c.counts[i] ? 'is-alert' : ''))).join('')}</tr>`).join('')}
+        <tr><th scope="row">완료율</th>${t.cols.map(c=>td(`${c.donePct}%`, c.label === '합계' ? 'is-sum' : '')).join('')}</tr></tbody>
+    </table></div>`;
 }
 /* ---------- Export helpers ---------- */
 function formatDate(){
@@ -3443,6 +3454,7 @@ function renderShareBox(){
   if(document.activeElement === shareInput) return;
   const p = editingProject();
   shareInput.value = p ? (p.share || '') : pendingShare;
+  document.getElementById('shareMeta').textContent = p ? `프로젝트마다 따로 · 실시간 저장 · 마지막 수정 ${p.date || '-'}` : '프로젝트마다 따로 · QC가 생기면 저장돼요';
 }
 shareInput.addEventListener('input', ()=>{
   const p = editingProject();
