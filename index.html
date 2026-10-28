@@ -663,6 +663,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--ink);background:color-mix(in srgb, var(--res) 14%, var(--panel));border:1px solid color-mix(in srgb, var(--res) 45%, var(--panel));}
   .status-badge{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:32px;padding:0 10px;border-radius:var(--radius-xs);
     font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);white-space:nowrap;}
+  /* 테스터 역할: 칩의 역할 셀렉트, 탭·담당자 고르기의 역할 꼬리표 */
+  .tester-chip .tester-role-select{margin-left:6px;padding:2px 4px;font-size:11.5px;font-weight:700;border:1px solid var(--line);border-radius:var(--radius-xs);background:var(--panel);color:var(--ink);font-family:inherit;}
+  .role-tag{display:inline-block;margin-left:4px;padding:0 6px;font-size:10.5px;font-weight:700;line-height:18px;border-radius:999px;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);}
+  #testerRoleInput{flex:0 0 auto;width:auto;}
   /* 공유 내용·테스트 계정(통계 밑) */
   .share-card{display:flex;flex-direction:column;gap:6px;}
   .share-label{font-size:13px;font-weight:700;color:var(--ink);}
@@ -1055,9 +1059,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <label for="testerNameInput">테스터 이름 <span class="ad-badge ad-badge--neutral" id="testerScope">기본 테스터</span></label>
         <div class="tester-input-row">
           <input type="text" class="ad-input" id="testerNameInput" autocomplete="off" placeholder="이름 입력 후 Enter…" />
+          <select class="ad-select" id="testerRoleInput" aria-label="추가할 테스터 역할">
+            <option value="">역할</option><option>기획</option><option>개발</option><option>디자이너</option><option>퍼블리셔</option><option>QA</option><option>사업</option>
+          </select>
           <button class="ad-btn ad-btn--primary" id="addTesterBtn" type="button">+ 추가</button>
         </div>
-        <span class="hint">추가한 테스터는 담당자 탭과 담당자 고르기에 바로 보여요. ✕를 누르면 삭제돼요.</span>
+        <span class="hint">추가한 테스터는 담당자 탭과 담당자 고르기에 역할과 함께 보여요. 칩의 역할은 언제든 바꿀 수 있고, ✕를 누르면 삭제돼요.</span>
         <div class="tester-chips" id="testerChips"></div>
       </div>
     </div>
@@ -1885,14 +1892,39 @@ async function changeTesters(edit){
   renderTesterChips();
   renderTable();
 }
+/* 테스터 역할(기획·개발·디자이너·퍼블리셔·QA·사업): 프로젝트마다 testerRoles {이름: 역할}에 둔다(프로젝트 data 안이라 팀 동기화됨, 스키마 변경 없음).
+   아직 프로젝트가 아니면(QC 0건) 적어 두었다가 프로젝트가 만들어질 때 넣는다 */
+const TESTER_ROLES = ['기획', '개발', '디자이너', '퍼블리셔', 'QA', '사업'];
+let pendingTesterRoles = {};
+function testerRoleOf(name){
+  const p = editingProject();
+  return ((p ? p.testerRoles : pendingTesterRoles) || {})[name] || '';
+}
+function setTesterRole(name, role){
+  const p = editingProject();
+  if(p){
+    p.testerRoles = { ...(p.testerRoles || {}), [name]: role };
+    if(!role) delete p.testerRoles[name];
+    saveHistory();
+    scheduleAutoSave();
+  }else{
+    if(role) pendingTesterRoles[name] = role; else delete pendingTesterRoles[name];
+  }
+  renderTesterChips();
+  renderTable();
+}
+const roleTag = name=>{ const r = testerRoleOf(name); return r ? `<span class="role-tag">${escapeHtml(r)}</span>` : ''; };
 function renderTesterChips(){
   const wrap = document.getElementById('testerChips');
   const p = editingProject();
   const scope = document.getElementById('testerScope');
   if(scope) scope.textContent = p ? `프로젝트: ${p.title || p.fileName}` : '기본 테스터';
   wrap.innerHTML = activeTesters().map((t,i)=>
-    `<span class="tester-chip">${escapeHtml(t)}<button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
+    `<span class="tester-chip">${escapeHtml(t)}<select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
+      <option value="">역할</option>${TESTER_ROLES.map(r=>`<option value="${r}" ${r===testerRoleOf(t)?'selected':''}>${r}</option>`).join('')}
+    </select><button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
+  wrap.querySelectorAll('.tester-role-select').forEach(sel=>sel.addEventListener('change', ()=>setTesterRole(sel.dataset.roleName, sel.value)));
   wrap.querySelectorAll('[data-tdel]').forEach(btn=>{
     btn.addEventListener('click', ()=>removeTester(activeTesters()[+btn.dataset.tdel]));
   });
@@ -1922,7 +1954,9 @@ async function addTesterFromInput(){
   const name = input.value.trim();
   if(!name) return;
   input.value = '';
+  const role = document.getElementById('testerRoleInput').value;
   await changeTesters(list=>list.includes(name) ? list : list.concat(name));
+  if(role) setTesterRole(name, role);
 }
 // 테스터 추가 창: QC 리스트 담당자 탭 옆 "+ 테스터 추가"로 연다(QC 생성 창에서 옮겨 옴)
 const testerModal = document.getElementById('testerModal');
@@ -2817,9 +2851,9 @@ function renderTesterTabs(names){
   if(!wrap) return;
   const stat = (rows, done)=>`<span class="count">${rows.length} · 완료 ${rows.filter(done).length}</span>`;
   const tabs = [['ALL', '전체', tcData, r=>effectiveStatus(r) === '완료'],
-    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료']),
+    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료', roleTag(n)]),
     ['NONE', '미배정', tcData.filter(r=>!testersOf(r).length), r=>r.status === '완료']];
-  wrap.innerHTML = tabs.map(([v, label, rows, done])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${stat(rows, done)}</button>`).join('');
+  wrap.innerHTML = tabs.map(([v, label, rows, done, tag = ''])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${tag}${stat(rows, done)}</button>`).join('');
   wrap.querySelectorAll('[data-tester]').forEach(b=>b.addEventListener('click', ()=>{
     tcFilterTester = b.dataset.tester;
     try{ localStorage.setItem('cvt_tester_tab', tcFilterTester); }catch(e){ /* 기억하지 못해도 이번 화면에서는 동작 */ }
@@ -2849,7 +2883,7 @@ function openTesterPicker(idx, anchor){
   pop.setAttribute('role', 'dialog');
   pop.setAttribute('aria-label', `${row.tcId} 담당자 고르기`);
   pop.innerHTML = `<p class="sub-txt" style="margin:0 0 6px;">${escapeHtml(row.tcId)} 담당자(여러 명 가능)</p>` + options.map(n=>
-    `<label class="tester-option"><input type="checkbox" value="${escapeHtml(n)}"${testersOf(row).includes(n) ? ' checked' : ''} /> ${escapeHtml(n)}</label>`).join('');
+    `<label class="tester-option"><input type="checkbox" value="${escapeHtml(n)}"${testersOf(row).includes(n) ? ' checked' : ''} /> ${escapeHtml(n)}${roleTag(n)}</label>`).join('');
   document.body.appendChild(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.top = `${Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 8)}px`;
@@ -3364,6 +3398,7 @@ function createProjectFromList(){
   if(projectCategory && projectCategory !== 'ALL' && projectCategory !== UNCATEGORIZED) entry.category = projectCategory;
   entry._id = draftProjectKey;
   if(pendingShare){ entry.share = pendingShare; pendingShare = ''; } // 프로젝트가 되기 전에 적어 둔 공유 내용
+  if(Object.keys(pendingTesterRoles).length){ entry.testerRoles = { ...pendingTesterRoles }; pendingTesterRoles = {}; } // 테스터 역할도
   addHistoryEntry(entry);
   loadedHistoryId = entry._id;
   saveHistory();
@@ -3534,7 +3569,7 @@ function switchProject(entry){
     syncShadow.rows = new Map();
   }
   loadedHistoryId = entry ? entry._id : null;
-  if(!entry){ draftProjectKey = newRowId(); pendingShare = ''; }
+  if(!entry){ draftProjectKey = newRowId(); pendingShare = ''; pendingTesterRoles = {}; }
   tcData = takeProjectRows(entry);
   resetTcIdCounter();
   selectedTcIds.clear();
