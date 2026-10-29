@@ -591,6 +591,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     background:var(--panel);border-color:var(--line);border-radius:var(--radius-xs);
   }
   .tc-card-head .tc-editable[data-key="tester"]:empty::before{content:"담당자 미배정";color:var(--muted);}
+  /* TC ID: 눌러서 고친다(버튼 모양은 숨기고 글자만) */
+  .tc-card-head button.tc-id-badge{border:1px solid transparent;background:none;padding:2px 4px;margin:0 -4px;border-radius:4px;cursor:text;font-family:inherit;}
+  .tc-card-head button.tc-id-badge:hover{border-color:var(--line);background:var(--bg);}
+  .tc-card-head .tc-id-input{width:140px;height:32px;padding:4px 8px;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;}
   .tc-card-head .tc-id-badge{
     font-weight:800;color:var(--primary-dark);font-size:14px;font-variant-numeric:tabular-nums;
     white-space:nowrap;
@@ -631,7 +635,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
   .tc-card-footer .tc-footer-item label{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--ink);}
   .tc-card-footer .tc-footer-item label svg{width:15px;height:15px;flex-shrink:0;}
-  .tc-card-footer .tc-editable{display:block;min-height:56px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
+  .tc-card-footer .tc-editable{display:block;min-height:44px;padding:10px 12px;line-height:1.6;background:var(--panel);border:1px solid var(--line);border-radius:8px;} /* 메모 칸: 위아래 여백을 같게 */
   .tc-card-footer .tc-editable:hover{border-color:var(--primary);}
   .tc-card-footer .tc-editable:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
   .tc-card-footer .tc-editable:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
@@ -640,12 +644,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tester-note-row{display:grid;grid-template-columns:96px 104px 128px 1fr;gap:8px;align-items:start;}
   .tester-note-row + .tester-note-row{margin-top:8px;}
   .tester-note-row.is-own{grid-template-columns:96px 1fr;} /* 테스터 탭: 이름 + 내역(결과·작성 상태는 카드 머리) */
-  .tester-note-name{padding-top:8px;font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .tester-note-row .tc-editable{min-height:38px;}
+  .tester-note-name{padding-top:12px;font-size:12.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tester-note-row .tc-editable{min-height:44px;}
   .tester-note-row select.tester-result-select, .tester-note-row select.tester-status-select{min-height:38px;width:100%;}
   /* 전체 탭: 테스터별 값을 보기만 한다 */
-  .tester-note-val{display:flex;align-items:center;gap:6px;padding-top:9px;font-size:12.5px;font-weight:700;color:var(--ink);}
-  .tester-note-text{min-height:38px;padding:8px 10px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
+  .tester-note-val{display:flex;align-items:center;gap:6px;padding-top:12px;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .tester-note-text{min-height:44px;padding:10px 12px;font-size:13.5px;line-height:1.6;white-space:pre-wrap;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
   @media (max-width:640px){
     .tester-note-row{grid-template-columns:1fr auto auto;}
     .tester-note-row .tc-editable, .tester-note-row .tester-note-text{grid-column:1 / -1;}
@@ -2328,6 +2332,30 @@ function normalizeTcIds(rows){
   rows && (rows.movedTcIds = moved);
   return rows;
 }
+// TC ID 직접 고치기: "FO-LOGIN-001", "BO-3", "LOGIN-001", "12"를 {type, name, n}으로 읽는다. 형식이 틀리면 null (순수 함수)
+// 접두사(FO/BO)를 적으면 그 행의 화면유형도 바뀐다. 예전 QC-·TC- 접두사는 화면유형을 바꾸지 않는다
+function parseTcIdInput(text){
+  const m = /^(?:(FO|BO|QC|TC)-)?(?:(.+)-)?(\d{1,5})$/i.exec(String(text || '').trim());
+  if(!m || !+m[3]) return null;
+  const type = m[1] && /^(FO|BO)$/i.test(m[1]) ? m[1].toUpperCase() : null;
+  const name = sanitizeTcName(m[2] || '');
+  if(m[2] && !name) return null;
+  return { type, name, n: +m[3] };
+}
+// tcData[idx]의 TC ID를 바꾼다. 잘못이면 안내 문구, 바꿨으면 ''. 번호는 프로젝트 안에서 겹칠 수 없다(서버 규칙과 같음)
+function applyTcIdEdit(idx, text){
+  const row = tcData[idx];
+  if(!row) return '';
+  const p = parseTcIdInput(text);
+  if(!p) return 'TC ID 형식이 맞지 않아요. 예: FO-LOGIN-001, BO-003처럼 적어 주세요.';
+  if(tcData.some((r, i)=>i !== idx && tcNumberOf(r.tcId) === p.n)) return `번호 ${String(p.n).padStart(3, '0')}은(는) 이미 다른 TC가 쓰고 있어요. 다른 번호를 적어 주세요.`;
+  const old = row.tcId;
+  if(p.type) row.screenType = p.type;
+  row.tcId = formatTcId(p.n, p.name, row.screenType);
+  [selectedTcIds, expandedTcRows].forEach(set=>{ if(set.delete(old)) set.add(row.tcId); });
+  lastIssuedTcNumber = Math.max(lastIssuedTcNumber, p.n);
+  return '';
+}
 // 화면에 그리기 전에 접두사를 맞추고, 선택·펼침 상태도 새 ID로 옮긴다
 function syncTcPrefixes(){
   const moved = normalizeTcIds(tcData).movedTcIds;
@@ -2681,7 +2709,7 @@ function renderTable(){
       <div class="tc-card-head">
         <button class="icon-btn ad-btn ad-btn--icon row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" title="${isCollapsed?'펼치기':'접기'}" aria-label="${escapeHtml(row.tcId)} ${isCollapsed?'펼치기':'접기'}" aria-expanded="${!isCollapsed}">${TOGGLE_CHEVRON}</button>
         <input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" />
-        <span class="tc-id-badge">${escapeHtml(row.tcId)}</span>
+        <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="눌러서 TC ID를 고칠 수 있어요" aria-label="${escapeHtml(row.tcId)} TC ID 고치기">${escapeHtml(row.tcId)}</button>
         <select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select>
@@ -2781,12 +2809,41 @@ function renderTable(){
     if(['precondition','procedure','testDetail','expected','testNote'].includes(key) || key.startsWith('tn:')) el.setAttribute('aria-multiline', 'true');
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
-      tcData[idx][key] = el.textContent;
+      // Enter로 생긴 <div>·<br>을 줄바꿈으로 읽는다(textContent는 줄바꿈을 버린다). 끝에 붙는 빈 줄 하나는 뺀다
+      tcData[idx][key] = el.innerText.replace(/\n$/, '');
       scheduleAutoSave(); // 글자를 고칠 때도 실시간 저장
       if(key === 'category' || key === 'subCategory'){ // 카드 제목(대분류 > 중분류)도 바로 맞춘다
         const title = list.querySelector(`[data-title-idx="${idx}"]`);
         if(title) title.textContent = tcTitleOf(tcData[idx]);
       }
+    });
+  });
+  // TC ID 고치기: 누르면 입력칸, Enter·바깥 클릭이면 저장, Esc면 취소. 형식이 틀리거나 번호가 겹치면 안내하고 그대로 둔다
+  list.querySelectorAll('[data-edit-tcid]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const idx = +btn.dataset.editTcid, row = tcData[idx];
+      const inp = document.createElement('input');
+      inp.className = 'ad-input tc-id-input';
+      inp.value = row.tcId;
+      inp.maxLength = 40;
+      inp.setAttribute('aria-label', `${row.tcId} TC ID 고치기`);
+      btn.replaceWith(inp);
+      inp.focus();
+      inp.select();
+      let done = false;
+      const finish = save=>{
+        if(done) return;
+        done = true;
+        if(save && inp.value.trim() !== row.tcId){ const err = applyTcIdEdit(idx, inp.value); showGlobalError(err); }
+        renderTable();
+        renderDistribution();
+      };
+      inp.addEventListener('keydown', ev=>{
+        if(ev.key === 'Enter'){ ev.preventDefault(); finish(true); }
+        else if(ev.key === 'Escape'){ ev.preventDefault(); finish(false); }
+      });
+      inp.addEventListener('blur', ()=>finish(true));
     });
   });
   list.querySelectorAll('.row-toggle-btn').forEach(btn=>{
