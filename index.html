@@ -769,7 +769,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-table tbody th{min-width:96px;}
   .qc-stat-table .is-sum{font-weight:800;}
   .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
-  .qc-stat-table tr.qc-stat-sec th{height:26px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);background:var(--panel);}
   .qc-stat-table td.is-fail{color:var(--fatal-text);font-weight:700;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
@@ -1338,22 +1337,26 @@ function toExportRow(row){
 const TESTER_KEY_RE = /^t[rns]:/;
 const RESULT_SEVERITY = ['N/A', 'PASS', 'BLOCK', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
 const assigneesOf = row => String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
-// 대표 결과: 담당 테스터의 결과 중 가장 심각한 값. 테스터별 결과가 하나도 없으면 행의 결과(예전 데이터·미배정 QC) (순수 함수)
+// 대표 결과: 담당 테스터 값(testerValue) 중 가장 심각한 값, 모두 비었으면 ''(미실행). 담당자가 없으면 행의 결과 (순수 함수)
+// 통계 표의 테스터 열과 같은 값으로 센다(비운 테스터 값을 행에 남은 예전 결과로 채우지 않는다)
 function effectiveResult(row){
-  const rs = assigneesOf(row).map(n=>row['tr:' + n]).filter(r=>RESULT_SEVERITY.includes(r));
-  if(!rs.length) return row ? row.result : undefined;
-  return rs.reduce((w, r)=>RESULT_SEVERITY.indexOf(r) > RESULT_SEVERITY.indexOf(w) ? r : w);
+  const ns = assigneesOf(row);
+  if(!ns.length) return row ? row.result : undefined;
+  const rs = ns.map(n=>testerValue(row, n, 'tr')).filter(r=>RESULT_SEVERITY.includes(r));
+  return rs.length ? rs.reduce((w, r)=>RESULT_SEVERITY.indexOf(r) > RESULT_SEVERITY.indexOf(w) ? r : w) : '';
 }
-// 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토 < 테스트불가 < 완료). 없으면 행의 진행상태 (순수 함수)
+// 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토 < 테스트불가 < 완료). 담당자가 없으면 행의 진행상태 (순수 함수)
 function effectiveStatus(row){
-  const ss = assigneesOf(row).map(n=>row['ts:' + n]).filter(s=>STATUS_OPTIONS.includes(s));
-  if(!ss.length) return row ? row.status : undefined;
+  const ns = assigneesOf(row);
+  if(!ns.length) return row ? row.status : undefined;
+  const ss = ns.map(n=>testerValue(row, n, 'ts')).map(s=>STATUS_PROGRESS.includes(s) ? s : '작성중'); // 비었으면 작성중(통계 표와 같음)
   return ss.reduce((w, s)=>STATUS_PROGRESS.indexOf(s) < STATUS_PROGRESS.indexOf(w) ? s : w);
 }
 // 테스터 n의 값(k = 'tr' 결과 | 'ts' 작성 상태 | 'tn' 테스트 내역). 담당자가 1명이고 그 칸이 아직 없으면 행의 값(예전 데이터) (순수 함수)
+// 테스터가 비운 칸('')은 비운 그대로다(행에 남은 예전 값으로 되돌아가지 않게)
 function testerValue(row, n, k){
   const v = row[k + ':' + n];
-  if(v != null && v !== '') return v;
+  if(v != null) return v;
   return assigneesOf(row).length === 1 ? (row[{ tr: 'result', ts: 'status', tn: 'testNote' }[k]] || '') : '';
 }
 
@@ -2301,9 +2304,10 @@ function figmaScreenLabel(category, subCategory, frameName){
    예전에는 tcData.length + 1로 번호를 매겨서, 중간 행을 지운 뒤 추가하면 기존 ID와 겹쳤다(선택·접기·일괄
    삭제가 tcId 기준이라 겹친 두 행이 함께 선택·삭제됨). 지금은 "현재 가장 큰 번호"와 "이번 세션에서 마지막으로
    발급한 번호" 중 큰 값의 다음 번호를 쓴다 — 삭제 후 되돌리기로 복원되는 행과도 겹치지 않는다.
-   TC ID는 화면유형을 앞에 둔 FO-001 / BO-LOGIN-001 형식이다. 번호는 FO·BO·이름과 관계없이 하나로 이어진다
+   TC ID는 화면유형을 앞에 둔 FO-001 / BO-LOGIN-001 형식이다. 다시 매길 때(renumberTcIds) 번호는 FO·BO 따로 1부터 이어진다
    (예전 접두사 QC-·TC-도 그대로 읽고, normalizeTcIds가 그 행의 화면유형 접두사로 맞춘다)
-   (서버 tc_no는 프로젝트 안에서 유일). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
+   (서버 tc_no는 프로젝트 안에서 유일 → BO는 -번호로 저장해 FO-001과 BO-001이 함께 있을 수 있다.
+   서버 번호 발급(allocate_cvt_tc_nos)은 가장 큰 tc_no 다음부터라 음수인 BO 행에 영향받지 않는다). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
 let lastIssuedTcNumber = 0;
 const TC_ID_RE = /^(?:QC|TC|FO|BO)-(?:([A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]+)-)?(\d+)$/;
 // 이름 정리: 공백·하이픈은 _로, 영문·숫자·한글·_ 외 글자는 빼고 20자로 자른다
@@ -2313,6 +2317,14 @@ function sanitizeTcName(s){
 function tcNumberOf(tcId){
   const m = TC_ID_RE.exec(tcId || '');
   return m ? +m[2] : 0;
+}
+const isBoTcId = tcId=>/^BO-/.test(tcId || '');
+function tcServerNo(tcId){
+  return isBoTcId(tcId) ? -tcNumberOf(tcId) : tcNumberOf(tcId);
+}
+// 리스트 정렬 순서: FO 번호순, 그다음 BO 번호순
+function tcSortKey(tcId){
+  return (isBoTcId(tcId) ? 1e6 : 0) + tcNumberOf(tcId);
 }
 function tcNameOf(tcId){
   const m = TC_ID_RE.exec(tcId || '');
@@ -2345,13 +2357,14 @@ function parseTcIdInput(text){
   if(m[2] && !name) return null;
   return { type, name, n: +m[3] };
 }
-// tcData[idx]의 TC ID를 바꾼다. 잘못이면 안내 문구, 바꿨으면 ''. 번호는 프로젝트 안에서 겹칠 수 없다(서버 규칙과 같음)
+// tcData[idx]의 TC ID를 바꾼다. 잘못이면 안내 문구, 바꿨으면 ''. 같은 화면유형(FO/BO) 안에서 번호가 겹칠 수 없다
 function applyTcIdEdit(idx, text){
   const row = tcData[idx];
   if(!row) return '';
   const p = parseTcIdInput(text);
   if(!p) return 'TC ID 형식이 맞지 않아요. 예: FO-LOGIN-001, BO-003처럼 적어 주세요.';
-  if(tcData.some((r, i)=>i !== idx && tcNumberOf(r.tcId) === p.n)) return `번호 ${String(p.n).padStart(3, '0')}은(는) 이미 다른 TC가 쓰고 있어요. 다른 번호를 적어 주세요.`;
+  const type = p.type || (row.screenType === 'BO' ? 'BO' : 'FO');
+  if(tcData.some((r, i)=>i !== idx && tcNumberOf(r.tcId) === p.n && (r.screenType === 'BO' ? 'BO' : 'FO') === type)) return `${type} 번호 ${String(p.n).padStart(3, '0')}은(는) 이미 다른 TC가 쓰고 있어요. 다른 번호를 적어 주세요.`;
   const old = row.tcId;
   if(p.type) row.screenType = p.type;
   row.tcId = formatTcId(p.n, p.name, row.screenType);
@@ -2369,12 +2382,13 @@ function nextTcId(name){
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber()) + 1;
   return formatTcId(lastIssuedTcNumber, name);
 }
-// QC 번호를 리스트 순서대로 1부터 다시 매긴다(이름 칸은 그대로). 삭제·되돌리기·생성·행 추가 뒤에 불러 번호에 빈칸이 없게 한다.
+// TC 번호를 리스트 순서대로 FO·BO 따로 1부터 다시 매긴다(이름 칸은 그대로). 삭제·되돌리기·생성·행 추가·화면유형 변경 뒤에 불러 번호에 빈칸이 없게 한다.
 // 선택·펼침 상태(tcId 기준)도 새 번호로 옮긴다. 바뀐 개수를 돌려준다.
-function renumberTcIds(){
-  const map = new Map();
-  tcData.forEach((r, i)=>{
-    const next = formatTcId(i + 1, tcNameOf(r.tcId), r.screenType);
+function renumberTcIds(rows = tcData){
+  const map = new Map(), seq = { FO: 0, BO: 0 };
+  rows.forEach(r=>{
+    const type = r.screenType === 'BO' ? 'BO' : 'FO';
+    const next = formatTcId(++seq[type], tcNameOf(r.tcId), type);
     if(next !== r.tcId){ map.set(r.tcId, next); r.tcId = next; }
   });
   [selectedTcIds, expandedTcRows].forEach(set=>{
@@ -2382,7 +2396,7 @@ function renumberTcIds(){
     set.clear();
     ids.forEach(id=>set.add(map.get(id) || id));
   });
-  lastIssuedTcNumber = tcData.length;
+  lastIssuedTcNumber = Math.max(seq.FO, seq.BO);
   return map.size;
 }
 // 생성·행 추가 직후 번호를 다시 매겨도 되는지: 팀원이 함께 접속해 있거나 접속 상태를 모르면 하지 않는다
@@ -2615,6 +2629,7 @@ function tcTitleOf(row){
 }
 function renderTable(){
   syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
+  tcData.sort((a, b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId)); // FO 번호순, 그다음 BO 번호순(서버에서 받은 순서와 같게)
   tcData.forEach(r=>Object.keys(r).forEach(k=>{ if((k === 'status' || k.startsWith('ts:')) && r[k] === '개발 검토중') r[k] = '개발 검토'; })); // 예전 작성 상태 이름
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
@@ -2864,7 +2879,8 @@ function renderTable(){
     sel.addEventListener('change', ()=>{
       const idx = +sel.dataset.idx;
       tcData[idx].screenType = sel.value;
-      renderTable(); // TC ID 접두사(FO/BO)도 바뀐다
+      renumberTcIds(); // FO·BO 번호를 따로 다시 매긴다(접두사도 바뀐다)
+      renderTable();
       renderDistribution();
     });
   });
@@ -3019,7 +3035,7 @@ window.addEventListener('scroll', ()=>{ if(testerPickerIdx >= 0) closeTesterPick
 document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.result = val; });
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.result = val; assigneesOf(r).forEach(n=>{ r['tr:' + n] = val; }); } }); // 담당자가 있으면 담당자마다
   e.target.value = '';
   renderTable();
   renderDistribution();
@@ -3027,7 +3043,7 @@ document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
 document.getElementById('bulkStatusSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)) r.status = val; });
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.status = val; assigneesOf(r).forEach(n=>{ r['ts:' + n] = val; }); } });
   e.target.value = '';
   renderTable();
 });
@@ -3076,22 +3092,23 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 });
 
 /* ---------- 테스트 시나리오 통계 ---------- */
-/* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 작성 상태(리스트의 작성 상태 값 순서) · 진행률 · 결함률, 열 = 전체 · 담당 테스터마다 (순수 함수)
-   미실행 = 결과 없음, 작성 상태가 없으면 작성중, 진행률 = 실행(총-미실행)/총, 결함률 = (MINOR·MAJOR·CRITICAL·FATAL)/실행(실행 0이면 0.0%).
-   전체 열은 대표 값(effectiveResult·effectiveStatus), 테스터 열은 그 테스터의 값(testerValue) */
+/* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 전체 · 담당 테스터마다 (순수 함수)
+   미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = (MINOR·MAJOR·CRITICAL·FATAL)/실행(실행 0이면 0.0%).
+   전체 열은 대표 값(effectiveResult), 테스터 열은 그 테스터의 값(testerValue) */
 const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
-const STAT_ROWS = ['총 TC', ...RESULT_OPTIONS, '미실행', ...STATUS_OPTIONS, '진행률', '결함률'];
+const STAT_ROWS = ['총 TC', ...RESULT_OPTIONS, '미실행', '진행률', '결함률'];
 const pct1 = (a, b)=>`${(b ? a / b * 100 : 0).toFixed(1)}%`;
 function qcStatTable(rows, testers){
-  const col = (label, list, resultOf, statusOf)=>{
-    const rs = list.map(r=>resultOf(r) || ''), ss = list.map(r=>statusOf(r) || '작성중');
+  const col = (label, list, resultOf)=>{
+    const rs = list.map(r=>resultOf(r) || '');
     const n = (vs, k)=>vs.filter(v=>v === k).length;
     const total = rs.length, none = n(rs, ''), fail = rs.filter(v=>FAIL_RESULTS.includes(v)).length, run = total - none;
-    return { label, values: [total, ...RESULT_OPTIONS.map(k=>n(rs, k)), none, ...STATUS_OPTIONS.map(k=>n(ss, k)), pct1(run, total), pct1(fail, run)] };
+    return { label, values: [total, ...RESULT_OPTIONS.map(k=>n(rs, k)), none, pct1(run, total), pct1(fail, run)] };
   };
-  const cols = [col('전체', rows, effectiveResult, effectiveStatus)];
-  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'), r=>testerValue(r, n, 'ts'))));
-  return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length, rows: STAT_ROWS, cols };
+  const cols = [col('전체', rows, effectiveResult)];
+  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'))));
+  return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
+    unassigned: rows.filter(r=>!assigneesOf(r).length).length, rows: STAT_ROWS, cols };
 }
 function renderDistribution(){
   scheduleAutoSave(); // TC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
@@ -3101,12 +3118,12 @@ function renderDistribution(){
   const testers = Array.from(new Set([...activeTesters(), ...tcData.flatMap(testersOf)]));
   const t = qcStatTable(tcData, testers);
   const tone = l=>l === 'PASS' || l === '진행률' ? 'is-pass' : FAIL_RESULTS.includes(l) || l === '결함률' ? 'is-fail' : ''; // PASS·진행률 초록, 결함·결함률 빨강
-  const secAt = { 1: '결과', [RESULT_OPTIONS.length + 2]: '작성 상태', [t.rows.length - 2]: '비율' }; // 묶음 머리 줄
   document.getElementById('distWrap').innerHTML =
     `<p class="stat-caption">FO ${t.fo} · BO ${t.bo}</p>
+    <p class="stat-caption">전체 열은 TC 1건씩, 테스터 열은 배정마다 셉니다(여러 명에게 배정된 TC는 각 테스터 열에 모두 들어가요).${t.unassigned ? ` 담당자가 없는 TC ${t.unassigned}건은 전체 열에만 들어가요.` : ''}</p>
     <div class="qc-stat-scroll"><table class="qc-stat-table">
       <thead><tr><th scope="col">구분</th>${t.cols.map((c, i)=>`<th scope="col"${i === 0 ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
-      <tbody>${t.rows.map((label, r)=>`${secAt[r] ? `<tr class="qc-stat-sec"><th scope="rowgroup" colspan="${t.cols.length + 1}">${secAt[r]}</th></tr>` : ''}<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
 }
 /* ---------- Export helpers ---------- */
@@ -3437,14 +3454,14 @@ function parseQcSheet(grid){
   return rows;
 }
 // 가져온 행을 지금 QC 리스트에 맞춘다: 같은 QC ID는 기존 행(동기화 정보·화면 구분·태그·진행상태)을 두고 엑셀 값만 바꾼다 (순수 함수)
-// 같은 TC = 번호와 이름이 같음(접두사 FO·BO·예전 QC-는 달라도 된다)
-function tcKeyOf(tcId){
-  return tcNumberOf(tcId) + ':' + tcNameOf(tcId);
+// 같은 TC = 화면유형(FO/BO 칸)·번호·이름이 같음(ID 접두사가 예전 QC-여도 된다). FO·BO 번호는 따로 매기므로 화면유형까지 본다
+function tcKeyOf(row){
+  return (row.screenType === 'BO' ? 'BO' : 'FO') + ':' + tcNumberOf(row.tcId) + ':' + tcNameOf(row.tcId);
 }
 function mergeExcelRows(current, imported){
-  const byId = new Map((current || []).map(r=>[tcKeyOf(r.tcId), r]));
+  const byId = new Map((current || []).map(r=>[tcKeyOf(r), r]));
   return imported.map(r=>{
-    const old = byId.get(tcKeyOf(r.tcId));
+    const old = byId.get(tcKeyOf(r));
     return old ? { ...old, ...r } : { screen: '', constraintTag: '없음', integrationTag: '없음', status: '작성중', ...r };
   });
 }
@@ -3460,7 +3477,7 @@ async function handleExcelImportFile(file){
     rows = parseQcSheet(grid);
   }catch(e){ showGlobalError(`엑셀 파일을 읽지 못했어요(${e.message}). .xlsx 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
   if(!rows || !rows.length){ showGlobalError('엑셀에서 테스트 시나리오 리스트를 찾지 못했어요. 이 도구의 내보내기 > EXCEL로 만든 파일인지 확인해주세요.'); return; }
-  const same = rows.filter(r=>tcData.some(t=>tcKeyOf(t.tcId) === tcKeyOf(r.tcId))).length;
+  const same = rows.filter(r=>tcData.some(t=>tcKeyOf(t) === tcKeyOf(r))).length;
   const ok = await openDialog({
     title: '엑셀 가져오기',
     body: `파일: ${file.name}\n엑셀에서 TC ${rows.length}건을 찾았어요. 지금 테스트 시나리오 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
@@ -3705,14 +3722,18 @@ function switchProject(entry){
 // 지금 프로젝트의 QC: 서버에서 받은 그 프로젝트의 행. 없으면(예전에 만든 프로젝트) 프로젝트 저장본으로 채운다
 function takeProjectRows(entry){
   const key = currentProjectKey(), mine = [];
+  let legacyNo = false; // 예전(FO·BO 번호가 하나로 이어지던) 프로젝트: BO 행이 양수 tc_no로 저장돼 있다
   otherRows.forEach((v, id)=>{
     if(v.project !== key) return;
     const row = rowFromServer(id, v.tc_no, v.data);
+    if(row.screenType === 'BO' && v.tc_no > 0) legacyNo = true;
     mine.push(row);
     syncShadow.rows.set(id, { tc_no: v.tc_no, project: key, data: rowDataOf(row) });
     otherRows.delete(id);
   });
-  if(mine.length || !entry) return mine.sort((a, b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
+  mine.sort((a, b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId));
+  if(legacyNo) renumberTcIds(mine); // 한 번만: FO·BO 따로 1부터(바뀐 번호는 다음 동기화 때 서버로)
+  if(mine.length || !entry) return mine;
   const rows = normalizeTcIds(clone(entry.snapshot || []));
   // 행 ID를 프로젝트 ID로 정해, 두 사람이 동시에 처음 열어도 같은 행이 두 번 쌓이지 않게 한다
   if(SYNC_ENABLED) rows.forEach((r, i)=>{ r._id = `${entry._id}-r${i + 1}`; });
@@ -4120,7 +4141,7 @@ function rowDataOf(row){
 // 서버 행(tc_no + data) → 화면 행
 function rowFromServer(id, tcNo, data){
   const { tcName, ...rest } = data || {};
-  return { ...rest, tcId: formatTcId(tcNo, tcName, rest.screenType), _id: id };
+  return { ...rest, tcId: formatTcId(Math.abs(tcNo), tcName, rest.screenType), _id: id };
 }
 function historyDataOf(entry){
   const { _id, ...rest } = entry;
@@ -4132,7 +4153,7 @@ function localSyncMaps(){
   const rows = new Map(), history = new Map(), testers = new Map();
   tcData.forEach(r=>{
     if(!r._id) r._id = newRowId();
-    rows.set(r._id, { tc_no: tcNumberOf(r.tcId), project: currentProjectKey(), data: rowDataOf(r) });
+    rows.set(r._id, { tc_no: tcServerNo(r.tcId), project: currentProjectKey(), data: rowDataOf(r) });
   });
   historyList.forEach(h=>{
     if(!h._id) h._id = newRowId();
@@ -4238,20 +4259,23 @@ async function insertTcRows(rows){
         if(!one.error){ ackRows(one.data, [r]); break; }
         if(one.error.code !== '23505' || attempt >= 3) sbCheck(one);
         const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: r.project || '' }));
-        renumberLocalRow(r.id, no);
-        r.tc_no = no;
+        r.tc_no = renumberLocalRow(r.id, no);
       }
     }
   }
 }
 let syncRenumbered = 0;
+// 서버에서 새로 받은 번호(no)로 행을 옮긴다. 서버에 쓸 tc_no(BO면 -no)를 돌려준다
 function renumberLocalRow(id, no){
   const row = tcData.find(x=>x._id === id);
-  if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId), row.screenType);
   const sh = syncShadow.rows.get(id) || otherRows.get(id); // 저장하는 사이 다른 프로젝트로 옮겼으면 그쪽 행
-  if(sh) sh.tc_no = no;
+  const bo = row ? row.screenType === 'BO' : !!(sh && sh.data && sh.data.screenType === 'BO');
+  if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId), row.screenType);
+  const serverNo = bo ? -no : no;
+  if(sh) sh.tc_no = serverNo;
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, no);
   syncRenumbered++;
+  return serverNo;
 }
 
 async function sendSyncOp(op){
@@ -4272,8 +4296,8 @@ async function sendSyncOp(op){
     const res = await sb.from('cvt_tc_rows').update({ tc_no: x.tc_no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id);
     if(res.error && res.error.code === '23505'){
       const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: x.project || '' }));
-      renumberLocalRow(x.id, no);
-      sbCheck(await sb.from('cvt_tc_rows').update({ tc_no: no, updated_by: SYNC_CLIENT_ID }).eq('id', x.id));
+      const serverNo = renumberLocalRow(x.id, no);
+      sbCheck(await sb.from('cvt_tc_rows').update({ tc_no: serverNo, updated_by: SYNC_CLIENT_ID }).eq('id', x.id));
     }else sbCheck(res);
   }
   // 새 행은 번호 이동이 끝난 뒤에 넣는다(되돌리기로 돌아온 행이 비워진 번호를 쓰도록)
@@ -4373,7 +4397,7 @@ async function loadFromServer(){
   syncShadow = { rows: new Map(), history: S.history, testers: S.testers };
   tcData = takeProjectRows(loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null)
     .concat(localOnlyRows)
-    .sort((a,b)=>tcNumberOf(a.tcId) - tcNumberOf(b.tcId));
+    .sort((a,b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId));
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber());
   syncLoaded = true;
   afterRemoteApply();
@@ -4445,11 +4469,11 @@ function applyRemoteChange(table, p){
     const next = rowFromServer(row.id, row.tc_no, merged);
     if(local) tcData[idx] = next;
     else{
-      const at = tcData.findIndex(r=>tcNumberOf(r.tcId) > row.tc_no);
+      const at = tcData.findIndex(r=>tcSortKey(r.tcId) > tcSortKey(next.tcId));
       tcData.splice(at === -1 ? tcData.length : at, 0, next);
     }
     syncShadow.rows.set(row.id, { tc_no: row.tc_no, project: row.project, data: rowDataOf(next) });
-    lastIssuedTcNumber = Math.max(lastIssuedTcNumber, row.tc_no);
+    lastIssuedTcNumber = Math.max(lastIssuedTcNumber, tcNumberOf(next.tcId));
   }else if(table === 'cvt_history'){
     const idx = historyList.findIndex(h=>h._id === row.id);
     if(isDelete){
