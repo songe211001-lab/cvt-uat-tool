@@ -766,7 +766,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-table th, .qc-stat-table td{border:1px solid var(--line);height:32px;padding:4px 10px;text-align:center;white-space:nowrap;color:var(--ink);}
   /* TC 결과 보고 양식: 머리 칸(위 줄·왼쪽 열)은 옅은 회색 바탕 굵은 글자, Pass·진행률 초록, Fail·결함률 빨강 */
   .qc-stat-table thead th, .qc-stat-table tbody th{font-weight:700;background:var(--bg);}
-  .qc-stat-table tbody th{min-width:96px;}
+  .qc-stat-table tr > :first-child{width:104px;min-width:104px;} /* 구분 열은 좁게 고정, 남는 너비는 합계·테스터 열이 나눠 가짐 */
   .qc-stat-table .is-sum{font-weight:800;}
   .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
   /* 구분 설명: (?) 버튼 + 설명 창 */
