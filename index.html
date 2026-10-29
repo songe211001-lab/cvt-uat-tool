@@ -769,6 +769,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-table tbody th{min-width:96px;}
   .qc-stat-table .is-sum{font-weight:800;}
   .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
+  .qc-stat-table th.has-def{cursor:help;text-decoration:underline dotted var(--muted);text-underline-offset:3px;} /* 정의 툴팁(title) */
   .qc-stat-table td.is-fail{color:var(--fatal-text);font-weight:700;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
@@ -1054,7 +1055,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <span class="hint">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</span>
       </div>
       <div class="f full">
-        <label for="tcNameInput">TC ID 이름</label>
+        <label for="tcNameInput">시나리오 ID 이름</label>
         <input type="text" class="ad-input" id="tcNameInput" title="기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요. 비우면 FO-001 형식이에요." aria-describedby="tcNameHint" autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (FO-LOGIN-001)" />
         <span class="hint" id="tcNameHint">기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요.</span>
       </div>
@@ -1290,7 +1291,7 @@ async function renderPdfPageToBlob(pdf, pageNum, scale = 1.4){
 }
 
 const COLUMNS = [
-  {key:'tcId', label:'TC ID'},
+  {key:'tcId', label:'시나리오 ID'},
   {key:'screenType', label:'화면유형(FO/BO)'},
   {key:'screen', label:'화면 구분'},
   {key:'category', label:'시험항목(대분류)'},
@@ -1968,7 +1969,7 @@ async function removeTester(name){
   });
   renderTable();
   renderDistribution();
-  showUndoToast(`'${name}' 테스터를 삭제했어요${n ? `(담당 TC ${n}건에서도 뺐어요)` : ''}.`, async ()=>{
+  showUndoToast(`'${name}' 테스터를 삭제했어요${n ? `(담당 시나리오 ${n}건에서도 뺐어요)` : ''}.`, async ()=>{
     await changeTesters(list=>list.includes(name) ? list : list.concat(name));
     tcData.forEach(r=>{ if(before.has(r.tcId)) r.tester = before.get(r.tcId); });
     renderTable();
@@ -2362,9 +2363,9 @@ function applyTcIdEdit(idx, text){
   const row = tcData[idx];
   if(!row) return '';
   const p = parseTcIdInput(text);
-  if(!p) return 'TC ID 형식이 맞지 않아요. 예: FO-LOGIN-001, BO-003처럼 적어 주세요.';
+  if(!p) return '시나리오 ID 형식이 맞지 않아요. 예: FO-LOGIN-001, BO-003처럼 적어 주세요.';
   const type = p.type || (row.screenType === 'BO' ? 'BO' : 'FO');
-  if(tcData.some((r, i)=>i !== idx && tcNumberOf(r.tcId) === p.n && (r.screenType === 'BO' ? 'BO' : 'FO') === type)) return `${type} 번호 ${String(p.n).padStart(3, '0')}은(는) 이미 다른 TC가 쓰고 있어요. 다른 번호를 적어 주세요.`;
+  if(tcData.some((r, i)=>i !== idx && tcNumberOf(r.tcId) === p.n && (r.screenType === 'BO' ? 'BO' : 'FO') === type)) return `${type} 번호 ${String(p.n).padStart(3, '0')}은(는) 이미 다른 시나리오가 쓰고 있어요. 다른 번호를 적어 주세요.`;
   const old = row.tcId;
   if(p.type) row.screenType = p.type;
   row.tcId = formatTcId(p.n, p.name, row.screenType);
@@ -2565,7 +2566,7 @@ async function runGeneration(startFresh){
     showGenNotice('기획안에서 이미 다룬 내용과 겹치지 않는 새 테스트 케이스를 더 찾지 못했습니다.');
   }else if(foundIds.size){
     const ids = [...foundIds];
-    showGenNotice(`화면 ID로 TC ID를 만들었어요: ${ids[0]}${ids.length > 1 ? ` 외 ${ids.length - 1}개` : ''}.`
+    showGenNotice(`화면 ID로 시나리오 ID를 만들었어요: ${ids[0]}${ids.length > 1 ? ` 외 ${ids.length - 1}개` : ''}.`
       + (noIdChunks ? ` ID를 찾지 못한 화면 ${noIdChunks}개는 입력한 이름(또는 기본 형식)을 썼어요.` : ''));
   }
 
@@ -2685,11 +2686,11 @@ function renderTable(){
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = '검색/필터 조건에 맞는 테스트 케이스가 없습니다.';
     countBadge.style.display = 'inline-block';
-    countBadge.textContent = `TC 0 / ${tcData.length}건`;
+    countBadge.textContent = `0 / ${tcData.length}건`;
   }else{
     document.getElementById('emptyState').style.display = 'none';
     countBadge.style.display = 'inline-block';
-    countBadge.textContent = filtered.length === tcData.length ? `TC ${tcData.length}건` : `TC ${filtered.length} / ${tcData.length}건`;
+    countBadge.textContent = filtered.length === tcData.length ? `${tcData.length}건` : `${filtered.length} / ${tcData.length}건`;
   }
 
   // 화면에 없는(필터링된) 행에 대한 선택 상태는 남겨두되, 삭제된 tcId는 정리
@@ -2725,12 +2726,12 @@ function renderTable(){
       <div class="tc-card-head">
         <button class="icon-btn ad-btn ad-btn--icon row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" title="${isCollapsed?'펼치기':'접기'}" aria-label="${escapeHtml(row.tcId)} ${isCollapsed?'펼치기':'접기'}" aria-expanded="${!isCollapsed}">${TOGGLE_CHEVRON}</button>
         <input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" />
-        <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="눌러서 TC ID를 고칠 수 있어요" aria-label="${escapeHtml(row.tcId)} TC ID 고치기">${escapeHtml(row.tcId)}</button>
+        <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="눌러서 시나리오 ID를 고칠 수 있어요" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
         <select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select>
         <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
-        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사 TC</span>' : ''}
+        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사 시나리오</span>' : ''}
         ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
@@ -2834,7 +2835,7 @@ function renderTable(){
       inp.className = 'ad-input tc-id-input';
       inp.value = row.tcId;
       inp.maxLength = 40;
-      inp.setAttribute('aria-label', `${row.tcId} TC ID 고치기`);
+      inp.setAttribute('aria-label', `${row.tcId} 시나리오 ID 고치기`);
       btn.replaceWith(inp);
       inp.focus();
       inp.select();
@@ -3092,21 +3093,36 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 });
 
 /* ---------- 테스트 시나리오 통계 ---------- */
-/* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 전체 · 담당 테스터마다 (순수 함수)
+/* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 합계 · 담당 테스터마다 (순수 함수)
    미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = (MINOR·MAJOR·CRITICAL·FATAL)/실행(실행 0이면 0.0%).
-   전체 열은 대표 값(effectiveResult), 테스터 열은 그 테스터의 값(testerValue) */
+   테스터 열은 그 테스터의 값(testerValue). 합계 열 = 테스터 열을 더한 값(배정마다 1건) + 담당자 없는 TC의 결과 */
 const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
-const STAT_ROWS = ['총 TC', ...RESULT_OPTIONS, '미실행', '진행률', '결함률'];
+const STAT_ROWS = ['총 건수', ...RESULT_OPTIONS, '미실행', '진행률', '결함률'];
+// 통계 행 이름에 마우스를 올리면 보이는 정의(툴팁)
+const STAT_DEFS = {
+  '총 건수': '테스터에게 배정된 시나리오 수예요. 합계는 테스터 열을 더한 값에 담당자가 없는 시나리오를 더한 값이에요.',
+  PASS: '기대결과대로 동작했어요.',
+  MINOR: '사용에 큰 지장이 없는 가벼운 결함이에요. 예: 문구 오타, 정렬·간격 어긋남.',
+  'N/A': '이번 테스트 대상이 아니거나 이 환경에서 확인할 수 없는 항목이에요.',
+  MAJOR: '기능이 기대와 다르게 동작하지만 다른 방법으로 쓸 수는 있는 결함이에요.',
+  FATAL: '서비스를 쓸 수 없게 만드는 가장 심각한 결함이에요. 예: 앱 강제 종료, 데이터 손실, 결제 오류.',
+  CRITICAL: '핵심 기능이 동작하지 않고 다른 방법도 없는 결함이에요.',
+  BLOCK: '선행 조건이나 환경 문제로 테스트를 진행할 수 없었어요.',
+  '미실행': '아직 결과를 입력하지 않았어요.',
+  '진행률': '결과를 입력한 비율이에요. (총 건수 - 미실행) / 총 건수',
+  '결함률': '실행한 것 중 결함 비율이에요. (MINOR + MAJOR + CRITICAL + FATAL) / (총 건수 - 미실행)'
+};
 const pct1 = (a, b)=>`${(b ? a / b * 100 : 0).toFixed(1)}%`;
 function qcStatTable(rows, testers){
-  const col = (label, list, resultOf)=>{
-    const rs = list.map(r=>resultOf(r) || '');
+  const col = (label, results)=>{
+    const rs = results.map(r=>r || '');
     const n = (vs, k)=>vs.filter(v=>v === k).length;
     const total = rs.length, none = n(rs, ''), fail = rs.filter(v=>FAIL_RESULTS.includes(v)).length, run = total - none;
     return { label, values: [total, ...RESULT_OPTIONS.map(k=>n(rs, k)), none, pct1(run, total), pct1(fail, run)] };
   };
-  const cols = [col('전체', rows, effectiveResult)];
-  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'))));
+  const sum = rows.flatMap(r=>{ const ns = assigneesOf(r); return ns.length ? ns.map(n=>testerValue(r, n, 'tr')) : [r.result]; });
+  const cols = [col('합계', sum)];
+  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)).map(r=>testerValue(r, n, 'tr')))));
   return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
     unassigned: rows.filter(r=>!assigneesOf(r).length).length, rows: STAT_ROWS, cols };
 }
@@ -3119,11 +3135,11 @@ function renderDistribution(){
   const t = qcStatTable(tcData, testers);
   const tone = l=>l === 'PASS' || l === '진행률' ? 'is-pass' : FAIL_RESULTS.includes(l) || l === '결함률' ? 'is-fail' : ''; // PASS·진행률 초록, 결함·결함률 빨강
   document.getElementById('distWrap').innerHTML =
-    `<p class="stat-caption">FO ${t.fo} · BO ${t.bo}</p>
-    <p class="stat-caption">전체 열은 TC 1건씩, 테스터 열은 배정마다 셉니다(여러 명에게 배정된 TC는 각 테스터 열에 모두 들어가요).${t.unassigned ? ` 담당자가 없는 TC ${t.unassigned}건은 전체 열에만 들어가요.` : ''}</p>
+    `<p class="stat-caption">시나리오 ${t.total}건 · FO ${t.fo} · BO ${t.bo}</p>
+    <p class="stat-caption">합계는 테스터 열을 더한 값이에요(여러 명에게 배정된 시나리오는 테스터마다 셉니다).${t.unassigned ? ` 담당자가 없는 시나리오 ${t.unassigned}건은 그 시나리오의 결과로 합계에 들어가요.` : ''}</p>
     <div class="qc-stat-scroll"><table class="qc-stat-table">
       <thead><tr><th scope="col">구분</th>${t.cols.map((c, i)=>`<th scope="col"${i === 0 ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
-      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row" class="has-def" title="${escapeHtml(STAT_DEFS[label] || '')}">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
 }
 /* ---------- Export helpers ---------- */
@@ -3347,7 +3363,7 @@ function addQcListSheet(workbook, rows, title){
   ws.getRow(3).height = 20;
 
   // 4행: 컬럼 헤더 (2열은 값이 FO/BO라서 "유형")
-  const headerLabels = ['TC ID', '유형', '시험항목\n(대분류)', '시험항목\n(중분류)', '전제조건\n(BO 설정 포함)', '테스트 절차', '시험 내역', '기대결과'];
+  const headerLabels = ['시나리오 ID', '유형', '시험항목\n(대분류)', '시험항목\n(중분류)', '전제조건\n(BO 설정 포함)', '테스트 절차', '시험 내역', '기대결과'];
   headerLabels.forEach((label, i)=>{
     const cell = ws.getCell(4, 2 + i);
     cell.value = label;
@@ -3413,7 +3429,7 @@ function addQcListSheet(workbook, rows, title){
 // 첫 "테스터" 열부터 4칸 = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
 // 테스터별 블록에 적힌 값은 그 테스터의 칸(tn:이름·tr:이름, 비고가 진행상태 값이면 ts:이름)으로도 읽는다.
 function parseQcSheet(grid){
-  const head = (grid || []).findIndex(r=>/^(TC|QC) ID$/.test(String((r || [])[1] || '').trim()));
+  const head = (grid || []).findIndex(r=>/^(시나리오|TC|QC) ID$/.test(String((r || [])[1] || '').trim()));
   if(head < 0) return null;
   const cell = (r, c)=>String(r[c] == null ? '' : r[c]).trim();
   const col = { tcId: 1, screenType: 2, category: 3, subCategory: 4 };
@@ -3480,8 +3496,8 @@ async function handleExcelImportFile(file){
   const same = rows.filter(r=>tcData.some(t=>tcKeyOf(t) === tcKeyOf(r))).length;
   const ok = await openDialog({
     title: '엑셀 가져오기',
-    body: `파일: ${file.name}\n엑셀에서 TC ${rows.length}건을 찾았어요. 지금 테스트 시나리오 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
-      + `TC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`,
+    body: `파일: ${file.name}\n엑셀에서 시나리오 ${rows.length}건을 찾았어요. 지금 테스트 시나리오 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
+      + `시나리오 ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`,
     okLabel: '가져오기'
   });
   if(ok === null) return false;
@@ -3495,7 +3511,7 @@ async function handleExcelImportFile(file){
     syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
   };
   apply(normalizeTcIds(mergeExcelRows(tcData, rows)));
-  showUndoToast(`엑셀에서 TC ${rows.length}건을 가져왔어요.`, ()=>apply(before));
+  showUndoToast(`엑셀에서 시나리오 ${rows.length}건을 가져왔어요.`, ()=>apply(before));
   return true;
 }
 
@@ -3645,7 +3661,7 @@ function tryRestoreDraft(){
 
   const banner = document.getElementById('draftRestoreBanner');
   document.getElementById('draftRestoreMsg').textContent =
-    `이전에 마치지 못한 작업이 남아 있습니다 (TC ${savedTc.length}건). 이어서 작업하시겠어요?`;
+    `이전에 마치지 못한 작업이 남아 있습니다 (시나리오 ${savedTc.length}건). 이어서 작업하시겠어요?`;
   banner.style.display = 'block';
 
   document.getElementById('draftRestoreYesBtn').addEventListener('click', ()=>{
@@ -3659,7 +3675,7 @@ function tryRestoreDraft(){
   document.getElementById('draftRestoreNoBtn').addEventListener('click', ()=>{
     clearDraft();
     banner.style.display = 'none';
-    showUndoToast(`임시저장(TC ${savedTc.length}건)을 삭제했습니다.`, ()=>{
+    showUndoToast(`임시저장(시나리오 ${savedTc.length}건)을 삭제했습니다.`, ()=>{
       try{ localStorage.setItem('cvt_tc_draft', JSON.stringify(savedTc)); }catch(e){ /* ignore */ }
       tryRestoreDraft();
     });
@@ -3907,7 +3923,7 @@ function renderCategoryTabs(){
   const cur = currentRoute.cat;
   if(cur && !stats.some(s=>s.cat === cur)) stats.push({ cat: cur, projects: 0, qc: 0 }); // 다른 브라우저에서 추가한 분류·빈 미분류로 들어와도 보이게
   const nav = document.getElementById('projectCategoryTabs');
-  nav.innerHTML = stats.map(s=>`<span class="cat-tab-wrap"><button type="button" class="cat-tab category-tab" data-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)} (프로젝트 ${s.projects}개 · TC ${s.qc}건)"${s.cat === cur ? ' aria-current="page"' : ''}>${escapeHtml(s.cat)}<span class="count">${s.projects}</span></button>`
+  nav.innerHTML = stats.map(s=>`<span class="cat-tab-wrap"><button type="button" class="cat-tab category-tab" data-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)} (프로젝트 ${s.projects}개 · 시나리오 ${s.qc}건)"${s.cat === cur ? ' aria-current="page"' : ''}>${escapeHtml(s.cat)}<span class="count">${s.projects}</span></button>`
     + (s.cat === UNCATEGORIZED ? '' : `<button type="button" class="cat-tab__more" data-cat-more="${escapeHtml(s.cat)}" aria-label="${escapeHtml(s.cat)} 프로젝트 관리" title="프로젝트 관리(삭제)">⋯</button>`) + '</span>').join('');
   nav.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click', ()=>goRoute({ view: 'cat', cat: b.dataset.cat })));
   nav.querySelectorAll('[data-cat-more]').forEach(b=>b.addEventListener('click', ()=>openProjectManage(b.dataset.catMore)));
@@ -3982,7 +3998,7 @@ function renderHistory(){
     return `<div class="history-item${isEditing ? ' is-editing' : ''}" data-open="${idx}" tabindex="0" title="눌러서 프로젝트 열기">
       <div class="meta">
         <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
-        <div class="date">${escapeHtml(h.date)} · TC ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
+        <div class="date">${escapeHtml(h.date)} · 시나리오 ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
         <div class="history-mini-bar">${bar}</div>
       </div>
       <div class="history-actions">
@@ -4348,7 +4364,7 @@ async function flushSyncQueue(){
     syncFlushing = false;
     const renumbered = syncRenumbered - renumberedBefore;
     if(renumbered){
-      syncConflictMsg = `다른 팀원과 TC 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
+      syncConflictMsg = `다른 팀원과 시나리오 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
       afterRemoteApply();
     }
     renderSyncStatus();
@@ -4654,9 +4670,9 @@ function validateBackup(d){
     if(!Array.isArray(d[k])) return `백업 파일에 ${k} 목록이 없어요.` + next;
   }
   const bad = d.tcData.findIndex(r=>!r || typeof r !== 'object' || !tcNumberOf(r.tcId));
-  if(bad > -1) return `TC ${bad + 1}번째 행의 TC ID가 올바르지 않아요(FO-001 또는 FO-이름-001 형식이어야 해요).` + next;
+  if(bad > -1) return `${bad + 1}번째 행의 시나리오 ID가 올바르지 않아요(FO-001 또는 FO-이름-001 형식이어야 해요).` + next;
   const ids = d.tcData.map(r=>r.tcId);
-  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 TC ID가 두 번 이상 들어 있어요.' + next;
+  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 시나리오 ID가 두 번 이상 들어 있어요.' + next;
   if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '프로젝트 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
   if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
   return '';
@@ -4693,13 +4709,13 @@ function formatExportedAt(iso){
 async function offerImport(data, fileName){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
-  const count = (t, h, n) => `TC ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
+  const count = (t, h, n) => `시나리오 ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
   const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: (fileName ? `파일: ${fileName}${data.exportedAt ? ` (내보낸 시각 ${formatExportedAt(data.exportedAt)})` : ''}\n` : '')
       + `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `TC ${data.tcData.length}건은 새 프로젝트로 열고, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
+      + `시나리오 ${data.tcData.length}건은 새 프로젝트로 열고, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
       + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
       + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : ''),
     okLabel: '가져오기'
