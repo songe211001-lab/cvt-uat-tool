@@ -766,7 +766,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-table th, .qc-stat-table td{border:1px solid var(--line);height:32px;padding:4px 10px;text-align:center;white-space:nowrap;color:var(--ink);}
   /* TC 결과 보고 양식: 머리 칸(위 줄·왼쪽 열)은 옅은 회색 바탕 굵은 글자, Pass·진행률 초록, Fail·결함률 빨강 */
   .qc-stat-table thead th, .qc-stat-table tbody th{font-weight:700;background:var(--bg);}
-  .qc-stat-table tr > :first-child{width:104px;min-width:104px;} /* 구분 열은 좁게 고정, 남는 너비는 합계·테스터 열이 나눠 가짐 */
+  .qc-stat-table tr > :first-child, .qc-stat-table tr > :nth-child(2){width:104px;min-width:104px;} /* 구분·합계 열은 좁게 고정, 남는 너비는 테스터 열이 나눠 가짐 */
   .qc-stat-table .is-sum{font-weight:800;}
   .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
   /* 구분 설명: (?) 버튼 + 설명 창 */
@@ -780,7 +780,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .stat-def-pop dt{font-weight:700;}
   .stat-def-pop dd{margin:0;color:var(--ink);}
   .stat-def-note{margin:12px 0 0;font-size:12px;color:var(--muted);}
+  .qc-stat-table.is-narrow{width:auto;} /* 테스터 열이 없으면 구분·합계 두 열만 좁게 */
   .qc-stat-table td.is-fail{color:var(--fatal-text);font-weight:700;}
+  /* 진행률·결함률 행: 결과 칸을 바탕색으로 강조(결함률은 값이 0이어도 빨강) */
+  .qc-stat-table tr.rate-progress td{background:color-mix(in srgb, var(--result-pass) 12%, var(--panel));color:var(--result-pass);font-weight:800;}
+  .qc-stat-table tr.rate-defect td{background:color-mix(in srgb, var(--fatal-text) 12%, var(--panel));color:var(--fatal-text);font-weight:800;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
     font-size:12px;font-weight:700;color:var(--primary-dark);background:var(--primary-soft);
@@ -3160,9 +3164,9 @@ function renderDistribution(){
   document.getElementById('distWrap').innerHTML =
     `<p class="stat-caption">시나리오 ${t.total}건 · FO ${t.fo} · BO ${t.bo}</p>
     <p class="stat-caption">합계는 테스터 열의 평균이에요.${t.unassigned && t.cols.length > 1 ? ` 담당자가 없는 시나리오 ${t.unassigned}건은 통계에 들어가지 않아요.` : ''}</p>
-    <div class="qc-stat-scroll"><table class="qc-stat-table">
+    <div class="qc-stat-scroll"><table class="qc-stat-table${t.cols.length > 1 ? '' : ' is-narrow'}">
       <thead><tr><th scope="col">구분 <button type="button" class="stat-help" popovertarget="statDefPop" aria-label="구분 설명 보기">?</button></th>${t.cols.map((c, i)=>`<th scope="col"${i === 0 ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
-      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tbody>${t.rows.map((label, r)=>`<tr${label === '진행률' ? ' class="rate-progress"' : label === '결함률' ? ' class="rate-defect"' : ''}><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
 }
 /* ---------- Export helpers ---------- */
