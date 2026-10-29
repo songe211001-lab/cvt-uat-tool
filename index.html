@@ -360,6 +360,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     --result-major: var(--minor);
     --result-fatal: var(--fatal);
     --result-critical: var(--fatal-text);
+    --result-block: var(--ink-soft); /* 막혀서 실행하지 못함 */
   }
   *{box-sizing:border-box;}
   :root{color-scheme:light;}
@@ -608,6 +609,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     padding:4px 0;border-bottom:1px solid var(--line);
   }
   @media (max-width:640px){.tc-field-block{grid-template-columns:1fr;}}
+  .tc-field-label small{display:block;font-size:10.5px;font-weight:500;color:var(--muted);}
   .tc-field-label{
     font-size:11px;font-weight:700;color:var(--muted);padding-top:6px;
     display:block;letter-spacing:.02em;
@@ -758,12 +760,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-scroll{overflow-x:auto;overflow-y:hidden;}
   .qc-stat-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;}
   .qc-stat-table th, .qc-stat-table td{border:1px solid var(--line);height:32px;padding:4px 10px;text-align:center;white-space:nowrap;color:var(--ink);}
-  .qc-stat-table thead th{font-weight:700;background:var(--panel);}
-  .qc-stat-table thead th small{margin-left:4px;font-size:11px;font-weight:500;color:var(--muted);}
-  .qc-stat-table tbody th{font-weight:600;}
+  /* TC 결과 보고 양식: 머리 칸(위 줄·왼쪽 열)은 옅은 회색 바탕 굵은 글자, Pass·진행률 초록, Fail·결함률 빨강 */
+  .qc-stat-table thead th, .qc-stat-table tbody th{font-weight:700;background:var(--bg);}
+  .qc-stat-table tbody th{min-width:96px;}
   .qc-stat-table .is-sum{font-weight:800;}
-  .qc-stat-table td.is-zero{color:var(--muted);}
-  .qc-stat-table td.is-alert{color:var(--fatal-text);font-weight:800;}
+  .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
+  .qc-stat-table td.is-fail{color:var(--fatal-text);font-weight:700;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
     font-size:12px;font-weight:700;color:var(--primary-dark);background:var(--primary-soft);
@@ -879,7 +881,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     <button class="ad-gnb__fold" id="gnbFold" type="button" aria-label="메뉴 접기" title="메뉴 접기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
     <nav class="ad-gnb__nav" aria-label="화면">
       <div class="gnb-group" id="gnbQcGroup">
-        <button class="gnb-head" id="gnbQcBtn" type="button" aria-expanded="true" aria-controls="gnbQcBody" title="QC 관리"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">QC 관리</span><span class="chev" aria-hidden="true">▾</span></button>
+        <button class="gnb-head" id="gnbQcBtn" type="button" aria-expanded="true" aria-controls="gnbQcBody" title="테스트 시나리오 관리"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">테스트 시나리오 관리</span><span class="chev" aria-hidden="true">▾</span></button>
         <div class="gnb-body" id="gnbQcBody">
           <div class="gnb-body" id="gnbCatList" aria-label="프로젝트"></div>
           <button class="ad-gnb-item gnb-sub gnb-sub--add" id="gnbCatAddBtn" type="button" title="프로젝트 추가"><span>+ 프로젝트 추가</span></button>
@@ -898,7 +900,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <select class="ad-select project-select tool-proj" id="projectSelect" aria-label="프로젝트 불러오기">
         <option value="">프로젝트 선택</option>
       </select>
-      <input type="search" class="ad-input qc-search tool-proj" id="tcSearchInput" aria-label="QC 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
+      <input type="search" class="ad-input qc-search tool-proj" id="tcSearchInput" aria-label="테스트 시나리오 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
       <select class="ad-select tool-proj" id="tcFilterType" aria-label="화면유형 필터">
         <option value="ALL">전체 유형</option>
         <option value="FO">FO</option>
@@ -912,6 +914,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <option value="MAJOR">MAJOR</option>
         <option value="FATAL">FATAL</option>
         <option value="CRITICAL">CRITICAL</option>
+        <option value="BLOCK">BLOCK</option>
+        <option value="">미실행</option>
       </select>
       <select class="ad-select tool-cat" id="projectSort" aria-label="프로젝트 정렬">
         <option value="recent">최근 수정순</option>
@@ -921,21 +925,21 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <details class="export-menu json-btn" id="exportMenu">
         <summary class="ad-btn" aria-label="내보내기 형식 고르기"><span aria-hidden="true">↓</span> 내보내기</summary>
         <div class="export-menu__list" role="menu">
-          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonExportBtn" title="QC 리스트·프로젝트·테스터를 JSON 파일로 내보내요">JSON</button>
-          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBtn" title="QC 리스트를 엑셀 파일로 내보내고 프로젝트로 저장해요" disabled>EXCEL</button>
+          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonExportBtn" title="테스트 시나리오 리스트·프로젝트·테스터를 JSON 파일로 내보내요">JSON</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBtn" title="테스트 시나리오 리스트를 엑셀 파일로 내보내고 프로젝트로 저장해요" disabled>EXCEL</button>
         </div>
       </details>
       <details class="export-menu json-btn" id="importMenu">
         <summary class="ad-btn" aria-label="가져오기 형식 고르기"><span aria-hidden="true">↑</span> 가져오기</summary>
         <div class="export-menu__list" role="menu">
-          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonImportBtn" title="JSON 백업 파일을 가져와요(QC 리스트·프로젝트·테스터)">JSON</button>
-          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="excelImportBtn" title="이 도구에서 내보낸 엑셀의 QC 리스트를 가져와요">EXCEL</button>
+          <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonImportBtn" title="JSON 백업 파일을 가져와요(테스트 시나리오 리스트·프로젝트·테스터)">JSON</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="excelImportBtn" title="이 도구에서 내보낸 엑셀의 테스트 시나리오 리스트를 가져와요">EXCEL</button>
         </div>
       </details>
       <input type="file" id="jsonImportInput" accept=".json,application/json" hidden />
       <input type="file" id="excelImportInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
       <button type="button" class="ad-btn ad-btn--primary tool-cat" id="newProjectBtn">+ 새 프로젝트</button>
-      <button type="button" class="ad-btn ad-btn--primary tool-proj" id="qcGenOpenBtn" aria-haspopup="dialog" aria-controls="qcGenModal">+ QC 생성</button>
+      <button type="button" class="ad-btn ad-btn--primary tool-proj" id="qcGenOpenBtn" aria-haspopup="dialog" aria-controls="qcGenModal">+ 테스트 시나리오 생성</button>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
   </header>
@@ -958,8 +962,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <!-- ===================== 프로젝트: QC 통계 + QC 리스트 ===================== -->
   <div class="panel" id="panel-gen">
     <div class="card ad-card ad-panel" id="tcStatsCard">
-      <div class="stat-grid" id="distWrap" role="group" aria-label="QC 통계" hidden></div>
-      <div id="distEmpty" class="ad-empty">QC를 생성하면 결과 통계가 여기에 보여요.</div>
+      <div class="stat-grid" id="distWrap" role="group" aria-label="테스트 시나리오 통계" hidden></div>
+      <div id="distEmpty" class="ad-empty">테스트 시나리오를 생성하면 결과 통계가 여기에 보여요.</div>
     </div>
 
     <!-- 공유 내용·테스트 계정: 프로젝트마다 따로, 팀원에게 동기화된다(프로젝트 data.share) -->
@@ -971,7 +975,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
     <div class="card ad-card ad-panel">
       <div class="tc-section-head section-head">
-        <h2 class="section-title">QC 리스트</h2>
+        <h2 class="section-title">테스트 시나리오 리스트</h2>
         <span class="section-meta" id="tcCountBadge" style="display:none;">0건</span>
         <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
       </div>
@@ -988,13 +992,13 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
       <div class="bulk-bar" id="bulkBar">
         <span class="bulk-count" id="bulkCount">0개 선택됨</span>
-        <select class="ad-select" id="bulkTesterAdd" aria-label="선택한 QC에 담당 추가">
+        <select class="ad-select" id="bulkTesterAdd" aria-label="선택한 테스트 시나리오에 담당 추가">
           <option value="">담당 추가…</option>
         </select>
-        <select class="ad-select" id="bulkTesterRemove" aria-label="선택한 QC에서 담당 빼기">
+        <select class="ad-select" id="bulkTesterRemove" aria-label="선택한 테스트 시나리오에서 담당 빼기">
           <option value="">담당 빼기…</option>
         </select>
-        <select class="ad-select" id="bulkResultSelect" aria-label="선택한 QC 결과 일괄 변경">
+        <select class="ad-select" id="bulkResultSelect" aria-label="선택한 테스트 시나리오 결과 일괄 변경">
           <option value="">결과값 일괄 변경…</option>
           <option value="PASS">PASS</option>
           <option value="MINOR">MINOR</option>
@@ -1002,8 +1006,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
           <option value="MAJOR">MAJOR</option>
           <option value="FATAL">FATAL</option>
           <option value="CRITICAL">CRITICAL</option>
+          <option value="BLOCK">BLOCK</option>
         </select>
-        <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 QC 진행상태 일괄 변경">
+        <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 테스트 시나리오 진행상태 일괄 변경">
           <option value="">진행상태 일괄 변경…</option>
           <option value="작성중">작성중</option>
           <option value="개발 검토중">개발 검토중</option>
@@ -1014,7 +1019,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       </div>
 
       <div id="tcCardList"></div>
-      <div id="emptyState" class="ad-empty">아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'QC 생성하기'를 눌러보세요.</div>
+      <div id="emptyState" class="ad-empty">아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 '테스트 시나리오 생성하기'를 눌러보세요.</div>
 
       <div class="table-footer">
         <button class="ad-btn ad-btn--sm" id="addRowBtn" type="button">+ 행 추가</button>
@@ -1028,7 +1033,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
       <div id="historyList"></div>
       <div id="historyNoMatch" class="ad-empty" hidden>검색 결과가 없어요.</div>
-      <div id="historyEmpty" class="ad-empty" style="display:none;">이 분류에 아직 프로젝트가 없어요. '새 프로젝트'로 QC를 만들고 내보내기에서 EXCEL을 고르면 여기에 저장돼요.</div>
+      <div id="historyEmpty" class="ad-empty" style="display:none;">이 분류에 아직 프로젝트가 없어요. '새 프로젝트'로 테스트 시나리오를 만들고 내보내기에서 EXCEL을 고르면 여기에 저장돼요.</div>
     </div>
   </div>
 
@@ -1036,7 +1041,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <!-- QC 생성: 워크보드 "업무 등록" 모달과 같은 구조(머리 = 제목 + 닫기, 본문 = 2열 칸, 아래 = 오른쪽 버튼 묶음) -->
   <dialog class="wb-modal qc-gen-modal" id="qcGenModal" aria-labelledby="qcGenTitle">
-    <header title="제목 줄을 끌면 창을 옮길 수 있어요"><h2 id="qcGenTitle">QC 생성</h2><button type="button" class="ad-btn ad-btn--ghost" id="qcGenClose">닫기</button></header>
+    <header title="제목 줄을 끌면 창을 옮길 수 있어요"><h2 id="qcGenTitle">테스트 시나리오 생성</h2><button type="button" class="ad-btn ad-btn--ghost" id="qcGenClose">닫기</button></header>
     <div class="body body--one">
       <div class="f full">
         <label for="figmaUrlInput">피그마 화면 링크 <b>*</b></label>
@@ -1044,8 +1049,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <span class="hint">claude.ai에 연결된 Figma 커넥터로 화면을 가져와요. 처음 가져올 때 이 페이지에서 Figma를 써도 되는지 물어봐요.</span>
       </div>
       <div class="f full">
-        <label for="tcNameInput">QC ID 이름</label>
-        <input type="text" class="ad-input" id="tcNameInput" title="기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요. 비우면 QC-001 형식이에요." aria-describedby="tcNameHint" autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (QC-LOGIN-001)" />
+        <label for="tcNameInput">TC ID 이름</label>
+        <input type="text" class="ad-input" id="tcNameInput" title="기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요. 비우면 FO-001 형식이에요." aria-describedby="tcNameHint" autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: LOGIN (FO-LOGIN-001)" />
         <span class="hint" id="tcNameHint">기획안 화면에 ID가 있으면 그 ID를 먼저 써요. 없을 때 이 이름을 써요.</span>
       </div>
       <div class="f full">
@@ -1055,8 +1060,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     </div>
     <footer>
       <div class="r">
-        <button class="ad-btn" id="appendBtn" type="button" disabled>QC 추가 생성</button>
-        <button class="ad-btn ad-btn--primary" id="genBtn" type="button" disabled>QC 생성하기</button>
+        <button class="ad-btn" id="appendBtn" type="button" disabled>테스트 시나리오 추가 생성</button>
+        <button class="ad-btn ad-btn--primary" id="genBtn" type="button" disabled>테스트 시나리오 생성하기</button>
       </div>
     </footer>
   </dialog>
@@ -1280,14 +1285,15 @@ async function renderPdfPageToBlob(pdf, pageNum, scale = 1.4){
 }
 
 const COLUMNS = [
-  {key:'tcId', label:'QC ID'},
+  {key:'tcId', label:'TC ID'},
   {key:'screenType', label:'화면유형(FO/BO)'},
   {key:'screen', label:'화면 구분'},
   {key:'category', label:'시험항목(대분류)'},
   {key:'subCategory', label:'시험(중분류)'},
-  {key:'procedure', label:'시험절차'},
+  {key:'precondition', label:'전제조건 (BO 설정 포함)'},
+  {key:'procedure', label:'테스트 절차'},
   {key:'testDetail', label:'시험 내역'},
-  {key:'expected', label:'기대 결과'},
+  {key:'expected', label:'기대결과'},
   {key:'constraintTag', label:'제약 태그'},
   {key:'integrationTag', label:'연동시스템'},
   {key:'tester', label:'테스터'},
@@ -1295,11 +1301,11 @@ const COLUMNS = [
   {key:'result', label:'결과'},
   {key:'status', label:'진행상태'}
 ];
-const RESULT_OPTIONS = ['PASS','MINOR','N/A','MAJOR','FATAL','CRITICAL'];
+const RESULT_OPTIONS = ['PASS','MINOR','N/A','MAJOR','FATAL','CRITICAL','BLOCK']; // 결과를 고르지 않은 TC('')는 "미실행"
 // 결과 6단계 색 (style_content.html의 --result-* → 알닷 토큰)
 const RESULT_COLOR = {
   PASS:'var(--result-pass)', MINOR:'var(--result-minor)', 'N/A':'var(--result-na)',
-  MAJOR:'var(--result-major)', FATAL:'var(--result-fatal)', CRITICAL:'var(--result-critical)'
+  MAJOR:'var(--result-major)', FATAL:'var(--result-fatal)', CRITICAL:'var(--result-critical)', BLOCK:'var(--result-block)'
 };
 // QC 행의 결과 셀렉트는 글자색(style_content.html select.result-select[data-result])으로 구분하고,
 // 이 색(RESULT_COLOR)은 프로젝트 목록의 결과 막대에 쓴다.
@@ -1320,10 +1326,10 @@ function toExportRow(row){
   return out;
 }
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
-   테스터마다 칸이 따로라, 두 테스터가 같은 QC에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
+   테스터마다 칸이 따로라, 두 테스터가 같은 테스트 시나리오에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
    담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 값에서만 뺀다. */
 const TESTER_KEY_RE = /^t[rns]:/;
-const RESULT_SEVERITY = ['N/A', 'PASS', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
+const RESULT_SEVERITY = ['N/A', 'PASS', 'BLOCK', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
 const assigneesOf = row => String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
 // 대표 결과: 담당 테스터의 결과 중 가장 심각한 값. 테스터별 결과가 하나도 없으면 행의 결과(예전 데이터·미배정 QC) (순수 함수)
 function effectiveResult(row){
@@ -1806,7 +1812,7 @@ async function importFigmaScreens(progressBtn){
     const listed = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
       fileKey: parsed.fileKey,
       code: figmaListScreensCode(parsed.nodeId),
-      description: 'QC 생성용 화면 목록 읽기 (수정 없음)'
+      description: '테스트 시나리오 생성용 화면 목록 읽기 (수정 없음)'
     }, { cache: false })).payload;
     const list = typeof listed === 'string' ? JSON.parse(listed) : listed;
     if(!list || list.error === 'not_found') throw new Error('해당 화면(노드)을 찾지 못했어요. 링크의 선택 영역이 올바른지 확인해주세요.');
@@ -1823,7 +1829,7 @@ async function importFigmaScreens(progressBtn){
       try{
         const nodeId = list.screens[i].id;
         const textRes = (await mcp.callTool(FIGMA_SERVER, 'use_figma', {
-          fileKey: parsed.fileKey, code: figmaScreenTextCode(nodeId), description: 'QC 생성용 화면 글자 읽기 (수정 없음)'
+          fileKey: parsed.fileKey, code: figmaScreenTextCode(nodeId), description: '테스트 시나리오 생성용 화면 글자 읽기 (수정 없음)'
         }, { cache: false })).payload;
         const textInfo = (typeof textRes === 'string' ? JSON.parse(textRes) : textRes) || {};
         const text = textInfo.text || '';
@@ -1952,7 +1958,7 @@ async function removeTester(name){
   });
   renderTable();
   renderDistribution();
-  showUndoToast(`'${name}' 테스터를 삭제했어요${n ? `(담당 QC ${n}건에서도 뺐어요)` : ''}.`, async ()=>{
+  showUndoToast(`'${name}' 테스터를 삭제했어요${n ? `(담당 TC ${n}건에서도 뺐어요)` : ''}.`, async ()=>{
     await changeTesters(list=>list.includes(name) ? list : list.concat(name));
     tcData.forEach(r=>{ if(before.has(r.tcId)) r.tester = before.get(r.tcId); });
     renderTable();
@@ -2171,9 +2177,19 @@ function escapeHtml(s){
 }
 
 /* ---------- Readability formatting (display only; stored value stays single-line for safe export/JSON) ---------- */
+// 테스트 절차: "1) a 2) b" → 줄마다 "1. a" (보기·엑셀용)
 function formatSteps(text){
   if(!text) return '';
-  return String(text).replace(/\s*(\d+\))\s*/g, '\n$1 ').replace(/^\n/, '').trim();
+  return String(text).replace(/\s*(\d+)\)\s*/g, '\n$1. ').replace(/^\n/, '').trim();
+}
+// 전제조건·기대결과: 줄마다 ①②③. 이미 ①이 있으면 그 앞에서 줄을 나누고, 없으면 문장마다 번호를 붙인다(한 문장이면 그대로)
+const CIRCLED_NUMS = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
+function formatCircled(text){
+  if(!text) return '';
+  const s = String(text);
+  if(/[①-⑳]/.test(s)) return s.replace(/\s*([①-⑳])\s*/g, '\n$1 ').trim();
+  const parts = formatSentences(s).split('\n').map(x=>x.trim()).filter(Boolean);
+  return parts.length > 1 ? parts.map((p, i)=>`${CIRCLED_NUMS[i] || '-'} ${p}`).join('\n') : s.trim();
 }
 function formatSentences(text){
   if(!text) return '';
@@ -2227,9 +2243,10 @@ QC 단위 규칙(중요): QC는 "한 화면에 들어가서 한 번에 확인할
 ${screenFieldDesc}
 - category: 시험항목 대분류
 - subCategory: 시험 중분류
-- procedure: 시험절차. 줄바꿈 없이 한 줄로, 전제조건(사전 상태)부터 시작해 "1) ... 2) ... 3) ..." 형태로 작성하세요. 같은 화면에서 이어서 확인하는 항목은 단계로 이어 붙이세요(최대 10단계). 각 단계에 입력값 예시나 진입 경로를 포함하세요.
+- precondition: 전제조건(BO 설정 포함). 줄바꿈 없이 "① ... ② ..." 형태로, 테스트 전에 갖춰야 할 상태만 쓰세요(로그인 여부, 최초/재방문, 회원·회선 상태, 데이터 유무, BO에서 미리 설정할 값 등). 없으면 빈 문자열.
+- procedure: 테스트 절차. 줄바꿈 없이 한 줄로, 전제조건은 빼고 실제 조작만 "1) ... 2) ... 3) ..." 형태로 작성하세요. 같은 화면에서 이어서 확인하는 항목은 단계로 이어 붙이세요(최대 10단계). 각 단계에 입력값 예시나 진입 경로를 포함하세요.
 - testDetail: 시험 내역. 줄바꿈 없이, 이 QC 하나로 함께 확인할 항목을 "① ... ② ... ③ ..." 처럼 모두 나열하세요(문구·버튼·표시값·정렬·건수 등).
-- expected: 기대 결과. 줄바꿈 없이, 실제 화면에 노출되는 문구/상태 변화/데이터 반영 여부를 구체적으로 서술하세요.
+- expected: 기대결과. 줄바꿈 없이 "① ... ② ..." 형태로, 실제 화면에 노출되는 문구/상태 변화/데이터 반영 여부를 구체적으로 서술하세요.
 - constraintTag: 이 TC 실행에 "하루 1회만 실행 가능한 액션"이 포함되면 "일일1회제한", 같은 테스트 계정으로 다른 TC와 동시에/같은 날 묶어 실행하면 안 되는(예: 명의이전처럼 계정 상태를 바꿔버리는) 액션이면 "단독실행필요", 둘 다 아니면 "없음"으로 표기하세요.
 - integrationTag: 이 TC가 연동하는 외부/부가 시스템이 있으면 "쿠폰", "요금제", "명의이전" 중 해당하는 값으로, 그 외 연동 시스템이면 "기타연동", 연동 시스템이 없으면 "없음"으로 표기하세요.
 
@@ -2254,6 +2271,7 @@ ${coverageBlock}`;
     ...(screenNameHint ? { _figmaScreen: screenNameHint } : {}),
     category: item.category || '',
     subCategory: item.subCategory || '',
+    precondition: item.precondition || '',
     procedure: item.procedure || '',
     testDetail: item.testDetail || '',
     expected: item.expected || '',
@@ -2261,7 +2279,7 @@ ${coverageBlock}`;
     integrationTag: INTEGRATION_TAG_OPTIONS.includes(item.integrationTag) ? item.integrationTag : '없음',
     tester: '',
     testNote: '',
-    result: 'N/A',
+    result: '', // 미실행
     status: '작성중'
   }));
 }
@@ -2276,11 +2294,11 @@ function figmaScreenLabel(category, subCategory, frameName){
    예전에는 tcData.length + 1로 번호를 매겨서, 중간 행을 지운 뒤 추가하면 기존 ID와 겹쳤다(선택·접기·일괄
    삭제가 tcId 기준이라 겹친 두 행이 함께 선택·삭제됨). 지금은 "현재 가장 큰 번호"와 "이번 세션에서 마지막으로
    발급한 번호" 중 큰 값의 다음 번호를 쓴다 — 삭제 후 되돌리기로 복원되는 행과도 겹치지 않는다.
-   ID는 QC-001 또는 가운데에 이름을 넣은 QC-LOGIN-001 형식이다. 번호는 이름과 관계없이 하나로 이어진다
-   (예전 ID 접두사 TC-도 그대로 읽고, 불러올 때 normalizeTcIds로 QC-로 맞춘다)
+   TC ID는 화면유형을 앞에 둔 FO-001 / BO-LOGIN-001 형식이다. 번호는 FO·BO·이름과 관계없이 하나로 이어진다
+   (예전 접두사 QC-·TC-도 그대로 읽고, normalizeTcIds가 그 행의 화면유형 접두사로 맞춘다)
    (서버 tc_no는 프로젝트 안에서 유일). 이름은 tcId 안에 들어 있고, 서버에는 data.tcName으로 따로 저장한다(rowDataOf). */
 let lastIssuedTcNumber = 0;
-const TC_ID_RE = /^(?:QC|TC)-(?:([A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]+)-)?(\d+)$/;
+const TC_ID_RE = /^(?:QC|TC|FO|BO)-(?:([A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]+)-)?(\d+)$/;
 // 이름 정리: 공백·하이픈은 _로, 영문·숫자·한글·_ 외 글자는 빼고 20자로 자른다
 function sanitizeTcName(s){
   return String(s || '').trim().replace(/[\s-]/g, '_').replace(/[^A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ_]/g, '').slice(0, 20);
@@ -2296,13 +2314,25 @@ function tcNameOf(tcId){
 function maxTcNumber(){
   return tcData.reduce((max, r)=>Math.max(max, tcNumberOf(r.tcId)), 0);
 }
-function formatTcId(n, name){
-  return 'QC-' + (name ? name + '-' : '') + String(n).padStart(3,'0');
+function formatTcId(n, name, screenType){
+  return (screenType === 'BO' ? 'BO' : 'FO') + '-' + (name ? name + '-' : '') + String(n).padStart(3,'0');
 }
-// 예전 접두사(TC-)로 저장된 행의 ID를 QC-로 바꾼다(임시저장·이력·JSON 백업을 불러올 때). 번호와 이름은 그대로다.
+// TC ID 접두사를 그 행의 화면유형(FO/BO)으로 맞춘다(예전 QC-·TC-, 화면유형을 바꾼 행). 번호와 이름은 그대로다. 바뀐 ID 짝(옛 → 새)을 돌려준다
 function normalizeTcIds(rows){
-  (rows || []).forEach(r=>{ if(r && /^TC-/.test(r.tcId || '') && TC_ID_RE.test(r.tcId)) r.tcId = 'QC-' + r.tcId.slice(3); });
+  const moved = new Map();
+  (rows || []).forEach(r=>{
+    if(!r || !TC_ID_RE.test(r.tcId || '')) return;
+    const next = formatTcId(tcNumberOf(r.tcId), tcNameOf(r.tcId), r.screenType);
+    if(next !== r.tcId){ moved.set(r.tcId, next); r.tcId = next; }
+  });
+  rows && (rows.movedTcIds = moved);
   return rows;
+}
+// 화면에 그리기 전에 접두사를 맞추고, 선택·펼침 상태도 새 ID로 옮긴다
+function syncTcPrefixes(){
+  const moved = normalizeTcIds(tcData).movedTcIds;
+  if(!moved.size) return;
+  [selectedTcIds, expandedTcRows].forEach(set=>{ moved.forEach((to, from)=>{ if(set.delete(from)) set.add(to); }); });
 }
 function nextTcId(name){
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber()) + 1;
@@ -2313,7 +2343,7 @@ function nextTcId(name){
 function renumberTcIds(){
   const map = new Map();
   tcData.forEach((r, i)=>{
-    const next = formatTcId(i + 1, tcNameOf(r.tcId));
+    const next = formatTcId(i + 1, tcNameOf(r.tcId), r.screenType);
     if(next !== r.tcId){ map.set(r.tcId, next); r.tcId = next; }
   });
   [selectedTcIds, expandedTcRows].forEach(set=>{
@@ -2484,13 +2514,13 @@ async function runGeneration(startFresh){
   const madeCount = tcData.length - startCount;
   if(roundErrors.length){
     showError(madeCount
-      ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 'QC 추가 생성'으로 이어서 만들 수 있습니다.`
+      ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 '테스트 시나리오 추가 생성'으로 이어서 만들 수 있습니다.`
       : (roundErrors[0] || '알 수 없는 오류가 발생했습니다.'));
   }else if(!madeCount){
     showGenNotice('기획안에서 이미 다룬 내용과 겹치지 않는 새 테스트 케이스를 더 찾지 못했습니다.');
   }else if(foundIds.size){
     const ids = [...foundIds];
-    showGenNotice(`화면 ID로 QC ID를 만들었어요: ${ids[0]}${ids.length > 1 ? ` 외 ${ids.length - 1}개` : ''}.`
+    showGenNotice(`화면 ID로 TC ID를 만들었어요: ${ids[0]}${ids.length > 1 ? ` 외 ${ids.length - 1}개` : ''}.`
       + (noIdChunks ? ` ID를 찾지 못한 화면 ${noIdChunks}개는 입력한 이름(또는 기본 형식)을 썼어요.` : ''));
   }
 
@@ -2553,6 +2583,7 @@ function tcTitleOf(row){
   return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
 }
 function renderTable(){
+  syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
 
@@ -2581,7 +2612,7 @@ function renderTable(){
   const conflictTesters = computeConflictTesters();
   const conflictNote = document.getElementById('conflictSummaryNote');
   conflictNote.textContent = conflictTesters.length
-    ? `${conflictTesters.join(', ')} 님에게 일일제한/단독실행 QC가 2건 이상 배정되어 실행 충돌 가능성이 있습니다.`
+    ? `${conflictTesters.join(', ')} 님에게 일일제한/단독실행 테스트 시나리오가 2건 이상 배정되어 실행 충돌 가능성이 있습니다.`
     : '';
 
   // 검색/필터 적용 (원본 인덱스는 그대로 유지해야 편집이 올바른 행에 반영됨)
@@ -2589,10 +2620,10 @@ function renderTable(){
     .map((row, idx)=>({row, idx}))
     .filter(({row})=>{
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
-      if(tcFilterResult !== 'ALL' && effectiveResult(row) !== tcFilterResult) return false;
+      if(tcFilterResult !== 'ALL' && (effectiveResult(row) || '') !== tcFilterResult) return false;
       if(tcFilterTester === 'NONE' ? testersOf(row).length : (tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester))) return false;
       if(tcSearchQuery){
-        const hay = [row.screen, row.category, row.subCategory, row.procedure, row.testDetail, row.expected]
+        const hay = [row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
           .join(' ').toLowerCase();
         if(!hay.includes(tcSearchQuery)) return false;
       }
@@ -2601,17 +2632,17 @@ function renderTable(){
 
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
-    document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 'QC 생성하기'를 눌러보세요.";
+    document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 '테스트 시나리오 생성하기'를 눌러보세요.";
     countBadge.style.display = 'none';
   }else if(!filtered.length){
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = '검색/필터 조건에 맞는 테스트 케이스가 없습니다.';
     countBadge.style.display = 'inline-block';
-    countBadge.textContent = `0 / ${tcData.length}건`;
+    countBadge.textContent = `TC 0 / ${tcData.length}건`;
   }else{
     document.getElementById('emptyState').style.display = 'none';
     countBadge.style.display = 'inline-block';
-    countBadge.textContent = filtered.length === tcData.length ? `${tcData.length}건` : `${filtered.length} / ${tcData.length}건`;
+    countBadge.textContent = filtered.length === tcData.length ? `TC ${tcData.length}건` : `TC ${filtered.length} / ${tcData.length}건`;
   }
 
   // 화면에 없는(필터링된) 행에 대한 선택 상태는 남겨두되, 삭제된 tcId는 정리
@@ -2655,8 +2686,8 @@ function renderTable(){
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select>
         <div class="tc-screen-input tc-title" data-title-idx="${idx}" title="시험항목(대분류) > 시험(중분류)">${escapeHtml(tcTitleOf(row))}</div>
-        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 QC가 더 있습니다">유사 QC</span>' : ''}
-        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 QC가 2건 이상 배정됨">배정 충돌</span>` : ''}
+        ${isDup ? '<span class="ad-badge ad-badge--warning" title="화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사 TC</span>' : ''}
+        ${rowHasConflict ? `<span class="ad-badge ad-badge--danger" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨">배정 충돌</span>` : ''}
         <div class="tc-card-controls">
         ${testerOptions}
         ${tabTester
@@ -2671,12 +2702,12 @@ function renderTable(){
         <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
         ${tabTester
           ? `<select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
-          <option value="">결과</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
+          <option value="">미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
         </select>`
           : resultLocked
-          ? `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 보기만 해요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '-')}</span>`
+          ? `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 보기만 해요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`
           : `<select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과">
-          ${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
+          <option value="" ${result ? '' : 'selected'}>미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
         </select>`}
         <button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
         </div>
@@ -2702,7 +2733,11 @@ function renderTable(){
       </div>
 
       <div class="tc-field-block">
-        <label class="tc-field-label">시험절차</label>
+        <label class="tc-field-label">전제조건<small>BO 설정 포함</small></label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="precondition">${escapeHtml(formatCircled(row.precondition))}</div>
+      </div>
+      <div class="tc-field-block">
+        <label class="tc-field-label">테스트 절차</label>
         <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="procedure">${escapeHtml(formatSteps(row.procedure))}</div>
       </div>
       <div class="tc-field-block">
@@ -2710,8 +2745,8 @@ function renderTable(){
         <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testDetail">${escapeHtml(formatSentences(row.testDetail))}</div>
       </div>
       <div class="tc-field-block">
-        <label class="tc-field-label">기대 결과</label>
-        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="expected">${escapeHtml(formatSentences(row.expected))}</div>
+        <label class="tc-field-label">기대결과</label>
+        <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="expected">${escapeHtml(formatCircled(row.expected))}</div>
       </div>
 
       <div class="tc-card-footer">
@@ -2725,7 +2760,7 @@ function renderTable(){
             const r = testerValue(row, n, 'tr'), st = testerValue(row, n, 'ts'), note = testerValue(row, n, 'tn');
             return `<div class="tester-note-row is-view">
             <span class="tester-note-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span>
-            <span class="tester-note-val">${r ? `<span class="dot" aria-hidden="true" style="background:${RESULT_COLOR[r]}"></span>${escapeHtml(r)}` : '<span class="sub-txt">결과 없음</span>'}</span>
+            <span class="tester-note-val">${r ? `<span class="dot" aria-hidden="true" style="background:${RESULT_COLOR[r]}"></span>${escapeHtml(r)}` : '<span class="sub-txt">미실행</span>'}</span>
             <span class="tester-note-val">${st ? escapeHtml(st) : '<span class="sub-txt">상태 없음</span>'}</span>
             <div class="tester-note-text">${note ? escapeHtml(note) : '<span class="sub-txt">아직 없어요</span>'}</div>
           </div>`;}).join('')
@@ -2743,7 +2778,7 @@ function renderTable(){
     el.setAttribute('role', 'textbox');
     const key = el.dataset.key, label = key.startsWith('tn:') ? `${key.slice(3)} 테스트 내역` : (columnLabel[key] || '');
     el.setAttribute('aria-label', `${tcData[+el.dataset.idx].tcId} ${label}`);
-    if(['procedure','testDetail','expected','testNote'].includes(key) || key.startsWith('tn:')) el.setAttribute('aria-multiline', 'true');
+    if(['precondition','procedure','testDetail','expected','testNote'].includes(key) || key.startsWith('tn:')) el.setAttribute('aria-multiline', 'true');
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
       tcData[idx][key] = el.textContent;
@@ -2796,6 +2831,7 @@ function renderTable(){
     sel.addEventListener('change', ()=>{
       const idx = +sel.dataset.idx;
       tcData[idx].screenType = sel.value;
+      renderTable(); // TC ID 접두사(FO/BO)도 바뀐다
       renderDistribution();
     });
   });
@@ -2812,7 +2848,7 @@ function renderTable(){
       renumberTcIds(); // 뒤 번호를 하나씩 앞당긴다
       renderTable();
       renderDistribution();
-      showUndoToast(`'${label}' QC를 삭제했어요. 뒤 번호는 하나씩 앞당겼어요.`, ()=>{
+      showUndoToast(`'${label}' 테스트 시나리오를 삭제했어요. 뒤 번호는 하나씩 앞당겼어요.`, ()=>{
         restoreRemovedItems(tcData, [{index: idx, row: removedRow}]);
         renumberTcIds();
         renderTable();
@@ -2976,7 +3012,7 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
   renumberTcIds(); // 남은 QC 번호를 1부터 빈칸 없이
   renderTable();
   renderDistribution();
-  showUndoToast(`${removed.length}개 QC를 삭제했어요. 번호를 다시 매겼어요.`, ()=>{
+  showUndoToast(`${removed.length}개 테스트 시나리오를 삭제했어요. 번호를 다시 매겼어요.`, ()=>{
     restoreRemovedItems(tcData, removed);
     renumberTcIds();
     renderTable();
@@ -2988,8 +3024,8 @@ document.getElementById('addRowBtn').addEventListener('click', async ()=>{
   const [tcId] = await allocateTcIds(1, currentTcName());
   tcData.push({
     tcId, screenType: 'FO', screen:'', category:'', subCategory:'', procedure:'',
-    testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: '',
-    testNote:'', result:'N/A', status:'작성중'
+    precondition:'', testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: '',
+    testNote:'', result:'', status:'작성중'
   });
   if(canRenumberAfterCreate()) renumberTcIds();
   renderTable();
@@ -3007,35 +3043,38 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
   renderTable();
 });
 
-/* ---------- QC 통계 ---------- */
-/* 통계 표(업무 보고 표 모양): 행 = 결과, 열 = 담당 테스터마다 · 미배정 · 합계 (순수 함수)
-   테스터 열은 그 테스터의 값(testerValue), 미배정 열은 담당자 없는 QC의 행 값, 합계 열은 대표 값(effectiveResult·effectiveStatus) */
-const STAT_ROWS = [['PASS', ['PASS']], ['MINOR', ['MINOR']], ['MAJOR', ['MAJOR']], ['FATAL·CRITICAL', ['FATAL', 'CRITICAL']], ['N/A', ['N/A']]];
+/* ---------- 테스트 시나리오 통계 ---------- */
+/* 통계 표(TC 결과 보고 양식): 행 = 총 TC·Pass·Fail·N/A·Block·미실행·진행률·결함률, 열 = 전체 · 담당 테스터마다 · 미배정 (순수 함수)
+   Fail = MINOR+MAJOR+CRITICAL+FATAL, 미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/실행(실행 0이면 0.0%).
+   전체 열은 대표 값(effectiveResult), 테스터 열은 그 테스터의 값(testerValue), 미배정 열은 담당자 없는 TC의 행 값 */
+const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
+const STAT_ROWS = ['총 TC', 'Pass', 'Fail', 'N/A', 'Block', '미실행', '진행률', '결함률'];
+const pct1 = (a, b)=>`${(b ? a / b * 100 : 0).toFixed(1)}%`;
 function qcStatTable(rows, testers){
-  const col = (label, list, resultOf, statusOf)=>({
-    label, n: list.length,
-    counts: STAT_ROWS.map(([, keys])=>list.filter(r=>keys.includes(resultOf(r))).length),
-    donePct: list.length ? Math.round(list.filter(r=>statusOf(r) === '완료').length / list.length * 100) : 0
-  });
-  const cols = (testers || []).map(n=>col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'), r=>testerValue(r, n, 'ts')));
-  cols.push(col('미배정', rows.filter(r=>!assigneesOf(r).length), r=>r.result, r=>r.status));
-  cols.push(col('합계', rows, effectiveResult, effectiveStatus));
-  return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length, rows: STAT_ROWS.map(([label])=>label), cols };
+  const col = (label, list, resultOf)=>{
+    const rs = list.map(r=>resultOf(r) || '');
+    const n = k=>rs.filter(v=>k.includes(v)).length;
+    const total = rs.length, none = n(['']), fail = n(FAIL_RESULTS), run = total - none;
+    return { label, values: [total, n(['PASS']), fail, n(['N/A']), n(['BLOCK']), none, pct1(run, total), pct1(fail, run)] };
+  };
+  const cols = [col('전체', rows, effectiveResult)];
+  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'))));
+  cols.push(col('미배정', rows.filter(r=>!assigneesOf(r).length), r=>r.result));
+  return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length, rows: STAT_ROWS, cols };
 }
 function renderDistribution(){
-  scheduleAutoSave(); // QC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
-  document.getElementById('distEmpty').hidden = !!tcData.length; // QC가 없으면 표 대신 안내 문구
+  scheduleAutoSave(); // TC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
+  document.getElementById('distEmpty').hidden = !!tcData.length; // TC가 없으면 표 대신 안내 문구
   document.getElementById('distWrap').hidden = !tcData.length;
   if(!tcData.length) return;
   const testers = Array.from(new Set([...activeTesters(), ...tcData.flatMap(testersOf)]));
   const t = qcStatTable(tcData, testers);
-  const td = (v, cls = '')=>`<td class="${v === 0 || v === '0%' ? 'is-zero ' : ''}${cls}">${v}</td>`;
+  const tone = ['', 'is-pass', 'is-fail', '', '', '', 'is-pass', 'is-fail']; // Pass·진행률 초록, Fail·결함률 빨강
   document.getElementById('distWrap').innerHTML =
-    `<p class="stat-caption">전체 QC ${t.total}건 · FO ${t.fo} · BO ${t.bo}</p>
+    `<p class="stat-caption">FO ${t.fo} · BO ${t.bo}</p>
     <div class="qc-stat-scroll"><table class="qc-stat-table">
-      <thead><tr><th scope="col">구분</th>${t.cols.map(c=>`<th scope="col"${c.label === '합계' ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}${c.label !== '합계' ? `<small>${c.n}건</small>` : ''}</th>`).join('')}</tr></thead>
-      <tbody>${t.rows.map((label, i)=>`<tr><th scope="row">${label}</th>${t.cols.map(c=>td(c.counts[i], (c.label === '합계' ? 'is-sum ' : '') + (label === 'FATAL·CRITICAL' && c.counts[i] ? 'is-alert' : ''))).join('')}</tr>`).join('')}
-        <tr><th scope="row">완료율</th>${t.cols.map(c=>td(`${c.donePct}%`, c.label === '합계' ? 'is-sum' : '')).join('')}</tr></tbody>
+      <thead><tr><th scope="col">구분</th>${t.cols.map((c, i)=>`<th scope="col"${i === 0 ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
+      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${tone[r]}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
 }
 /* ---------- Export helpers ---------- */
@@ -3211,10 +3250,10 @@ function qcSheetSections(rows){
   return sections;
 }
 function addQcListSheet(workbook, rows, title){
-  const ws = workbook.addWorksheet('QC 리스트');
+  const ws = workbook.addWorksheet('테스트 시나리오 리스트');
   const testerGroups = activeTesters().slice(); // 지금 보이는 테스터(편집 중인 프로젝트의 테스터)만큼 개별 컬럼 블록 생성
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
-  const BASE_COLS = 7; // QC ID~기대 결과
+  const BASE_COLS = 8; // TC ID~기대결과
   const totalCols = 1 + BASE_COLS + groupCount * 4; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
 
@@ -3226,7 +3265,7 @@ function addQcListSheet(workbook, rows, title){
     + RESULT_OPTIONS.map(o=>`${o} ${counts[o]}건`).join(' / ');
 
   // 열 너비 (A열은 여백)
-  const widths = [3, 10, 9, 18, 22, 60, 50, 50];
+  const widths = [3, 14, 9, 18, 22, 40, 50, 50, 50];
   for(let g = 0; g < groupCount; g++){ widths.push(10, 22, 10, 16); }
   widths.forEach((w,i)=>{ ws.getColumn(i+1).width = w; });
 
@@ -3259,7 +3298,7 @@ function addQcListSheet(workbook, rows, title){
   ws.getRow(3).height = 20;
 
   // 4행: 컬럼 헤더 (2열은 값이 FO/BO라서 "유형")
-  const headerLabels = ['QC ID', '유형', '시험항목\n(대분류)', '시험항목\n(중분류)', '시험 절차', '시험 내역', '기대 결과'];
+  const headerLabels = ['TC ID', '유형', '시험항목\n(대분류)', '시험항목\n(중분류)', '전제조건\n(BO 설정 포함)', '테스트 절차', '시험 내역', '기대결과'];
   headerLabels.forEach((label, i)=>{
     const cell = ws.getCell(4, 2 + i);
     cell.value = label;
@@ -3286,7 +3325,7 @@ function addQcListSheet(workbook, rows, title){
     rowNum++;
     sec.rows.forEach(r=>{
       const baseVals = [r.tcId, r.screenType, r.category, r.subCategory,
-        formatSteps(r.procedure), formatSentences(r.testDetail), formatSentences(r.expected)];
+        formatCircled(r.precondition), formatSteps(r.procedure), formatSentences(r.testDetail), formatCircled(r.expected)];
       baseVals.forEach((v, i)=>{
         const cell = ws.getCell(rowNum, 2 + i);
         cell.value = v || '';
@@ -3320,26 +3359,36 @@ function addQcListSheet(workbook, rows, title){
   return ws;
 }
 
-// 엑셀 가져오기: addQcListSheet가 만든 시트(4행 열 머리 "QC ID", 구분 행 "[FO] …", 데이터 행)를 QC 행으로 읽는다 (순수 함수)
-// grid: 시트 칸 글자, grid[행][열](0부터, A열 = 0). B~H = QC ID·유형·대분류·중분류·시험 절차·시험 내역·기대 결과,
-// I~L = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
+// 엑셀 가져오기: addQcListSheet가 만든 시트(열 머리 "TC ID"(예전 "QC ID"), 구분 행 "[FO] …", 데이터 행)를 TC 행으로 읽는다 (순수 함수)
+// grid: 시트 칸 글자, grid[행][열](0부터, A열 = 0). 기본 칸은 열 머리 이름으로 찾는다(전제조건 열이 없는 예전 파일도 읽힌다).
+// 첫 "테스터" 열부터 4칸 = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
 // 테스터별 블록에 적힌 값은 그 테스터의 칸(tn:이름·tr:이름, 비고가 진행상태 값이면 ts:이름)으로도 읽는다.
 function parseQcSheet(grid){
-  const head = (grid || []).findIndex(r=>String((r || [])[1] || '').trim() === 'QC ID');
+  const head = (grid || []).findIndex(r=>/^(TC|QC) ID$/.test(String((r || [])[1] || '').trim()));
   if(head < 0) return null;
   const cell = (r, c)=>String(r[c] == null ? '' : r[c]).trim();
+  const col = { tcId: 1, screenType: 2, category: 3, subCategory: 4 };
+  let agg = -1;
+  (grid[head] || []).forEach((h, c)=>{
+    const t = String(h == null ? '' : h).replace(/\s+/g, ' ').trim();
+    if(agg >= 0 || c < 5) return;
+    if(t === '테스터'){ agg = c; return; }
+    const key = /전제/.test(t) ? 'precondition' : /절차/.test(t) ? 'procedure' : /내역/.test(t) ? 'testDetail' : /기대/.test(t) ? 'expected' : '';
+    if(key && col[key] == null) col[key] = c;
+  });
+  if(agg < 0) agg = 8;
   const rows = [];
   for(let i = head + 1; i < grid.length; i++){
     const r = grid[i] || [];
     const tcId = cell(r, 1);
     if(!TC_ID_RE.test(tcId)) continue; // 구분 행·빈 행
-    let tester = cell(r, 8), testNote = cell(r, 9), result = cell(r, 10).toUpperCase();
-    for(let c = 12; c < r.length && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
+    let tester = cell(r, agg), testNote = cell(r, agg + 1), result = cell(r, agg + 2).toUpperCase();
+    for(let c = agg + 4; c < r.length && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
       if(!testNote && cell(r, c + 1)) testNote = cell(r, c + 1);
       if(!result && cell(r, c + 2)){ result = cell(r, c + 2).toUpperCase(); if(!tester) tester = cell(r, c); }
     }
     const perTester = {};
-    for(let c = 12; c < r.length; c += 4){
+    for(let c = agg + 4; c < r.length; c += 4){
       const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3);
       if(!name) continue;
       if(note) perTester['tn:' + name] = note;
@@ -3347,18 +3396,23 @@ function parseQcSheet(grid){
       if(STATUS_OPTIONS.includes(st)) perTester['ts:' + name] = st;
     }
     rows.push({
-      tcId, screenType: cell(r, 2).toUpperCase() === 'BO' ? 'BO' : 'FO', category: cell(r, 3), subCategory: cell(r, 4),
-      procedure: cell(r, 5), testDetail: cell(r, 6), expected: cell(r, 7),
-      tester, testNote, result: RESULT_OPTIONS.includes(result) ? result : 'N/A', ...perTester
+      tcId, screenType: cell(r, col.screenType).toUpperCase() === 'BO' ? 'BO' : 'FO', category: cell(r, col.category), subCategory: cell(r, col.subCategory),
+      ...(col.precondition != null ? { precondition: cell(r, col.precondition) } : {}),
+      procedure: col.procedure != null ? cell(r, col.procedure) : '', testDetail: col.testDetail != null ? cell(r, col.testDetail) : '', expected: col.expected != null ? cell(r, col.expected) : '',
+      tester, testNote, result: RESULT_OPTIONS.includes(result) ? result : '', ...perTester // 결과가 비었거나 모르는 값이면 미실행
     });
   }
   return rows;
 }
 // 가져온 행을 지금 QC 리스트에 맞춘다: 같은 QC ID는 기존 행(동기화 정보·화면 구분·태그·진행상태)을 두고 엑셀 값만 바꾼다 (순수 함수)
+// 같은 TC = 번호와 이름이 같음(접두사 FO·BO·예전 QC-는 달라도 된다)
+function tcKeyOf(tcId){
+  return tcNumberOf(tcId) + ':' + tcNameOf(tcId);
+}
 function mergeExcelRows(current, imported){
-  const byId = new Map((current || []).map(r=>[r.tcId, r]));
+  const byId = new Map((current || []).map(r=>[tcKeyOf(r.tcId), r]));
   return imported.map(r=>{
-    const old = byId.get(r.tcId);
+    const old = byId.get(tcKeyOf(r.tcId));
     return old ? { ...old, ...r } : { screen: '', constraintTag: '없음', integrationTag: '없음', status: '작성중', ...r };
   });
 }
@@ -3368,17 +3422,17 @@ async function handleExcelImportFile(file){
   try{
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(await file.arrayBuffer());
-    const ws = wb.getWorksheet('QC 리스트') || wb.worksheets[0];
+    const ws = wb.getWorksheet('테스트 시나리오 리스트') || wb.worksheets[0];
     const grid = [];
     if(ws) ws.eachRow({ includeEmpty: true }, (row, n)=>{ grid[n - 1] = Array.from({ length: ws.columnCount }, (_, c)=>row.getCell(c + 1).text); });
     rows = parseQcSheet(grid);
   }catch(e){ showGlobalError(`엑셀 파일을 읽지 못했어요(${e.message}). .xlsx 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
-  if(!rows || !rows.length){ showGlobalError('엑셀에서 QC 리스트를 찾지 못했어요. 이 도구의 내보내기 > EXCEL로 만든 파일인지 확인해주세요.'); return; }
-  const same = rows.filter(r=>tcData.some(t=>t.tcId === r.tcId)).length;
+  if(!rows || !rows.length){ showGlobalError('엑셀에서 테스트 시나리오 리스트를 찾지 못했어요. 이 도구의 내보내기 > EXCEL로 만든 파일인지 확인해주세요.'); return; }
+  const same = rows.filter(r=>tcData.some(t=>tcKeyOf(t.tcId) === tcKeyOf(r.tcId))).length;
   const ok = await openDialog({
     title: '엑셀 가져오기',
-    body: `파일: ${file.name}\n엑셀에서 QC ${rows.length}건을 찾았어요. 지금 QC 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
-      + `QC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`,
+    body: `파일: ${file.name}\n엑셀에서 TC ${rows.length}건을 찾았어요. 지금 테스트 시나리오 리스트(${tcData.length}건)를 이 내용으로 바꿀까요?\n`
+      + `TC ID가 같은 ${same}건은 결과·테스터·테스트 내역 등 엑셀 값으로 고치고, 화면 구분·태그·진행상태는 그대로 둬요.`,
     okLabel: '가져오기'
   });
   if(ok === null) return false;
@@ -3392,7 +3446,7 @@ async function handleExcelImportFile(file){
     syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
   };
   apply(normalizeTcIds(mergeExcelRows(tcData, rows)));
-  showUndoToast(`엑셀에서 QC ${rows.length}건을 가져왔어요.`, ()=>apply(before));
+  showUndoToast(`엑셀에서 TC ${rows.length}건을 가져왔어요.`, ()=>apply(before));
   return true;
 }
 
@@ -3414,7 +3468,7 @@ function currentHistoryEntry(){
   };
 }
 /* ---------- 실시간 저장 ----------
-   QC를 고치면 0.3초 뒤(잇따른 수정은 모아서) 바로 저장한다.
+   테스트 시나리오를 고치면 0.3초 뒤(잇따른 수정은 모아서) 바로 저장한다.
    1) 열려 있는 프로젝트(loadedHistoryId)의 저장본에도 반영한다(예전에는 엑셀로 내보낼 때만 저장돼, 다른 프로젝트로 갔다 오면 수정이 사라졌다)
    2) 이 브라우저 임시저장, 3) 팀 동기화 중이면 1초 비교를 기다리지 않고 서버로 보낸다
    내용이 같으면 쓰지 않는다(여러 팀원이 같은 프로젝트를 보고 있어도 서로 계속 덮어쓰지 않게)
@@ -3454,7 +3508,7 @@ function renderShareBox(){
   if(document.activeElement === shareInput) return;
   const p = editingProject();
   shareInput.value = p ? (p.share || '') : pendingShare;
-  document.getElementById('shareMeta').textContent = p ? `프로젝트마다 따로 · 실시간 저장 · 마지막 수정 ${p.date || '-'}` : '프로젝트마다 따로 · QC가 생기면 저장돼요';
+  document.getElementById('shareMeta').textContent = p ? `프로젝트마다 따로 · 실시간 저장 · 마지막 수정 ${p.date || '-'}` : '프로젝트마다 따로 · 테스트 시나리오가 생기면 저장돼요';
 }
 shareInput.addEventListener('input', ()=>{
   const p = editingProject();
@@ -3542,7 +3596,7 @@ function tryRestoreDraft(){
 
   const banner = document.getElementById('draftRestoreBanner');
   document.getElementById('draftRestoreMsg').textContent =
-    `이전에 마치지 못한 작업이 남아 있습니다 (QC ${savedTc.length}건). 이어서 작업하시겠어요?`;
+    `이전에 마치지 못한 작업이 남아 있습니다 (TC ${savedTc.length}건). 이어서 작업하시겠어요?`;
   banner.style.display = 'block';
 
   document.getElementById('draftRestoreYesBtn').addEventListener('click', ()=>{
@@ -3556,7 +3610,7 @@ function tryRestoreDraft(){
   document.getElementById('draftRestoreNoBtn').addEventListener('click', ()=>{
     clearDraft();
     banner.style.display = 'none';
-    showUndoToast(`임시저장(QC ${savedTc.length}건)을 삭제했습니다.`, ()=>{
+    showUndoToast(`임시저장(TC ${savedTc.length}건)을 삭제했습니다.`, ()=>{
       try{ localStorage.setItem('cvt_tc_draft', JSON.stringify(savedTc)); }catch(e){ /* ignore */ }
       tryRestoreDraft();
     });
@@ -3696,7 +3750,7 @@ function addProjectCategory(){
 function openProjectManage(cat){
   setProjModalMode(cat);
   const n = filterByCategory(historyList, cat).length;
-  document.getElementById('projManageInfo').innerHTML = `<b>${escapeHtml(cat)}</b><span class="sub-txt">QC 프로젝트 ${n}건</span>`;
+  document.getElementById('projManageInfo').innerHTML = `<b>${escapeHtml(cat)}</b><span class="sub-txt">테스트 시나리오 프로젝트 ${n}건</span>`;
   if(!projAddModal.open) projAddModal.showModal();
   document.getElementById('projDelBtn').focus();
 }
@@ -3712,7 +3766,7 @@ async function deleteProjectCategory(cat){
   saveCategoryLists();
   await saveHistory();
   goRoute({ view: 'main' }); // 첫 탭(프로젝트가 있는 첫 분류)으로
-  showUndoToast(`'${cat}' 프로젝트${removed.length ? `와 QC 프로젝트 ${removed.length}건` : ''}을 삭제했어요.`, async ()=>{
+  showUndoToast(`'${cat}' 프로젝트${removed.length ? `와 테스트 시나리오 프로젝트 ${removed.length}건` : ''}을 삭제했어요.`, async ()=>{
     restoreRemovedItems(historyList, removed);
     addedCategories = prevAdded; hiddenCategories = prevHidden;
     if(loadedRemoved){ switchProject(loadedRemoved.row); renderTable(); }
@@ -3724,7 +3778,7 @@ async function deleteProjectCategory(cat){
 document.getElementById('projDelBtn').addEventListener('click', ()=>{
   const cat = projManageCat, n = filterByCategory(historyList, cat).length;
   const box = document.getElementById('projConfirm');
-  box.innerHTML = `<div class="proj-confirm"><span>'${escapeHtml(cat)}' 프로젝트${n ? `와 그 안의 QC 프로젝트 ${n}건` : ''}을 삭제할까요?</span><button type="button" class="ad-btn ad-btn--danger" id="projDelYes">삭제</button><button type="button" class="ad-btn ad-btn--ghost" id="projDelNo">취소</button></div>`;
+  box.innerHTML = `<div class="proj-confirm"><span>'${escapeHtml(cat)}' 프로젝트${n ? `와 그 안의 테스트 시나리오 프로젝트 ${n}건` : ''}을 삭제할까요?</span><button type="button" class="ad-btn ad-btn--danger" id="projDelYes">삭제</button><button type="button" class="ad-btn ad-btn--ghost" id="projDelNo">취소</button></div>`;
   document.getElementById('projDelNo').addEventListener('click', ()=>{ box.innerHTML = ''; document.getElementById('projDelBtn').focus(); });
   document.getElementById('projDelYes').addEventListener('click', ()=>{ projAddModal.close(); deleteProjectCategory(cat); });
   document.getElementById('projDelYes').focus();
@@ -3800,7 +3854,7 @@ function renderCategoryTabs(){
   const cur = currentRoute.cat;
   if(cur && !stats.some(s=>s.cat === cur)) stats.push({ cat: cur, projects: 0, qc: 0 }); // 다른 브라우저에서 추가한 분류·빈 미분류로 들어와도 보이게
   const nav = document.getElementById('projectCategoryTabs');
-  nav.innerHTML = stats.map(s=>`<span class="cat-tab-wrap"><button type="button" class="cat-tab category-tab" data-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)} (프로젝트 ${s.projects}개 · QC ${s.qc}건)"${s.cat === cur ? ' aria-current="page"' : ''}>${escapeHtml(s.cat)}<span class="count">${s.projects}</span></button>`
+  nav.innerHTML = stats.map(s=>`<span class="cat-tab-wrap"><button type="button" class="cat-tab category-tab" data-cat="${escapeHtml(s.cat)}" title="${escapeHtml(s.cat)} (프로젝트 ${s.projects}개 · TC ${s.qc}건)"${s.cat === cur ? ' aria-current="page"' : ''}>${escapeHtml(s.cat)}<span class="count">${s.projects}</span></button>`
     + (s.cat === UNCATEGORIZED ? '' : `<button type="button" class="cat-tab__more" data-cat-more="${escapeHtml(s.cat)}" aria-label="${escapeHtml(s.cat)} 프로젝트 관리" title="프로젝트 관리(삭제)">⋯</button>`) + '</span>').join('');
   nav.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click', ()=>goRoute({ view: 'cat', cat: b.dataset.cat })));
   nav.querySelectorAll('[data-cat-more]').forEach(b=>b.addEventListener('click', ()=>openProjectManage(b.dataset.catMore)));
@@ -3875,7 +3929,7 @@ function renderHistory(){
     return `<div class="history-item${isEditing ? ' is-editing' : ''}" data-open="${idx}" tabindex="0" title="눌러서 프로젝트 열기">
       <div class="meta">
         <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
-        <div class="date">${escapeHtml(h.date)} · QC ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
+        <div class="date">${escapeHtml(h.date)} · TC ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
         <div class="history-mini-bar">${bar}</div>
       </div>
       <div class="history-actions">
@@ -4034,7 +4088,7 @@ function rowDataOf(row){
 // 서버 행(tc_no + data) → 화면 행
 function rowFromServer(id, tcNo, data){
   const { tcName, ...rest } = data || {};
-  return { ...rest, tcId: formatTcId(tcNo, tcName), _id: id };
+  return { ...rest, tcId: formatTcId(tcNo, tcName, rest.screenType), _id: id };
 }
 function historyDataOf(entry){
   const { _id, ...rest } = entry;
@@ -4161,7 +4215,7 @@ async function insertTcRows(rows){
 let syncRenumbered = 0;
 function renumberLocalRow(id, no){
   const row = tcData.find(x=>x._id === id);
-  if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId));
+  if(row) row.tcId = formatTcId(no, tcNameOf(row.tcId), row.screenType);
   const sh = syncShadow.rows.get(id) || otherRows.get(id); // 저장하는 사이 다른 프로젝트로 옮겼으면 그쪽 행
   if(sh) sh.tc_no = no;
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, no);
@@ -4204,7 +4258,7 @@ async function sendSyncOp(op){
 
 // 서버에 프로젝트별 QC 리스트 설정(SQL 11번)이 없으면 동기화를 멈추고 안내만 한다.
 // (보내면 매번 거절돼 "건너뜀 → 다시 불러오기 → 또 거절"이 반복되고, 헤더 안내가 계속 바뀌었다)
-const SYNC_SCHEMA_MSG = '서버에 프로젝트별 QC 리스트 설정이 아직 없어요(supabase_schema.sql 11번). Supabase SQL Editor에서 실행한 뒤 새로고침해주세요. 그 전에는 고친 내용이 서버에 저장되지 않아요.';
+const SYNC_SCHEMA_MSG = '서버에 프로젝트별 테스트 시나리오 리스트 설정이 아직 없어요(supabase_schema.sql 11번). Supabase SQL Editor에서 실행한 뒤 새로고침해주세요. 그 전에는 고친 내용이 서버에 저장되지 않아요.';
 const isSchemaMissingError = err => /project|allocate_cvt_tc_nos/i.test(err.message || '') && /PGRST20[0-9]|42703|42883/.test(err.code || '');
 async function flushSyncQueue(){
   if(syncFlushing || !sb || !syncLoaded) return;
@@ -4238,7 +4292,7 @@ async function flushSyncQueue(){
     syncFlushing = false;
     const renumbered = syncRenumbered - renumberedBefore;
     if(renumbered){
-      syncConflictMsg = `다른 팀원과 QC 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
+      syncConflictMsg = `다른 팀원과 TC 번호가 겹친 ${renumbered}건은 새 번호로 바꿨습니다.`;
       afterRemoteApply();
     }
     renderSyncStatus();
@@ -4544,9 +4598,9 @@ function validateBackup(d){
     if(!Array.isArray(d[k])) return `백업 파일에 ${k} 목록이 없어요.` + next;
   }
   const bad = d.tcData.findIndex(r=>!r || typeof r !== 'object' || !tcNumberOf(r.tcId));
-  if(bad > -1) return `QC ${bad + 1}번째 행의 QC ID가 올바르지 않아요(QC-001 또는 QC-이름-001 형식이어야 해요).` + next;
+  if(bad > -1) return `TC ${bad + 1}번째 행의 TC ID가 올바르지 않아요(FO-001 또는 FO-이름-001 형식이어야 해요).` + next;
   const ids = d.tcData.map(r=>r.tcId);
-  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 QC ID가 두 번 이상 들어 있어요.' + next;
+  if(new Set(ids).size !== ids.length) return '백업 파일에 같은 TC ID가 두 번 이상 들어 있어요.' + next;
   if(d.historyList.some(h=>!h || typeof h !== 'object' || !Array.isArray(h.snapshot))) return '프로젝트 항목 중 형식이 올바르지 않은 것이 있어요.' + next;
   if(d.testerList.some(n=>typeof n !== 'string' || !n.trim())) return '테스터 목록에 이름이 아닌 값이 있어요.' + next;
   return '';
@@ -4583,13 +4637,13 @@ function formatExportedAt(iso){
 async function offerImport(data, fileName){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
-  const count = (t, h, n) => `QC ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
+  const count = (t, h, n) => `TC ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
   const merged = mergeImportedHistory(historyList, data.historyList);
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: (fileName ? `파일: ${fileName}${data.exportedAt ? ` (내보낸 시각 ${formatExportedAt(data.exportedAt)})` : ''}\n` : '')
       + `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `QC ${data.tcData.length}건은 새 프로젝트로 열고, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
+      + `TC ${data.tcData.length}건은 새 프로젝트로 열고, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
       + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
       + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : ''),
     okLabel: '가져오기'
@@ -4681,8 +4735,8 @@ async function openSharedProjectOnce(){
 }
 
 /* ---------- 화면 이동: 분류 → 프로젝트 ----------
-   주소: #/c/분류 (그 분류의 프로젝트 목록), #/c/분류/p/프로젝트ID (QC 생성·리스트, 아직 내보내지 않은 프로젝트는 new).
-   QC 리스트는 여전히 하나(지금 작업 중인 리스트)이고, 화면 전환은 보이는 영역만 바꾼다. */
+   주소: #/c/분류 (그 분류의 프로젝트 목록), #/c/분류/p/프로젝트ID (테스트 시나리오 생성·리스트, 아직 내보내지 않은 프로젝트는 new).
+   테스트 시나리오 리스트는 여전히 하나(지금 작업 중인 리스트)이고, 화면 전환은 보이는 영역만 바꾼다. */
 // 주소의 해시 → 화면. 주소가 없거나 형식이 틀리면 {view:'main'}(기본 분류로 연다) (순수 함수)
 function parseRoute(hash){
   const m = /^#\/(?:c\/([^/]+)(?:\/p\/([^/]+))?)?$/.exec(hash || '');
