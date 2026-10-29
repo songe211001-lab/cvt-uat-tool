@@ -590,7 +590,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     min-height:auto;min-width:96px;padding:4px 8px;font-size:12.5px;line-height:1.4;
     background:var(--panel);border-color:var(--line);border-radius:var(--radius-xs);
   }
-  .tc-card-head .tc-editable[data-key="tester"]:empty::before{content:"담당자 미배정";color:var(--muted);}
+  .tc-card-head .tc-editable[data-key="tester"]:empty::before{content:"담당자 없음";color:var(--muted);}
   /* TC ID: 눌러서 고친다(버튼 모양은 숨기고 글자만) */
   .tc-card-head button.tc-id-badge{border:1px solid transparent;background:none;padding:2px 4px;margin:0 -4px;border-radius:4px;cursor:text;font-family:inherit;}
   .tc-card-head button.tc-id-badge:hover{border-color:var(--line);background:var(--bg);}
@@ -769,6 +769,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .qc-stat-table tbody th{min-width:96px;}
   .qc-stat-table .is-sum{font-weight:800;}
   .qc-stat-table td.is-pass{color:var(--result-pass);font-weight:700;}
+  .qc-stat-table tr.qc-stat-sec th{height:26px;text-align:left;font-size:12px;font-weight:700;color:var(--muted);background:var(--panel);}
   .qc-stat-table td.is-fail{color:var(--fatal-text);font-weight:700;}
   .tc-section-head h2{margin:0;}
   .tc-count-badge{
@@ -1014,9 +1015,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         </select>
         <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 테스트 시나리오 진행상태 일괄 변경">
           <option value="">진행상태 일괄 변경…</option>
-          <option value="작성중">작성중</option>
-          <option value="개발 검토중">개발 검토중</option>
           <option value="완료">완료</option>
+          <option value="테스트불가">테스트불가</option>
+          <option value="작성중">작성중</option>
+          <option value="개발 검토">개발 검토</option>
         </select>
         <button class="ad-btn ad-btn--sm" id="bulkClearBtn" type="button">선택 해제</button>
         <button class="ad-btn ad-btn--sm ad-btn--danger" id="bulkDeleteBtn" type="button">선택 삭제</button>
@@ -1314,7 +1316,8 @@ const RESULT_COLOR = {
 // QC 행의 결과 셀렉트는 글자색(style_content.html select.result-select[data-result])으로 구분하고,
 // 이 색(RESULT_COLOR)은 프로젝트 목록의 결과 막대에 쓴다.
 const SCREEN_TYPE_OPTIONS = ['FO','BO'];
-const STATUS_OPTIONS = ['작성중','개발 검토중','완료'];
+const STATUS_OPTIONS = ['완료','테스트불가','작성중','개발 검토']; // 고르는 순서(화면·통계 표)
+const STATUS_PROGRESS = ['작성중','개발 검토','테스트불가','완료']; // 진행 순서: 대표 진행상태는 가장 앞쪽(덜 진행된) 값
 
 // 도메인 특화 태그: 하루 1회 제한 액션 / 동일 회원에 결합 불가한(단독 실행 필요) 액션.
 // 같은 테스터(=보통 같은 테스트 계정/회원을 사용)에게 이런 태그가 붙은 TC가 여러 건 배정되면
@@ -1341,11 +1344,11 @@ function effectiveResult(row){
   if(!rs.length) return row ? row.result : undefined;
   return rs.reduce((w, r)=>RESULT_SEVERITY.indexOf(r) > RESULT_SEVERITY.indexOf(w) ? r : w);
 }
-// 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토중 < 완료). 없으면 행의 진행상태 (순수 함수)
+// 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토 < 테스트불가 < 완료). 없으면 행의 진행상태 (순수 함수)
 function effectiveStatus(row){
   const ss = assigneesOf(row).map(n=>row['ts:' + n]).filter(s=>STATUS_OPTIONS.includes(s));
   if(!ss.length) return row ? row.status : undefined;
-  return ss.reduce((w, s)=>STATUS_OPTIONS.indexOf(s) < STATUS_OPTIONS.indexOf(w) ? s : w);
+  return ss.reduce((w, s)=>STATUS_PROGRESS.indexOf(s) < STATUS_PROGRESS.indexOf(w) ? s : w);
 }
 // 테스터 n의 값(k = 'tr' 결과 | 'ts' 작성 상태 | 'tn' 테스트 내역). 담당자가 1명이고 그 칸이 아직 없으면 행의 값(예전 데이터) (순수 함수)
 function testerValue(row, n, k){
@@ -1376,7 +1379,7 @@ let testerList = [];
 let tcSearchQuery = '';
 let tcFilterType = 'ALL';
 let tcFilterResult = 'ALL';
-// 담당자 탭: 'ALL' | 'NONE'(미배정) | 담당자 이름. 이 브라우저에만 기억한다(cvt_tester_tab)
+// 담당자 탭: 'ALL' | 담당자 이름. 이 브라우저에만 기억한다(cvt_tester_tab)
 let tcFilterTester = (()=>{ try{ return localStorage.getItem('cvt_tester_tab') || 'ALL'; }catch(e){ return 'ALL'; } })();
 let selectedTcIds = new Set(); // 일괄 수정을 위해 선택된 tcData 인덱스가 아닌 tcId(행이 재배치돼도 안전)
 let expandedTcRows = new Set(); // 펼친 TC 행의 tcId 목록 (기본은 모두 접힌 한 줄 요약)
@@ -2612,6 +2615,7 @@ function tcTitleOf(row){
 }
 function renderTable(){
   syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
+  tcData.forEach(r=>Object.keys(r).forEach(k=>{ if((k === 'status' || k.startsWith('ts:')) && r[k] === '개발 검토중') r[k] = '개발 검토'; })); // 예전 작성 상태 이름
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
 
@@ -2621,7 +2625,7 @@ function renderTable(){
   const usedTesters = Array.from(new Set(tcData.flatMap(testersOf)));
   const testers = activeTesters();
   const testerOptionsForFilter = Array.from(new Set([...testers, ...usedTesters]));
-  if(tcFilterTester !== 'ALL' && tcFilterTester !== 'NONE' && !testerOptionsForFilter.includes(tcFilterTester)) tcFilterTester = 'ALL';
+  if(tcFilterTester !== 'ALL' && !testerOptionsForFilter.includes(tcFilterTester)) tcFilterTester = 'ALL';
   renderTesterTabs(testerOptionsForFilter);
 
   // 일괄 담당 추가/빼기 드롭다운
@@ -2649,7 +2653,7 @@ function renderTable(){
     .filter(({row})=>{
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
       if(tcFilterResult !== 'ALL' && (effectiveResult(row) || '') !== tcFilterResult) return false;
-      if(tcFilterTester === 'NONE' ? testersOf(row).length : (tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester))) return false;
+      if(tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester)) return false;
       if(tcSearchQuery){
         const hay = [row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
           .join(' ').toLowerCase();
@@ -2686,15 +2690,12 @@ function renderTable(){
     // 대표 결과·진행상태(담당 테스터 값 중 가장 심각한 결과, 가장 덜 진행된 상태). N/A가 아니면 카드 테두리·테스트 내역 박스를 그 결과 색으로
     const result = effectiveResult(row);
     const status = STATUS_OPTIONS.includes(effectiveStatus(row)) ? effectiveStatus(row) : '작성중';
-    // 담당자 탭별 화면: 테스터 탭 = 그 테스터의 줄만 입력, 전체 탭 = 보기만, 미배정 탭 = 행 하나의 결과·진행상태·테스트 내역 입력
-    const tabTester = tcFilterTester !== 'ALL' && tcFilterTester !== 'NONE' && assigned.includes(tcFilterTester) ? tcFilterTester : null;
-    const rowEditable = tcFilterTester === 'NONE';
-    const resultLocked = !rowEditable;
-    const statusLocked = !rowEditable && (!!tabTester || assigned.some(n=>STATUS_OPTIONS.includes(row['ts:' + n])));
+    // 담당자 탭별 화면: 테스터 탭 = 그 테스터의 줄만 입력, 전체 탭 = 보기만(결과·작성 상태는 담당자를 지정해 그 테스터 탭에서 입력)
+    const tabTester = tcFilterTester !== 'ALL' && assigned.includes(tcFilterTester) ? tcFilterTester : null;
     const ownResult = tabTester ? testerValue(row, tabTester, 'tr') : '', ownStatus = tabTester ? testerValue(row, tabTester, 'ts') : '';
     paintResult(card, tabTester ? ownResult : result);
     const testerOptions = testers.length
-      ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '미배정')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '미배정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
+      ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '없음')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '담당자 지정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
       : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tester">${escapeHtml(row.tester)}</div>`;
 
     const dupKey = `${(row.screen||'').trim().toLowerCase()}|${(row.category||'').trim().toLowerCase()}`;
@@ -2722,21 +2723,13 @@ function renderTable(){
           ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
           <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===ownStatus?'selected':''}>${o}</option>`).join('')}
         </select>`
-          : statusLocked || tcFilterTester === 'ALL'
-          ? `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '진행상태는 미배정 탭에서 바꿔요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`
-          : `<select class="status-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 진행상태">
-          ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===status?'selected':''}>${o}</option>`).join('')}
-        </select>`}
+          : `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '담당자를 지정하면 그 테스터 탭에서 작성 상태를 골라요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`}
         <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
         ${tabTester
           ? `<select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
           <option value="">미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
         </select>`
-          : resultLocked
-          ? `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="${tcFilterTester === 'ALL' ? '전체 탭에서는 결과를 보기만 해요. 담당자 탭(미배정이면 미배정 탭)에서 입력해요' : '테스터별 결과 중 가장 심각한 결과예요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`
-          : `<select class="result-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 결과">
-          <option value="" ${result ? '' : 'selected'}>미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===result?'selected':''}>${o}</option>`).join('')}
-        </select>`}
+          : `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         <button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button>
         </div>
       </div>
@@ -2792,8 +2785,7 @@ function renderTable(){
             <span class="tester-note-val">${st ? escapeHtml(st) : '<span class="sub-txt">상태 없음</span>'}</span>
             <div class="tester-note-text">${note ? escapeHtml(note) : '<span class="sub-txt">아직 없어요</span>'}</div>
           </div>`;}).join('')
-          : tcFilterTester === 'ALL' ? `<div class="tester-note-text">${row.testNote ? escapeHtml(row.testNote) : '<span class="sub-txt">아직 없어요. 미배정 탭에서 입력해요</span>'}</div>`
-          : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testNote" data-placeholder="테스트하면서 확인한 내용을 적어주세요">${escapeHtml(row.testNote)}</div>`}
+          : `<div class="tester-note-text">${row.testNote ? escapeHtml(row.testNote) : '<span class="sub-txt">아직 없어요. 담당자를 지정하면 그 테스터 탭에서 입력해요</span>'}</div>`}
         </div>
       </div>
       </div>
@@ -2857,15 +2849,6 @@ function renderTable(){
       if(willCollapse) expandedTcRows.delete(tcId); else expandedTcRows.add(tcId);
     });
   });
-  list.querySelectorAll('.result-select').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
-      tcData[idx].result = sel.value;
-      sel.previousElementSibling.style.background = RESULT_COLOR[sel.value];
-      paintResult(sel.closest('.tc-card'), sel.value);
-      renderDistribution();
-    });
-  });
   // 테스터별 결과·작성 상태: 그 테스터의 칸에만 쓰고, 행의 결과·진행상태는 대표 값으로 맞춘다(카드 머리·통계·테두리 색이 바뀌므로 다시 그린다)
   list.querySelectorAll('.tester-result-select, .tester-status-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
@@ -2875,13 +2858,6 @@ function renderTable(){
       row.status = effectiveStatus(row);
       renderTable();
       renderDistribution();
-    });
-  });
-  list.querySelectorAll('.status-select').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
-      tcData[idx].status = sel.value;
-      renderDistribution(); // 완료율
     });
   });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
@@ -2973,14 +2949,13 @@ document.getElementById('bulkTesterRemove').addEventListener('change', (e)=>{
   renderTable();
 });
 
-// 담당자별 탭: 전체 / 담당자마다 / 미배정. "건수 · 완료 n"을 보인다(여러 명에게 배정된 QC는 각 탭에 모두 나온다)
+// 담당자별 탭: 전체 / 담당자마다. "건수 · 완료 n"을 보인다(여러 명에게 배정된 QC는 각 탭에 모두 나온다)
 function renderTesterTabs(names){
   const wrap = document.getElementById('testerTabs');
   if(!wrap) return;
   const stat = (rows, done)=>`<span class="count">${rows.length} · 완료 ${rows.filter(done).length}</span>`;
   const tabs = [['ALL', '전체', tcData, r=>effectiveStatus(r) === '완료'],
-    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료', roleTag(n)]),
-    ['NONE', '미배정', tcData.filter(r=>!testersOf(r).length), r=>r.status === '완료']];
+    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료', roleTag(n)])];
   wrap.innerHTML = tabs.map(([v, label, rows, done, tag = ''])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${tag}${stat(rows, done)}</button>`).join('');
   wrap.querySelectorAll('[data-tester]').forEach(b=>b.addEventListener('click', ()=>{
     tcFilterTester = b.dataset.tester;
@@ -3101,22 +3076,21 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 });
 
 /* ---------- 테스트 시나리오 통계 ---------- */
-/* 통계 표(TC 결과 보고 양식): 행 = 총 TC·Pass·Fail·N/A·Block·미실행·진행률·결함률, 열 = 전체 · 담당 테스터마다 · 미배정 (순수 함수)
-   Fail = MINOR+MAJOR+CRITICAL+FATAL, 미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/실행(실행 0이면 0.0%).
-   전체 열은 대표 값(effectiveResult), 테스터 열은 그 테스터의 값(testerValue), 미배정 열은 담당자 없는 TC의 행 값 */
+/* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 작성 상태(리스트의 작성 상태 값 순서) · 진행률 · 결함률, 열 = 전체 · 담당 테스터마다 (순수 함수)
+   미실행 = 결과 없음, 작성 상태가 없으면 작성중, 진행률 = 실행(총-미실행)/총, 결함률 = (MINOR·MAJOR·CRITICAL·FATAL)/실행(실행 0이면 0.0%).
+   전체 열은 대표 값(effectiveResult·effectiveStatus), 테스터 열은 그 테스터의 값(testerValue) */
 const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
-const STAT_ROWS = ['총 TC', 'Pass', 'Fail', 'N/A', 'Block', '미실행', '진행률', '결함률'];
+const STAT_ROWS = ['총 TC', ...RESULT_OPTIONS, '미실행', ...STATUS_OPTIONS, '진행률', '결함률'];
 const pct1 = (a, b)=>`${(b ? a / b * 100 : 0).toFixed(1)}%`;
 function qcStatTable(rows, testers){
-  const col = (label, list, resultOf)=>{
-    const rs = list.map(r=>resultOf(r) || '');
-    const n = k=>rs.filter(v=>k.includes(v)).length;
-    const total = rs.length, none = n(['']), fail = n(FAIL_RESULTS), run = total - none;
-    return { label, values: [total, n(['PASS']), fail, n(['N/A']), n(['BLOCK']), none, pct1(run, total), pct1(fail, run)] };
+  const col = (label, list, resultOf, statusOf)=>{
+    const rs = list.map(r=>resultOf(r) || ''), ss = list.map(r=>statusOf(r) || '작성중');
+    const n = (vs, k)=>vs.filter(v=>v === k).length;
+    const total = rs.length, none = n(rs, ''), fail = rs.filter(v=>FAIL_RESULTS.includes(v)).length, run = total - none;
+    return { label, values: [total, ...RESULT_OPTIONS.map(k=>n(rs, k)), none, ...STATUS_OPTIONS.map(k=>n(ss, k)), pct1(run, total), pct1(fail, run)] };
   };
-  const cols = [col('전체', rows, effectiveResult)];
-  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'))));
-  cols.push(col('미배정', rows.filter(r=>!assigneesOf(r).length), r=>r.result));
+  const cols = [col('전체', rows, effectiveResult, effectiveStatus)];
+  (testers || []).forEach(n=>cols.push(col(n, rows.filter(r=>assigneesOf(r).includes(n)), r=>testerValue(r, n, 'tr'), r=>testerValue(r, n, 'ts'))));
   return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length, rows: STAT_ROWS, cols };
 }
 function renderDistribution(){
@@ -3126,12 +3100,13 @@ function renderDistribution(){
   if(!tcData.length) return;
   const testers = Array.from(new Set([...activeTesters(), ...tcData.flatMap(testersOf)]));
   const t = qcStatTable(tcData, testers);
-  const tone = ['', 'is-pass', 'is-fail', '', '', '', 'is-pass', 'is-fail']; // Pass·진행률 초록, Fail·결함률 빨강
+  const tone = l=>l === 'PASS' || l === '진행률' ? 'is-pass' : FAIL_RESULTS.includes(l) || l === '결함률' ? 'is-fail' : ''; // PASS·진행률 초록, 결함·결함률 빨강
+  const secAt = { 1: '결과', [RESULT_OPTIONS.length + 2]: '작성 상태', [t.rows.length - 2]: '비율' }; // 묶음 머리 줄
   document.getElementById('distWrap').innerHTML =
     `<p class="stat-caption">FO ${t.fo} · BO ${t.bo}</p>
     <div class="qc-stat-scroll"><table class="qc-stat-table">
       <thead><tr><th scope="col">구분</th>${t.cols.map((c, i)=>`<th scope="col"${i === 0 ? ' class="is-sum"' : ''}>${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
-      <tbody>${t.rows.map((label, r)=>`<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${tone[r]}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
+      <tbody>${t.rows.map((label, r)=>`${secAt[r] ? `<tr class="qc-stat-sec"><th scope="rowgroup" colspan="${t.cols.length + 1}">${secAt[r]}</th></tr>` : ''}<tr><th scope="row">${label}</th>${t.cols.map((c, i)=>`<td class="${c.values[r] && c.values[r] !== '0.0%' ? tone(label) : ''}${i === 0 ? ' is-sum' : ''}">${c.values[r]}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div>`;
 }
 /* ---------- Export helpers ---------- */
@@ -3446,7 +3421,7 @@ function parseQcSheet(grid){
     }
     const perTester = {};
     for(let c = agg + 4; c < r.length; c += 4){
-      const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3);
+      const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3).replace(/^개발 검토중$/, '개발 검토');
       if(!name) continue;
       if(note) perTester['tn:' + name] = note;
       if(RESULT_OPTIONS.includes(res)) perTester['tr:' + name] = res;
