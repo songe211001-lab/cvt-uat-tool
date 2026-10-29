@@ -3094,7 +3094,7 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 
 /* ---------- 테스트 시나리오 통계 ---------- */
 /* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 합계 · 담당 테스터마다 (순수 함수)
-   미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = (MINOR·MAJOR·CRITICAL·FATAL)/실행(실행 0이면 0.0%).
+   미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/(PASS+Fail), Fail = MINOR·MAJOR·CRITICAL·FATAL(분모 0이면 0.0%). 엑셀 장표 계산식과 같다.
    테스터 열은 그 테스터의 값(testerValue). 합계 열 = 배정이 있는 테스터 열의 평균(엑셀 장표와 같음, 소수 첫째 자리).
    테스터가 아무도 없으면 시나리오 행의 결과로 센다 */
 const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
@@ -3110,8 +3110,8 @@ const STAT_DEFS = {
   CRITICAL: '핵심 기능이 동작하지 않고 다른 방법도 없는 결함이에요.',
   BLOCK: '선행 조건이나 환경 문제로 테스트를 진행할 수 없었어요.',
   '미실행': '아직 결과를 입력하지 않았어요.',
-  '진행률': '결과를 입력한 비율이에요. (총 건수 - 미실행) / 총 건수. 합계 칸은 테스터별 진행률의 평균이에요.',
-  '결함률': '실행한 것 중 결함 비율이에요. (MINOR + MAJOR + CRITICAL + FATAL) / (총 건수 - 미실행). 합계 칸은 테스터별 결함률의 평균이에요.'
+  '진행률': '결과를 입력한 비율이에요. (PASS + Fail + N/A + BLOCK) / 총 건수. 합계 칸은 테스터별 진행률의 평균이에요.',
+  '결함률': 'PASS와 Fail 중 Fail의 비율이에요. Fail / (PASS + Fail), Fail = MINOR + MAJOR + CRITICAL + FATAL. N/A·BLOCK은 넣지 않아요. 합계 칸은 테스터별 결함률의 평균이에요.'
 };
 // 건수는 정수면 그대로, 평균이라 소수가 생기면 첫째 자리까지. 마지막 두 행(진행률·결함률)은 %
 const statFmt = (v, i)=>i >= STAT_ROWS.length - 2 ? `${v.toFixed(1)}%` : Math.round(v * 10) / 10;
@@ -3120,7 +3120,8 @@ function qcStatTable(rows, testers){
     const rs = results.map(r=>r || '');
     const n = k=>rs.filter(v=>v === k).length;
     const total = rs.length, none = n(''), fail = rs.filter(v=>FAIL_RESULTS.includes(v)).length, run = total - none;
-    return [total, ...RESULT_OPTIONS.map(n), none, total ? run / total * 100 : 0, run ? fail / run * 100 : 0];
+    const judged = n('PASS') + fail; // 결함률 분모: 판정이 난 것(PASS + Fail)
+    return [total, ...RESULT_OPTIONS.map(n), none, total ? run / total * 100 : 0, judged ? fail / judged * 100 : 0];
   };
   const per = (testers || []).map(n=>({ label: n, nums: nums(rows.filter(r=>assigneesOf(r).includes(n)).map(r=>testerValue(r, n, 'tr'))) }));
   const used = per.filter(c=>c.nums[0] > 0); // 배정이 없는 테스터는 평균에서 뺀다
