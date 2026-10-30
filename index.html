@@ -894,10 +894,10 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-table-head{min-height:40px;background:var(--panel);border-bottom:2px solid var(--line);font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
   .tc-table-head .tc-c{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-  #tcCardList .tc-card{min-width:838px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:none;}
-  #tcCardList .tc-card:nth-child(even){background:var(--bg);}
+  #tcCardList .tc-card{--row-bg:var(--panel);min-width:838px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--row-bg);box-shadow:none;} /* --row-bg: 행 바탕(고정 칸도 같은 색) */
+  #tcCardList .tc-card:nth-child(even){--row-bg:var(--bg);}
   #tcCardList .tc-card:last-child{border-bottom:0;}
-  #tcCardList .tc-card:hover, #tcCardList .tc-card.selected{background:var(--primary-soft);}
+  #tcCardList .tc-card:hover, #tcCardList .tc-card.selected{--row-bg:var(--primary-soft);}
   #tcCardList .tc-card[data-result="MAJOR"], #tcCardList .tc-card[data-result="CRITICAL"], #tcCardList .tc-card[data-result="FATAL"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
   #tcCardList .tc-card-head{min-height:48px;padding-top:6px;padding-bottom:6px;font-size:14.5px;cursor:pointer;}
   #tcCardList .tc-card-head > *{order:0;}
@@ -967,11 +967,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tester-note-text{font-size:15.5px;}
   @media (min-width:0px){
     /* 표 안쪽이 가로로 스크롤되면 선택·ID 칸은 왼쪽에 고정 */
-    .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:inherit;}
-    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-12px 0 0 var(--panel), 6px 0 0 var(--panel);}
-    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:26px;flex-wrap:wrap;box-shadow:6px 0 0 var(--panel);}
-    #tcCardList .tc-card-head{background:inherit;}
-    #tcCardList .tc-card:nth-child(even) .tc-card-head > .c-sel, #tcCardList .tc-card:nth-child(even) .tc-card-head > .c-id{box-shadow:-12px 0 0 var(--bg), 6px 0 0 var(--bg);}
+    /* 고정 칸과 그 사이 틈은 행 바탕색(--row-bg)을 그대로 따른다(호버·선택·줄무늬에서 흰 선이 생기지 않게). 왼쪽 3px 결함 선은 가리지 않는다 */
+    .tc-table-head{--row-bg:var(--panel);}
+    .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:var(--row-bg);}
+    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-9px 0 0 var(--row-bg), 6px 0 0 var(--row-bg);}
+    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:26px;flex-wrap:wrap;box-shadow:6px 0 0 var(--row-bg);}
   }
   @media (max-width:640px){
     .tc-detail{grid-template-columns:1fr;}
