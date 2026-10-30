@@ -889,7 +889,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
 
   /* ── 테스트 시나리오 표: 업무관리 "회귀 검증" 화면(.statWrap · .stable · .cvTable)과 같은 모양 ── */
-  #tcTableWrap{--tc-cols:20px 96px 44px minmax(70px,1fr) minmax(110px,1.8fr) 104px minmax(90px,1.2fr) 84px 88px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  #tcTableWrap{--tc-cols:20px 86px 54px minmax(70px,1fr) minmax(110px,1.8fr) 104px minmax(90px,1.2fr) 84px 88px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
   .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:8px;align-items:center;padding:0 12px;min-width:826px;}
   .tc-table-head{min-height:40px;background:var(--panel);border-bottom:2px solid var(--line);font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
@@ -903,12 +903,18 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tc-card-head > *{order:0;}
   #tcCardList .tc-c{min-width:0;}
   #tcCardList .c-id{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;}
+  #tcCardList .tc-card-head button.tc-id-badge{max-width:100%;overflow:hidden;text-overflow:ellipsis;margin:0;}
   #tcCardList .tc-card-head .tc-id-badge{font-size:14.5px;font-weight:700;color:var(--primary-dark);}
   #tcCardList .tc-mini-badge{height:auto;padding:0 4px;font-size:10px;line-height:16px;white-space:nowrap;}
   #tcCardList .tc-card-head .tc-inline-input{width:100%;height:32px;padding:4px 8px;font-size:14.5px;}
   #tcCardList .tc-card-head .tc-id-input{width:100%;height:32px;font-size:14.5px;}
   /* 서비스(FO/BO): 작은 굵은 회색 글자(cvSvc), 고를 수 있게 셀렉트는 테두리 없이 */
-  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:28px;padding:0 14px 0 0;border:0;background-color:transparent;background-position:calc(100% - 6px) 52%, calc(100% - 2px) 52%;font-size:13px;font-weight:700;color:var(--muted);}
+  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:32px;padding:0 16px 0 6px;border:1px solid var(--line);border-radius:7px;background-color:var(--panel);background-position:calc(100% - 9px) 52%, calc(100% - 5px) 52%;font-size:13px;font-weight:700;color:var(--ink-soft);}
+  /* 이 탭에서 고칠 수 없는 칸: 입력칸 모양 없이 글자만 */
+  #tcCardList .tc-ro-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;color:var(--ink-soft);}
+  #tcCardList .tc-type-text{font-size:13px;font-weight:700;color:var(--muted);}
+  /* 고칠 수 있는 칸: 마우스를 올리면 테두리 강조 */
+  #tcCardList .tc-card-head select:hover, #tcCardList .tester-pick:hover, #tcCardList .tc-note-cell:hover, #tcCardList .tc-note-multi:hover{border-color:var(--primary);}
   /* 케이스(대분류 > 중분류): cvGrp */
   #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:400;color:var(--ink-soft);cursor:pointer;}
   /* 점검 항목(시험 내역): 누르면 펼치는 굵은 글자 버튼(cvItem) */
@@ -2817,8 +2823,7 @@ function renderTable(){
       return true;
     });
 
-  document.getElementById('tcTableHead').hidden = !filtered.length;
-  syncTableWrapWidth();
+  document.getElementById('tcTableHead').hidden = !filtered.length; // 표 너비는 ResizeObserver가 맞춘다(여기서 재면 목록이 빈 순간 높이로 계산돼 스크롤이 맨 위로 튄다)
   document.querySelectorAll('#tcTypeSeg [data-type]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.type === tcFilterType)));
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
@@ -2847,7 +2852,9 @@ function renderTable(){
     const tabTester = tcFilterTester !== 'ALL' && assigned.includes(tcFilterTester) ? tcFilterTester : null;
     const ownResult = tabTester ? testerValue(row, tabTester, 'tr') : '', ownStatus = tabTester ? testerValue(row, tabTester, 'ts') : '';
     paintResult(card, tabTester ? ownResult : result);
-    const testerOptions = testers.length
+    const testerOptions = tabTester
+      ? `<span class="tc-ro-text" title="담당자는 전체 탭에서 바꿔요">${escapeHtml(tabTester)}</span>`
+      : testers.length
       ? `<button type="button" class="ad-btn ad-btn--sm tester-pick${assigned.length ? '' : ' is-none'}" data-pick-idx="${idx}" aria-haspopup="true" aria-expanded="false" aria-label="${escapeHtml(row.tcId)} 담당자: ${escapeHtml(assigned.join(', ') || '없음')}" title="${escapeHtml(assigned.join(', ') || '담당자를 고르세요')}">${escapeHtml(!assigned.length ? '담당자 지정' : assigned.length === 1 ? assigned[0] : `${assigned[0]} 외 ${assigned.length - 1}명`)}</button>`
       : `<div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="tester">${escapeHtml(row.tester)}</div>`;
 
@@ -2870,13 +2877,15 @@ function renderTable(){
       <div class="tc-card-head">
         <div class="tc-c c-sel"><input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" /></div>
         <div class="tc-c c-id">
-          <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="눌러서 시나리오 ID를 고칠 수 있어요" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
+          <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="${escapeHtml(row.tcId)} (눌러서 고칠 수 있어요)" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
           ${isDup ? '<span class="ad-badge ad-badge--warning tc-mini-badge" title="유사 시나리오: 화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사</span>' : ''}
           ${rowHasConflict ? `<span class="ad-badge ad-badge--danger tc-mini-badge" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨(배정 충돌)">충돌</span>` : ''}
         </div>
-        <div class="tc-c c-type"><select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
+        <div class="tc-c c-type">${tabTester
+          ? `<span class="tc-ro-text tc-type-text">${escapeHtml(row.screenType || '')}</span>`
+          : `<select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
-        </select></div>
+        </select>`}</div>
         <div class="tc-c c-cat"><div class="tc-screen-input tc-title" data-title-idx="${idx}" data-catedit="category" title="${escapeHtml(row.category || '')} (두 번 누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">-</span>'}</div></div>
         <div class="tc-c c-detail"><button type="button" class="row-toggle-btn tc-item" data-toggle-tcid="${escapeHtml(row.tcId)}" data-catedit="subCategory" data-idx="${idx}" title="누르면 상세, 두 번 누르면 중분류를 고쳐요" aria-expanded="${!isCollapsed}">${escapeHtml(row.subCategory || '') || '(중분류 없음)'}</button></div>
         <div class="tc-c c-res">
