@@ -888,91 +888,104 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     .tc-card-head select, select.tester-select{padding-left:8px;padding-right:22px;background-position:calc(100% - 12px) 52%, calc(100% - 7px) 52%;}
   }
 
-  /* ── 테스트 시나리오 표 양식(회귀 검증 화면처럼): 머리 줄 + 한 줄짜리 행, 누르면 아래에 상세 행 ── */
-  #tcTableWrap{--tc-cols:32px 24px 96px 56px minmax(80px,1fr) minmax(110px,1.6fr) 92px minmax(80px,1fr) 80px 84px 28px;overflow-x:clip;}
-  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);gap:4px;align-items:center;padding:0 8px;}
-  .tc-table-head{position:sticky;top:var(--tc-sticky-top, 0px);z-index:3;min-height:36px;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);}
+  /* ── 테스트 시나리오 표: 업무관리 "회귀 검증" 화면(.statWrap · .stable · .cvTable)과 같은 모양 ── */
+  #tcTableWrap{--tc-cols:20px 92px 44px minmax(80px,1fr) minmax(110px,1.8fr) 100px minmax(90px,1.2fr) 80px 84px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:10px;align-items:center;padding:0 12px;min-width:830px;}
+  .tc-table-head{min-height:38px;background:var(--panel);border-bottom:2px solid var(--line);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
-  #tcCardList .tc-card{padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);}
-  #tcCardList .tc-card.selected{background:var(--primary-soft);}
-  #tcCardList .tc-card-head{min-height:44px;flex-wrap:nowrap;cursor:pointer;}
+  #tcCardList .tc-card{min-width:830px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:none;}
+  #tcCardList .tc-card:nth-child(even){background:var(--bg);}
+  #tcCardList .tc-card:last-child{border-bottom:0;}
+  #tcCardList .tc-card:hover, #tcCardList .tc-card.selected{background:var(--primary-soft);}
+  #tcCardList .tc-card[data-result="MAJOR"], #tcCardList .tc-card[data-result="CRITICAL"], #tcCardList .tc-card[data-result="FATAL"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
+  #tcCardList .tc-card-head{min-height:44px;padding-top:6px;padding-bottom:6px;font-size:12.5px;cursor:pointer;}
   #tcCardList .tc-card-head > *{order:0;}
   #tcCardList .tc-c{min-width:0;}
   #tcCardList .c-id{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;}
+  #tcCardList .tc-card-head .tc-id-badge{font-size:12.5px;font-weight:700;color:var(--primary-dark);}
   #tcCardList .tc-mini-badge{height:auto;padding:0 4px;font-size:10px;line-height:16px;white-space:nowrap;}
-  #tcCardList .tc-card-head .tc-id-badge{font-size:13px;}
-  #tcCardList .tc-card-head .tc-id-input{width:100%;height:30px;font-size:13px;}
-  #tcCardList .tc-card-head select{width:100%;min-height:30px;font-size:12px;}
-  #tcCardList .c-res{display:flex;align-items:center;gap:4px;}
-  #tcCardList .c-res .result-dot{margin:0;flex:none;}
-  #tcCardList .c-res select, #tcCardList .c-res .result-badge{flex:1 1 0;min-width:0;}
-  #tcCardList .result-badge, #tcCardList .status-badge{min-width:0;width:100%;height:28px;padding:0 6px;font-size:12px;}
-  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;}
-  #tcCardList .tc-title, #tcCardList .c-detail, #tcCardList .tc-note-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
-  #tcCardList .tc-title{min-width:0;min-height:0;padding:0;border:none;background:none;font-weight:700;cursor:pointer;}
-  #tcCardList .c-detail{color:var(--ink);}
-  /* 비고(테스터 탭): 평소엔 한 줄, 누르면 펼쳐져 여러 줄로 쓴다 */
-  #tcCardList .tc-note-cell{display:block;min-height:30px;max-height:30px;padding:5px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:4px;cursor:text;}
+  #tcCardList .tc-card-head .tc-id-input{width:100%;height:28px;font-size:12.5px;}
+  /* 서비스(FO/BO): 작은 굵은 회색 글자(cvSvc), 고를 수 있게 셀렉트는 테두리 없이 */
+  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:24px;padding:0 14px 0 0;border:0;background-color:transparent;background-position:calc(100% - 6px) 52%, calc(100% - 2px) 52%;font-size:11px;font-weight:700;color:var(--muted);}
+  /* 케이스(대분류 > 중분류): cvGrp */
+  #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:400;color:var(--ink-soft);cursor:pointer;}
+  /* 점검 항목(시험 내역): 누르면 펼치는 굵은 글자 버튼(cvItem) */
+  #tcCardList .tc-item{all:unset;box-sizing:border-box;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  #tcCardList .tc-item:hover, #tcCardList .tc-item:focus-visible{text-decoration:underline;}
+  #tcCardList .tc-item:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  /* 결과: 알약 셀렉트(cvSel)·알약 배지(cvPill) */
+  #tcCardList .c-res{display:flex;align-items:center;}
+  #tcCardList .c-res .result-dot{display:none;}
+  #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:28px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:12px;font-weight:700;}
+  #tcCardList .result-badge{min-width:0;width:auto;height:auto;padding:2px 9px;border:0;border-radius:999px;font-size:11.5px;font-weight:700;}
+  .cvpill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .rp-PASS{background:var(--pass-soft) !important;color:var(--pass-text) !important;}
+  .rp-MINOR{background:var(--minor-soft) !important;color:var(--minor-text) !important;}
+  .rp-MAJOR, .rp-CRITICAL, .rp-FATAL{background:var(--fatal-soft) !important;color:var(--fatal-text) !important;}
+  .rp-NA{background:var(--grey-100) !important;color:var(--ink-soft) !important;}
+  .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
+  .rp-NT{background:var(--grey-100) !important;color:var(--muted) !important;}
+  /* 메모(비고): 28px 입력칸(cvMemo). 누르면 여러 줄로 펼쳐 쓴다 */
+  #tcCardList .tc-note-cell{display:block;min-height:28px;max-height:28px;padding:4px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12.5px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:text;}
   #tcCardList .tc-note-cell:empty::before{content:attr(data-placeholder);color:var(--muted);}
-  #tcCardList .tc-note-cell:focus{max-height:none;min-height:64px;overflow:visible;white-space:pre-wrap;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
-  #tcCardList .row-toggle-btn{width:28px;height:28px;}
-  #tcCardList .row-toggle-btn svg{width:16px;height:16px;}
-  #tcCardList .c-del .icon-btn{width:28px;height:28px;}
-  #tcCardList .tc-card-body{margin:0;padding:12px 16px 16px 68px;border-top:1px dashed var(--line);}
-  .tc-detail{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
-  .tc-detail-col{min-width:0;}
+  #tcCardList .tc-note-cell:focus{max-height:none;min-height:64px;overflow:visible;white-space:pre-wrap;border-color:var(--primary);outline:none;}
+  #tcCardList .tc-note-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--ink-soft);}
+  /* 담당자·상태: 28px 셀렉트 모양(.sel) */
+  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:28px;padding:0 8px;border-radius:7px;font-size:12.5px;font-weight:500;}
+  #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:28px;padding:0 22px 0 8px;border-radius:7px;font-size:12.5px;}
+  #tcCardList .status-badge{min-width:0;width:auto;height:auto;padding:2px 9px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:11.5px;font-weight:600;}
+  #tcCardList .c-del .icon-btn{width:24px;height:24px;color:var(--muted);}
+  /* 펼친 상세 행(cvDet): 연한 바탕, 2열, 굵은 제목 + 본문 */
+  #tcCardList .tc-card-body{margin:0;padding:12px 16px 14px 134px;background:var(--bg);border-top:1px solid var(--line);}
+  .tc-detail{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px;}
+  .tc-detail-col{display:flex;flex-direction:column;gap:12px;min-width:0;}
+  #tcCardList .tc-field-block{display:block;margin:0;padding:0;border:0;}
+  #tcCardList .tc-field-label{display:block;margin:0;font-size:12.5px;font-weight:700;color:var(--ink);}
+  #tcCardList .tc-field-label small{display:inline;margin-left:4px;font-weight:400;color:var(--muted);}
+  #tcCardList .tc-card-body .tc-editable{margin-top:4px;padding:2px 4px;font-size:12.5px;line-height:1.6;color:var(--ink-soft);background:transparent;}
+  #tcCardList .tc-card-body .tc-editable:hover{background:var(--panel);}
+  #tcCardList .tc-card-body .tc-editable:focus{background:var(--panel);}
+  #tcCardList .tc-cat-sep{padding-top:6px;}
   #tcCardList .tc-card-footer{margin-top:12px;}
   @media (max-width:1199px){
-    /* 좁은 화면: 표 안쪽만 가로로 스크롤, 펼침·선택·ID 칸은 왼쪽에 고정 */
-    #tcTableWrap{overflow-x:auto;}
-    .tc-table-head{position:static;}
-    .tc-table-head, #tcCardList .tc-card{min-width:818px;}
-    .tc-table-head, #tcCardList .tc-card-head{padding-left:0;}
-    .tc-table-head > .c-tog, .tc-table-head > .c-sel, .tc-table-head > .c-id,
-    #tcCardList .tc-card-head > .c-tog, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;}
-    .tc-table-head > .c-tog, .tc-table-head > .c-sel, .tc-table-head > .c-id{background:var(--bg);}
-    #tcCardList .tc-card-head > .c-tog, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{background:var(--panel);}
-    /* 고정 칸 사이 4px 틈으로 스크롤된 칸이 비치지 않게 같은 색으로 덮는다 */
-    .tc-table-head > .c-tog, .tc-table-head > .c-sel{box-shadow:4px 0 0 var(--bg);}
-    #tcCardList .tc-card-head > .c-tog, #tcCardList .tc-card-head > .c-sel{box-shadow:4px 0 0 var(--panel);}
-    #tcCardList .tc-card.selected .tc-card-head > .c-tog, #tcCardList .tc-card.selected .tc-card-head > .c-sel{box-shadow:4px 0 0 var(--primary-soft);}
-    #tcCardList .tc-card.selected .tc-card-head > .c-tog, #tcCardList .tc-card.selected .tc-card-head > .c-sel, #tcCardList .tc-card.selected .tc-card-head > .c-id{background:var(--primary-soft);}
-    .tc-table-head > .c-tog, #tcCardList .tc-card-head > .c-tog{left:0;justify-content:center;}
-    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:36px;}
-    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:64px;flex-wrap:wrap;box-shadow:4px 0 0 var(--line);}
+    /* 좁은 화면: 선택·ID 칸은 왼쪽에 고정 */
+    .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:inherit;}
+    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-12px 0 0 var(--panel), 10px 0 0 var(--panel);}
+    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:30px;flex-wrap:wrap;box-shadow:10px 0 0 var(--panel);}
+    #tcCardList .tc-card-head{background:inherit;}
+    #tcCardList .tc-card:nth-child(even) .tc-card-head > .c-sel, #tcCardList .tc-card:nth-child(even) .tc-card-head > .c-id{box-shadow:-12px 0 0 var(--bg), 10px 0 0 var(--bg);}
   }
   @media (max-width:640px){
     .tc-detail{grid-template-columns:1fr;}
     #tcCardList .tc-card-body{padding-left:16px;}
   }
 
-  /* 리스트 위 필터 줄: 담당자 탭 + 전체/FO/BO + 검색(헤더의 유형·검색과 같은 상태) */
+  /* 필터 줄(cvFilt): 담당자 탭 + 서비스 세그먼트(.seg) + 돋보기 검색칸(.searchBox) */
   .tc-filter-bar{flex-wrap:wrap;}
-  .tc-list-tools{display:flex;align-items:center;gap:8px;margin-left:auto;}
-  .tc-type-seg{display:inline-flex;}
-  .tc-type-seg .ad-btn{border-radius:0;margin-left:-1px;}
-  .tc-type-seg .ad-btn:first-child{border-radius:4px 0 0 4px;margin-left:0;}
-  .tc-type-seg .ad-btn:last-child{border-radius:0 4px 4px 0;}
-  .tc-type-seg .ad-btn[aria-pressed="true"]{position:relative;z-index:1;background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark);}
-  .tc-list-search{width:200px;height:32px;}
-  @media (max-width:640px){ .tc-list-tools{width:100%;margin-left:0;} .tc-list-search{flex:1 1 0;min-width:0;width:auto;} }
+  .tc-list-tools{display:flex;align-items:center;gap:8px 10px;margin-left:auto;}
+  .tc-type-seg{display:inline-flex;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:7px;}
+  .tc-type-seg .ad-btn{height:auto;min-height:0;padding:6px 12px;margin:0;border:0;border-radius:0;background:transparent;font-size:12.5px;font-weight:600;color:var(--ink-soft);box-shadow:none;}
+  .tc-type-seg .ad-btn[aria-pressed="true"]{background:var(--primary-soft);color:var(--ink);font-weight:700;}
+  .tc-search-box{position:relative;display:block;width:280px;max-width:100%;}
+  .tc-search-box svg{position:absolute;left:10px;top:50%;width:16px;height:16px;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+  .tc-list-search{box-sizing:border-box;width:100%;height:32px;padding:6px 10px 6px 32px;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;}
+  .tc-list-search:focus{border-color:var(--primary);outline:none;}
+  @media (max-width:640px){ .tc-list-tools{width:100%;margin-left:0;} .tc-search-box{flex:1 1 0;width:auto;min-width:0;} }
 
-  /* 요약 줄: 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 */
-  .tc-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px 24px;}
-  @media (max-width:640px){ .tc-summary{grid-template-columns:1fr;} }
+  /* 요약 줄(cvHead): 제목·날짜 / 결과 알약 + 건수 버튼(누르면 그 결과만) / 진행률 */
+  .tc-summary{display:flex;flex-direction:column;gap:10px;padding:14px 16px;}
   .tc-summary[hidden]{display:none;}
-  .sum-main{min-width:0;}
-  .sum-title{display:flex;align-items:baseline;gap:8px;min-width:0;margin:0 0 10px;font-size:20px;font-weight:800;color:var(--ink);}
-  .sum-name{max-width:min(520px, 60vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .sum-date{flex:none;font-size:12px;font-weight:500;color:var(--muted);}
-  .sum-badges{display:flex;flex-wrap:wrap;gap:6px;}
-  .sum-badge{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;font-size:12px;font-weight:700;color:var(--ink);background:color-mix(in srgb, var(--res) 8%, var(--panel));border:1px solid color-mix(in srgb, var(--res) 40%, var(--line));border-radius:4px;}
-  .sum-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--res);}
-  .sum-badge b{font-weight:800;}
-  .sum-progress{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
-  .sum-progress-label{font-size:13px;font-weight:700;color:var(--muted);}
-  .sum-progress strong{font-size:28px;font-weight:800;line-height:1;color:var(--primary);}
-  .sum-progress-sub{font-size:12px;color:var(--muted);}
+  .sum-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+  .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
+  .tc-summary .legend{font-size:12px;color:var(--muted);}
+  .sum-stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .sum-badge{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;font-size:12.5px;cursor:pointer;}
+  .sum-badge b{font-weight:700;color:var(--ink);}
+  .sum-badge[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary);}
+  .sum-badge:focus-visible{outline:2px solid var(--primary);}
+  .sum-progress{display:inline-flex;align-items:baseline;gap:6px;margin-left:auto;}
+  .sum-progress strong{font-size:18px;font-weight:700;color:var(--ink);}
+  @media (max-width:600px){ .sum-progress{margin-left:0;} }
 
   /* 담당자별 통계: 기본 접힘 */
   .stats-toggle-row{display:flex;justify-content:flex-end;}
@@ -1105,7 +1118,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
             <button type="button" class="ad-btn ad-btn--sm" data-type="FO" aria-pressed="false">FO</button>
             <button type="button" class="ad-btn ad-btn--sm" data-type="BO" aria-pressed="false">BO</button>
           </div>
-          <input type="search" class="ad-input tc-list-search" id="tcListSearch" placeholder="화면명·분류·내용 검색" aria-label="테스트 시나리오 검색" autocomplete="off" />
+          <label class="tc-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="tc-list-search" id="tcListSearch" placeholder="화면명 · 분류 · 내용 검색" aria-label="테스트 시나리오 검색" autocomplete="off" /></label>
         </div>
       </div>
 
@@ -1146,7 +1159,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <!-- 표 양식: 머리 줄 + 행(.tc-card = 한 줄, 누르면 아래에 상세 행) -->
       <div class="tc-table-wrap" id="tcTableWrap">
         <div class="tc-table-head" id="tcTableHead" role="row" hidden>
-          <span class="tc-c c-tog" role="columnheader" aria-label="펼치기"></span><span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
+          <span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
           <span class="tc-c c-id" role="columnheader">ID</span><span class="tc-c c-type" role="columnheader">유형</span>
           <span class="tc-c c-cat" role="columnheader">대분류 &gt; 중분류</span><span class="tc-c c-detail" role="columnheader">시험 내역</span>
           <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-note" role="columnheader">비고</span>
@@ -2746,20 +2759,15 @@ function computeConflictTesters(){
 }
 /* ---------- Table render ---------- */
 // TC 카드 제목: "시험항목(대분류) > 시험(중분류)". 둘 다 비어 있으면 화면 구분을 보인다.
-// 카드 펼침/접힘 아이콘(아래 화살표). 접혀 있으면 CSS가 오른쪽으로 돌린다(aria-expanded 기준)
-const TOGGLE_CHEVRON = '<svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 // 카드 테두리·테스트 내역 박스를 결과 색으로(결과가 없거나 N/A면 기본 모양)
 function paintResult(card, result){
   const on = !!RESULT_COLOR[result] && result !== 'N/A';
   if(on){ card.dataset.result = result; card.style.setProperty('--tc-res', RESULT_COLOR[result]); }
   else{ delete card.dataset.result; card.style.removeProperty('--tc-res'); }
 }
-// 표 머리 줄은 위 헤더(.ad-topbar) 바로 아래에 붙는다
-function syncTableStickyTop(){
-  const bar = document.querySelector('.ad-topbar');
-  document.documentElement.style.setProperty('--tc-sticky-top', `${bar && getComputedStyle(bar).position === 'sticky' ? bar.offsetHeight : 0}px`);
-}
-window.addEventListener('resize', syncTableStickyTop);
+// 결과 알약 색(회귀 검증 화면과 같은 규칙): rp-PASS · rp-MINOR · rp-MAJOR · rp-CRITICAL · rp-FATAL · rp-BLOCK · rp-NA · rp-NT(미실행)
+const resultTone = v=>'rp-' + (v ? String(v).replace('/', '') : 'NT');
+const resultPill = v=>`<span class="cvpill ${resultTone(v)}">${escapeHtml(v || '미실행')}</span>`;
 function tcTitleOf(row){
   return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
 }
@@ -2817,7 +2825,6 @@ function renderTable(){
   document.querySelectorAll('#tcTypeSeg [data-type]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.type === tcFilterType)));
   const listSearch = document.getElementById('tcListSearch'), headSearch = document.getElementById('tcSearchInput');
   if(listSearch && headSearch && document.activeElement !== listSearch) listSearch.value = headSearch.value;
-  syncTableStickyTop();
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 '테스트 시나리오 생성하기'를 눌러보세요.";
@@ -2870,7 +2877,6 @@ function renderTable(){
     card.setAttribute('role', 'row');
     card.innerHTML = `
       <div class="tc-card-head">
-        <div class="tc-c c-tog"><button class="icon-btn ad-btn ad-btn--icon row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" title="${isCollapsed?'펼치기':'접기'}" aria-label="${escapeHtml(row.tcId)} ${isCollapsed?'펼치기':'접기'}" aria-expanded="${!isCollapsed}">${TOGGLE_CHEVRON}</button></div>
         <div class="tc-c c-sel"><input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" /></div>
         <div class="tc-c c-id">
           <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="눌러서 시나리오 ID를 고칠 수 있어요" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
@@ -2881,14 +2887,14 @@ function renderTable(){
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select></div>
         <div class="tc-c c-cat"><div class="tc-screen-input tc-title" data-title-idx="${idx}" title="${escapeHtml(tcTitleOf(row))}">${escapeHtml(tcTitleOf(row))}</div></div>
-        <div class="tc-c c-detail" data-detail-idx="${idx}" title="${escapeHtml(row.testDetail || '')}">${escapeHtml(oneLine(row.testDetail)) || '<span class="sub-txt">비어 있음</span>'}</div>
+        <div class="tc-c c-detail"><button type="button" class="row-toggle-btn tc-item" data-toggle-tcid="${escapeHtml(row.tcId)}" data-detail-idx="${idx}" title="전제조건·테스트 절차·기대결과 보기" aria-expanded="${!isCollapsed}">${escapeHtml(oneLine(row.testDetail)) || '(시험 내역 없음)'}</button></div>
         <div class="tc-c c-res">
           <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
           ${tabTester
-            ? `<select class="tester-result-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
+            ? `<select class="tester-result-select ${resultTone(ownResult)}" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
             <option value="">미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
           </select>`
-            : `<span class="result-badge" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
+            : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         </div>
         <div class="tc-c c-note">${tabTester
           ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(tabTester)}" data-placeholder="비고">${escapeHtml(testerValue(row, tabTester, 'tn'))}</div>`
@@ -2977,7 +2983,7 @@ function renderTable(){
       }
       if(key === 'testDetail'){ // 표 칸(시험 내역)도 바로 맞춘다
         const cell = list.querySelector(`[data-detail-idx="${idx}"]`);
-        if(cell){ cell.textContent = tcData[idx].testDetail.replace(/\s*\n\s*/g, ' '); cell.title = tcData[idx].testDetail; }
+        if(cell) cell.textContent = tcData[idx].testDetail.replace(/\s*\n\s*/g, ' ') || '(시험 내역 없음)';
       }
     });
   });
@@ -3021,7 +3027,6 @@ function renderTable(){
       const body = btn.closest('.tc-card').querySelector('.tc-card-body');
       const willCollapse = body.style.display !== 'none';
       body.style.display = willCollapse ? 'none' : '';
-      btn.title = willCollapse ? '펼치기' : '접기';
       btn.setAttribute('aria-expanded', String(!willCollapse));
       if(willCollapse) expandedTcRows.delete(tcId); else expandedTcRows.add(tcId);
     });
@@ -3333,12 +3338,19 @@ function renderSummary(t){
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
-  box.innerHTML = `<div class="sum-main">
-      <h2 class="sum-title"><span class="sum-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span class="sum-date">${today}</span></h2>
-      <div class="sum-badges">${SUMMARY_RESULTS.map(l=>`<span class="sum-badge" style="--res:${RESULT_COLOR[l] || 'var(--line)'}"><span class="dot" aria-hidden="true"></span>${l}<b>${v(l)}</b></span>`).join('')}</div>
-    </div>
-    <div class="sum-progress"><span class="sum-progress-label">진행률</span><strong>${Math.round(parseFloat(v('진행률')))}%</strong><span class="sum-progress-sub">전체 ${tcData.length}건 중 ${done}건 실행</span></div>`;
+  box.innerHTML = `<div class="sum-head"><h3 class="sum-title" title="${escapeHtml(name)}">${escapeHtml(name)}</h3><span class="legend">${today}</span></div>
+    <div class="sum-stats">${SUMMARY_RESULTS.map(l=>{ const key = l === '미실행' ? '' : l;
+      return `<button type="button" class="sum-badge" data-sumres="${key || 'NT'}" aria-pressed="${tcFilterResult === key}" title="이 결과만 보기">${resultPill(key)}<b class="num">${v(l)}</b></button>`; }).join('')}
+      <span class="sum-progress"><span class="legend">진행률</span><strong class="num">${Math.round(parseFloat(v('진행률')))}%</strong><span class="legend">${done}/${tcData.length}</span></span></div>`;
 }
+// 요약 줄 결과 알약: 누르면 헤더의 결과 필터를 그 값으로(다시 누르면 전체)
+document.getElementById('tcSummary').addEventListener('click', e=>{
+  const b = e.target.closest('[data-sumres]'), sel = document.getElementById('tcFilterResult');
+  if(!b || !sel) return;
+  const v = b.dataset.sumres === 'NT' ? '' : b.dataset.sumres;
+  sel.value = tcFilterResult === v ? 'ALL' : v;
+  sel.dispatchEvent(new Event('change'));
+});
 function renderDistribution(){
   renderStatDefs();
   scheduleAutoSave(); // TC가 바뀔 때마다 불린다(표 다시 그리기·결과·진행상태·화면유형) → 실시간 저장
