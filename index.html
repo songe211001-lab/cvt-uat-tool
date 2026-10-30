@@ -889,35 +889,37 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
 
   /* ── 테스트 시나리오 표: 업무관리 "회귀 검증" 화면(.statWrap · .stable · .cvTable)과 같은 모양 ── */
-  #tcTableWrap{--tc-cols:20px 92px 44px minmax(80px,1fr) minmax(110px,1.8fr) 100px minmax(90px,1.2fr) 80px 84px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
-  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:10px;align-items:center;padding:0 12px;min-width:830px;}
-  .tc-table-head{min-height:38px;background:var(--panel);border-bottom:2px solid var(--line);font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;}
+  #tcTableWrap{--tc-cols:20px 96px 44px minmax(70px,1fr) minmax(110px,1.8fr) 104px minmax(90px,1.2fr) 84px 88px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:8px;align-items:center;padding:0 12px;min-width:826px;}
+  .tc-table-head{min-height:40px;background:var(--panel);border-bottom:2px solid var(--line);font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
-  #tcCardList .tc-card{min-width:830px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:none;}
+  .tc-table-head .tc-c{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  #tcCardList .tc-card{min-width:826px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:none;}
   #tcCardList .tc-card:nth-child(even){background:var(--bg);}
   #tcCardList .tc-card:last-child{border-bottom:0;}
   #tcCardList .tc-card:hover, #tcCardList .tc-card.selected{background:var(--primary-soft);}
   #tcCardList .tc-card[data-result="MAJOR"], #tcCardList .tc-card[data-result="CRITICAL"], #tcCardList .tc-card[data-result="FATAL"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
-  #tcCardList .tc-card-head{min-height:44px;padding-top:6px;padding-bottom:6px;font-size:12.5px;cursor:pointer;}
+  #tcCardList .tc-card-head{min-height:48px;padding-top:6px;padding-bottom:6px;font-size:14.5px;cursor:pointer;}
   #tcCardList .tc-card-head > *{order:0;}
   #tcCardList .tc-c{min-width:0;}
   #tcCardList .c-id{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;}
-  #tcCardList .tc-card-head .tc-id-badge{font-size:12.5px;font-weight:700;color:var(--primary-dark);}
+  #tcCardList .tc-card-head .tc-id-badge{font-size:14.5px;font-weight:700;color:var(--primary-dark);}
   #tcCardList .tc-mini-badge{height:auto;padding:0 4px;font-size:10px;line-height:16px;white-space:nowrap;}
-  #tcCardList .tc-card-head .tc-id-input{width:100%;height:28px;font-size:12.5px;}
+  #tcCardList .tc-card-head .tc-inline-input{width:100%;height:32px;padding:4px 8px;font-size:14.5px;}
+  #tcCardList .tc-card-head .tc-id-input{width:100%;height:32px;font-size:14.5px;}
   /* 서비스(FO/BO): 작은 굵은 회색 글자(cvSvc), 고를 수 있게 셀렉트는 테두리 없이 */
-  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:24px;padding:0 14px 0 0;border:0;background-color:transparent;background-position:calc(100% - 6px) 52%, calc(100% - 2px) 52%;font-size:11px;font-weight:700;color:var(--muted);}
+  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:28px;padding:0 14px 0 0;border:0;background-color:transparent;background-position:calc(100% - 6px) 52%, calc(100% - 2px) 52%;font-size:13px;font-weight:700;color:var(--muted);}
   /* 케이스(대분류 > 중분류): cvGrp */
-  #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:400;color:var(--ink-soft);cursor:pointer;}
+  #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:400;color:var(--ink-soft);cursor:pointer;}
   /* 점검 항목(시험 내역): 누르면 펼치는 굵은 글자 버튼(cvItem) */
-  #tcCardList .tc-item{all:unset;box-sizing:border-box;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  #tcCardList .tc-item{all:unset;box-sizing:border-box;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
   #tcCardList .tc-item:hover, #tcCardList .tc-item:focus-visible{text-decoration:underline;}
   #tcCardList .tc-item:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   /* 결과: 알약 셀렉트(cvSel)·알약 배지(cvPill) */
   #tcCardList .c-res{display:flex;align-items:center;}
   #tcCardList .c-res .result-dot{display:none;}
-  #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:28px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:12px;font-weight:700;}
-  #tcCardList .result-badge{min-width:0;width:auto;height:auto;padding:2px 9px;border:0;border-radius:999px;font-size:11.5px;font-weight:700;}
+  #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:32px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:13.5px;font-weight:700;}
+  #tcCardList .result-badge{min-width:0;width:auto;height:auto;padding:3px 10px;border:0;border-radius:999px;font-size:13.5px;font-weight:700;}
   .cvpill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
   .rp-PASS{background:var(--pass-soft) !important;color:var(--pass-text) !important;}
   .rp-MINOR{background:var(--minor-soft) !important;color:var(--minor-text) !important;}
@@ -926,29 +928,40 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
   .rp-NT{background:var(--grey-100) !important;color:var(--muted) !important;}
   /* 메모(비고): 28px 입력칸(cvMemo). 누르면 여러 줄로 펼쳐 쓴다 */
-  #tcCardList .tc-note-cell{display:block;min-height:28px;max-height:28px;padding:4px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12.5px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:text;}
+  #tcCardList .tc-note-cell{display:block;min-height:32px;max-height:32px;padding:5px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14.5px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:text;}
   #tcCardList .tc-note-cell:empty::before{content:attr(data-placeholder);color:var(--muted);}
   #tcCardList .tc-note-cell:focus{max-height:none;min-height:64px;overflow:visible;white-space:pre-wrap;border-color:var(--primary);outline:none;}
-  #tcCardList .tc-note-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--ink-soft);}
+  #tcCardList .tc-note-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;color:var(--ink-soft);}
+  /* 비고(담당자 여러 명): 요약 글자 버튼 + 누르면 아래에 이름별 입력 패널 */
+  #tcCardList .tc-note-multi{all:unset;box-sizing:border-box;display:block;width:100%;min-height:32px;padding:5px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;line-height:1.5;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:pointer;}
+  #tcCardList .tc-note-multi[aria-expanded="true"], #tcCardList .tc-note-multi:focus-visible{border-color:var(--primary);}
+  #tcCardList .tc-note-pop{position:fixed;z-index:30;width:300px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,.12);cursor:default;}
+  #tcCardList .tc-note-pop[hidden]{display:none;}
+  #tcCardList .tc-note-pop-row{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:start;}
+  #tcCardList .tc-note-pop-name{padding-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;color:var(--ink);}
   /* 담당자·상태: 28px 셀렉트 모양(.sel) */
-  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:28px;padding:0 8px;border-radius:7px;font-size:12.5px;font-weight:500;}
-  #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:28px;padding:0 22px 0 8px;border-radius:7px;font-size:12.5px;}
-  #tcCardList .status-badge{min-width:0;width:auto;height:auto;padding:2px 9px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:11.5px;font-weight:600;}
+  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:32px;padding:0 8px;border-radius:7px;font-size:14.5px;font-weight:500;}
+  #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:32px;padding:0 22px 0 8px;border-radius:7px;font-size:14.5px;}
+  #tcCardList .status-badge{min-width:0;width:auto;height:auto;padding:3px 10px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:13.5px;font-weight:600;}
   #tcCardList .c-del .icon-btn{width:24px;height:24px;color:var(--muted);}
   /* 펼친 상세 행(cvDet): 연한 바탕, 2열, 굵은 제목 + 본문 */
-  #tcCardList .tc-card-body{margin:0;padding:12px 16px 14px 134px;background:var(--bg);border-top:1px solid var(--line);}
-  .tc-detail{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:12px;}
+  #tcCardList .tc-card-body{position:sticky;left:0;box-sizing:border-box;width:var(--tc-wrap-w, 100%);margin:0;padding:12px 16px 14px 136px;background:var(--bg);border-top:1px solid var(--line);}
+  .tc-detail{display:grid;grid-template-columns:minmax(0, 1fr);gap:12px;} /* 펼친 상세는 1열: 전제조건 → 절차 → 시험 내역 → 기대결과 → 분류 → 화면 구분 */
   .tc-detail-col{display:flex;flex-direction:column;gap:12px;min-width:0;}
   #tcCardList .tc-field-block{display:block;margin:0;padding:0;border:0;}
-  #tcCardList .tc-field-label{display:block;margin:0;font-size:12.5px;font-weight:700;color:var(--ink);}
+  #tcCardList .tc-field-label{display:block;margin:0;font-size:14.5px;font-weight:700;color:var(--ink);}
   #tcCardList .tc-field-label small{display:inline;margin-left:4px;font-weight:400;color:var(--muted);}
-  #tcCardList .tc-card-body .tc-editable{margin-top:4px;padding:2px 4px;font-size:12.5px;line-height:1.6;color:var(--ink-soft);background:transparent;}
+  #tcCardList .tc-card-body .tc-editable{margin-top:4px;padding:2px 4px;font-size:14.5px;line-height:1.6;color:var(--ink-soft);background:transparent;}
   #tcCardList .tc-card-body .tc-editable:hover{background:var(--panel);}
   #tcCardList .tc-card-body .tc-editable:focus{background:var(--panel);}
   #tcCardList .tc-cat-sep{padding-top:6px;}
   #tcCardList .tc-card-footer{margin-top:12px;}
-  @media (max-width:1199px){
-    /* 좁은 화면: 선택·ID 칸은 왼쪽에 고정 */
+  #tcCardList .tc-card-footer .tc-footer-item label{font-size:15px;}
+  #tcCardList .tc-card-footer .tc-footer-sub{font-size:13.5px;}
+  #tcCardList .tester-note-name, #tcCardList .tester-note-val{font-size:14.5px;}
+  #tcCardList .tester-note-text{font-size:15.5px;}
+  @media (min-width:0px){
+    /* 표 안쪽이 가로로 스크롤되면 선택·ID 칸은 왼쪽에 고정 */
     .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:inherit;}
     .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-12px 0 0 var(--panel), 10px 0 0 var(--panel);}
     .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:30px;flex-wrap:wrap;box-shadow:10px 0 0 var(--panel);}
@@ -973,7 +986,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (max-width:640px){ .tc-list-tools{width:100%;margin-left:0;} .tc-search-box{flex:1 1 0;width:auto;min-width:0;} }
 
   /* 요약 줄(cvHead): 제목·날짜 / 결과 알약 + 건수 버튼(누르면 그 결과만) / 진행률 */
-  .tc-summary{display:flex;flex-direction:column;gap:10px;padding:14px 16px;}
+  .ad-main-body .panel .card.ad-card.tc-summary, .ad-main-body .panel #tcStatsCard.card.ad-card, .ad-main-body .panel .card.ad-card.tc-list-card{
+    margin:0 0 12px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:9px;} /* 테두리 있는 흰 카드 */
+  .ad-main-body #tcStatsCard + .card.tc-list-card{border-top:1px solid var(--line);} /* 통계 아래 카드도 테두리 그대로 */
+  .tc-list-card .tc-section-head{justify-content:flex-end;margin-bottom:10px;}
+  /* 목록 카드 안의 표는 카드 폭 끝까지(테두리는 카드가, 표는 위 선만) */
+  .tc-list-card #tcTableWrap{margin:0 -16px;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;}
+  .tc-summary{display:flex;flex-direction:column;gap:12px;}
+  .sum-spacer{flex:1;}
+  .tc-summary .stats-toggle{height:auto;padding:4px 8px;font-size:13px;font-weight:600;color:var(--ink-soft);}
   .tc-summary[hidden]{display:none;}
   .sum-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
   .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
@@ -988,10 +1009,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (max-width:600px){ .sum-progress{margin-left:0;} }
 
   /* 담당자별 통계: 기본 접힘 */
-  .stats-toggle-row{display:flex;justify-content:flex-end;}
-  #tcStatsCard:not(.is-collapsed) .stats-toggle-row{margin-bottom:12px;}
-  #tcStatsCard.is-collapsed{padding-top:10px;padding-bottom:10px;}
-  #tcStatsCard.is-collapsed #distWrap, #tcStatsCard.is-collapsed #distEmpty{display:none;}
+  .ad-main-body .panel #tcStatsCard.is-collapsed{display:none;}
   .stats-toggle[aria-expanded="true"]{border-color:var(--primary);color:var(--primary-dark);}
 </style>
 </head>
@@ -1024,23 +1042,6 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     <div class="ad-topbar__tools">
       <select class="ad-select project-select tool-proj" id="projectSelect" aria-label="프로젝트 불러오기">
         <option value="">프로젝트 선택</option>
-      </select>
-      <input type="search" class="ad-input qc-search tool-proj" id="tcSearchInput" aria-label="테스트 시나리오 검색" autocomplete="off" placeholder="화면명·카테고리·내용 검색…" />
-      <select class="ad-select tool-proj" id="tcFilterType" aria-label="화면유형 필터">
-        <option value="ALL">전체 유형</option>
-        <option value="FO">FO</option>
-        <option value="BO">BO</option>
-      </select>
-      <select class="ad-select tool-proj" id="tcFilterResult" aria-label="결과 필터">
-        <option value="ALL">전체 결과</option>
-        <option value="PASS">PASS</option>
-        <option value="MINOR">MINOR</option>
-        <option value="N/A">N/A</option>
-        <option value="MAJOR">MAJOR</option>
-        <option value="FATAL">FATAL</option>
-        <option value="CRITICAL">CRITICAL</option>
-        <option value="BLOCK">BLOCK</option>
-        <option value="">미실행</option>
       </select>
       <select class="ad-select tool-cat" id="projectSort" aria-label="프로젝트 정렬">
         <option value="recent">최근 수정순</option>
@@ -1087,25 +1088,18 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <!-- ===================== 프로젝트: QC 통계 + QC 리스트 ===================== -->
   <div class="panel" id="panel-gen">
     <!-- 요약 줄(회귀 검증 화면 머리): 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 -->
-    <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden></div>
+    <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden>
+      <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm stats-toggle" id="statsToggle" aria-expanded="false" aria-controls="tcStatsCard">담당자별 통계</button></div>
+      <div class="sum-stats" id="sumStats"></div>
+    </div>
     <div class="card ad-card ad-panel is-collapsed" id="tcStatsCard">
-      <div class="stats-toggle-row"><button type="button" class="ad-btn ad-btn--sm stats-toggle" id="statsToggle" aria-expanded="false" aria-controls="distWrap">담당자별 통계</button></div>
       <div class="stat-grid" id="distWrap" role="group" aria-label="테스트 시나리오 통계" hidden></div>
       <div id="statDefPop" class="stat-def-pop" popover role="dialog" aria-labelledby="statDefTitle"></div>
       <div id="distEmpty" class="ad-empty">테스트 시나리오를 생성하면 결과 통계가 여기에 보여요.</div>
     </div>
 
-    <!-- 공유 내용·테스트 계정: 프로젝트마다 따로, 팀원에게 동기화된다(프로젝트 data.share) -->
-    <div class="card ad-card ad-panel share-card" id="shareCard">
-      <div class="section-head"><label class="section-title" for="projectShareInput">공유 내용 · 테스트 계정</label><span class="section-meta" id="shareMeta"></span></div>
-      <textarea id="projectShareInput" class="ad-input share-input" rows="3" spellcheck="false" placeholder="예: 테스트 계정 qa01 / 테스트 서버 주소 / 이번 회차에 꼭 확인할 점" aria-describedby="projectShareHint"></textarea>
-      <span class="hint" id="projectShareHint">이 내용은 이 도구를 여는 누구나 볼 수 있어요. 개인 비밀번호는 적지 마세요.</span>
-    </div>
-
-    <div class="card ad-card ad-panel">
+    <div class="card ad-card ad-panel tc-list-card">
       <div class="tc-section-head section-head">
-        <h2 class="section-title">테스트 시나리오 리스트</h2>
-        <span class="section-meta" id="tcCountBadge" style="display:none;">0건</span>
         <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
       </div>
 
@@ -1161,7 +1155,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <div class="tc-table-head" id="tcTableHead" role="row" hidden>
           <span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
           <span class="tc-c c-id" role="columnheader">ID</span><span class="tc-c c-type" role="columnheader">유형</span>
-          <span class="tc-c c-cat" role="columnheader">대분류 &gt; 중분류</span><span class="tc-c c-detail" role="columnheader">시험 내역</span>
+          <span class="tc-c c-cat" role="columnheader">대분류</span><span class="tc-c c-detail" role="columnheader">중분류</span>
           <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-note" role="columnheader">비고</span>
           <span class="tc-c c-who" role="columnheader">담당자</span><span class="tc-c c-st" role="columnheader">상태</span><span class="tc-c c-del" role="columnheader" aria-label="삭제"></span>
         </div>
@@ -1472,6 +1466,7 @@ const INTEGRATION_TAG_OPTIONS = ['없음','쿠폰','요금제','명의이전','�
 function toExportRow(row){
   const out = Object.fromEntries(COLUMNS.map(c=>[c.key, row[c.key]]));
   Object.keys(row || {}).forEach(k=>{ if(TESTER_KEY_RE.test(k)) out[k] = row[k]; });
+  if(typeof (row && row.seq) === 'number') out.seq = row.seq; // 리스트 순서(만든 순서). 팀원 화면·새로고침 뒤에도 같은 순서
   return out;
 }
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
@@ -1560,19 +1555,7 @@ function restoreRemovedItems(targetArray, removedItems){
   });
 }
 
-/* ---------- TC filter bar ---------- */
-document.getElementById('tcSearchInput').addEventListener('input', e=>{
-  tcSearchQuery = e.target.value.trim().toLowerCase();
-  renderTable();
-});
-document.getElementById('tcFilterType').addEventListener('change', e=>{
-  tcFilterType = e.target.value;
-  renderTable();
-});
-document.getElementById('tcFilterResult').addEventListener('change', e=>{
-  tcFilterResult = e.target.value;
-  renderTable();
-});
+/* ---------- 리스트 필터: 검색·유형(FO/BO)은 리스트 위 필터 줄, 결과는 요약 줄 결과 알약(script_content_part3.html) ---------- */
 
 /* ---------- 파일(PDF·이미지) 기획안 처리 ----------
    화면에서는 피그마 URL만 받는다. handleFile은 E2E가 생성 흐름을 서버 없이 시험하는 데 쓰므로 남겨 둔다. */
@@ -2465,9 +2448,21 @@ const isBoTcId = tcId=>/^BO-/.test(tcId || '');
 function tcServerNo(tcId){
   return isBoTcId(tcId) ? -tcNumberOf(tcId) : tcNumberOf(tcId);
 }
-// 리스트 정렬 순서: FO 번호순, 그다음 BO 번호순
+// 예전 행(seq 없음)의 순서: FO 번호순, 그다음 BO 번호순
 function tcSortKey(tcId){
   return (isBoTcId(tcId) ? 1e6 : 0) + tcNumberOf(tcId);
+}
+// 리스트 순서 = 만든 순서(seq). seq가 없는 예전 행은 seq가 있는 행 뒤에 예전 규칙대로, 같으면 행 ID 순 (순수 함수)
+function compareRowOrder(a, b){
+  const sa = typeof a.seq === 'number' ? a.seq : Infinity, sb = typeof b.seq === 'number' ? b.seq : Infinity;
+  if(sa !== sb) return sa < sb ? -1 : 1;
+  const ka = tcSortKey(a.tcId), kb = tcSortKey(b.tcId);
+  if(ka !== kb) return ka - kb;
+  return String(a._id || '').localeCompare(String(b._id || ''));
+}
+// 지금 리스트 순서를 seq로 적는다(바뀐 행만). 행 추가·삭제·되돌리기·생성 뒤에도 순서가 그대로 저장된다
+function syncRowSeq(rows = tcData){
+  rows.forEach((r, i)=>{ if(r.seq !== i + 1) r.seq = i + 1; });
 }
 function tcNameOf(tcId){
   const m = TC_ID_RE.exec(tcId || '');
@@ -2773,12 +2768,13 @@ function tcTitleOf(row){
 }
 function renderTable(){
   syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
-  tcData.sort((a, b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId)); // FO 번호순, 그다음 BO 번호순(서버에서 받은 순서와 같게)
+  // 리스트 순서(만든 순서)를 seq로 저장한다. 다시 정렬하지 않아 BO 줄이 옮겨가지 않는다.
+  // 받은 변경을 그릴 때는 적지 않는다: 팀원이 보낸 순서를 그대로 두어야 양쪽이 같은 값을 서로 덮어쓰며 오래된 번호를 되돌리지 않는다
+  if(!remoteApplying) syncRowSeq();
   tcData.forEach(r=>Object.keys(r).forEach(k=>{ if((k === 'status' || k.startsWith('ts:')) && r[k] === '개발 검토중') r[k] = '개발 검토'; })); // 예전 작성 상태 이름
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
 
-  const countBadge = document.getElementById('tcCountBadge');
 
   // 담당자 목록: 등록된 테스터(편집 중인 프로젝트, 없으면 기본 테스터) + 지금 QC에 배정된 담당자
   const usedTesters = Array.from(new Set(tcData.flatMap(testersOf)));
@@ -2822,22 +2818,16 @@ function renderTable(){
     });
 
   document.getElementById('tcTableHead').hidden = !filtered.length;
+  syncTableWrapWidth();
   document.querySelectorAll('#tcTypeSeg [data-type]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.type === tcFilterType)));
-  const listSearch = document.getElementById('tcListSearch'), headSearch = document.getElementById('tcSearchInput');
-  if(listSearch && headSearch && document.activeElement !== listSearch) listSearch.value = headSearch.value;
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = "아직 생성된 테스트 케이스가 없습니다. 기획안을 업로드하고 '테스트 시나리오 생성하기'를 눌러보세요.";
-    countBadge.style.display = 'none';
   }else if(!filtered.length){
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('emptyState').textContent = '검색/필터 조건에 맞는 테스트 케이스가 없습니다.';
-    countBadge.style.display = 'inline-block';
-    countBadge.textContent = `0 / ${tcData.length}건`;
   }else{
     document.getElementById('emptyState').style.display = 'none';
-    countBadge.style.display = 'inline-block';
-    countBadge.textContent = filtered.length === tcData.length ? `${tcData.length}건` : `${filtered.length} / ${tcData.length}건`;
   }
 
   // 화면에 없는(필터링된) 행에 대한 선택 상태는 남겨두되, 삭제된 tcId는 정리
@@ -2874,6 +2864,7 @@ function renderTable(){
       : assigned.length ? assigned.map(n=>{ const v = testerValue(row, n, 'tn'); return v ? `${n}: ${v}` : ''; }).filter(Boolean).join(' / ')
       : (row.testNote || '');
     const oneLine = v=>String(v || '').replace(/\s*\n\s*/g, ' ');
+    const noteKey = tabTester ? `tn:${tabTester}` : !assigned.length ? 'testNote' : assigned.length === 1 ? `tn:${assigned[0]}` : null; // 여러 명이면 null(이름별 패널)
     card.setAttribute('role', 'row');
     card.innerHTML = `
       <div class="tc-card-head">
@@ -2886,8 +2877,8 @@ function renderTable(){
         <div class="tc-c c-type"><select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select></div>
-        <div class="tc-c c-cat"><div class="tc-screen-input tc-title" data-title-idx="${idx}" title="${escapeHtml(tcTitleOf(row))}">${escapeHtml(tcTitleOf(row))}</div></div>
-        <div class="tc-c c-detail"><button type="button" class="row-toggle-btn tc-item" data-toggle-tcid="${escapeHtml(row.tcId)}" data-detail-idx="${idx}" title="전제조건·테스트 절차·기대결과 보기" aria-expanded="${!isCollapsed}">${escapeHtml(oneLine(row.testDetail)) || '(시험 내역 없음)'}</button></div>
+        <div class="tc-c c-cat"><div class="tc-screen-input tc-title" data-title-idx="${idx}" data-catedit="category" title="${escapeHtml(row.category || '')} (두 번 누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">-</span>'}</div></div>
+        <div class="tc-c c-detail"><button type="button" class="row-toggle-btn tc-item" data-toggle-tcid="${escapeHtml(row.tcId)}" data-catedit="subCategory" data-idx="${idx}" title="누르면 상세, 두 번 누르면 중분류를 고쳐요" aria-expanded="${!isCollapsed}">${escapeHtml(row.subCategory || '') || '(중분류 없음)'}</button></div>
         <div class="tc-c c-res">
           <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
           ${tabTester
@@ -2896,9 +2887,10 @@ function renderTable(){
           </select>`
             : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         </div>
-        <div class="tc-c c-note">${tabTester
-          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(tabTester)}" data-placeholder="비고">${escapeHtml(testerValue(row, tabTester, 'tn'))}</div>`
-          : `<span class="tc-note-text" title="${escapeHtml(noteText)}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">-</span>'}</span>`}</div>
+        <div class="tc-c c-note">${noteKey
+          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (row.testNote || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
+          : `<button type="button" class="tc-note-multi" data-note-idx="${idx}" aria-expanded="false" aria-controls="tcNotePop${idx}" title="${escapeHtml(noteText || '눌러서 담당자별 비고 입력')}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">담당자별 비고</span>'}</button>
+          <div class="tc-note-pop" id="tcNotePop${idx}" role="group" aria-label="${escapeHtml(row.tcId)} 담당자별 비고" hidden>${assigned.map(n=>`<label class="tc-note-pop-row"><span class="tc-note-pop-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span><div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(n)}" data-placeholder="${escapeHtml(n)} 비고">${escapeHtml(testerValue(row, n, 'tn'))}</div></label>`).join('')}</div>`}</div>
         <div class="tc-c c-who">${testerOptions}</div>
         <div class="tc-c c-st">${tabTester
           ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
@@ -2909,10 +2901,6 @@ function renderTable(){
       </div>
 
       <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
-      ${(constraintTag !== '없음' || integrationTag !== '없음') ? `<div class="tag-row">
-        ${constraintTag !== '없음' ? `<span class="ad-badge ad-badge--warning" title="제약 태그">${escapeHtml(CONSTRAINT_TAG_LABEL[constraintTag] || constraintTag)}</span>` : ''}
-        ${integrationTag !== '없음' ? `<span class="ad-badge ad-badge--neutral" title="연동 시스템">${escapeHtml(integrationTag)}</span>` : ''}
-      </div>` : ''}
       <div class="tc-detail">
         <div class="tc-detail-col">
           <div class="tc-field-block">
@@ -2933,34 +2921,8 @@ function renderTable(){
             <label class="tc-field-label">기대결과</label>
             <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="expected">${escapeHtml(formatCircled(row.expected))}</div>
           </div>
-          <div class="tc-field-block">
-            <label class="tc-field-label">대분류 &gt; 중분류</label>
-            <div class="tc-cat-line">
-              <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="category">${escapeHtml(row.category)}</div>
-              <span class="tc-cat-sep" aria-hidden="true">&gt;</span>
-              <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory)}</div>
-            </div>
-          </div>
-          ${(row.screen || '').trim() === tcTitleOf(row) ? '' : `<div class="tc-field-block">
-            <label class="tc-field-label">화면 구분</label>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen)}</div>
-          </div>`}
         </div>
       </div>
-      ${tabTester ? '' : `<div class="tc-card-footer">
-        <div class="tc-footer-item">
-          <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>테스트 내역${assigned.length ? '<span class="tc-footer-sub">입력은 담당자 탭의 비고 칸에서 해요</span>' : ''}</label>
-          ${assigned.length ? assigned.slice().sort((a, b)=>RESULT_SEVERITY.indexOf(testerValue(row, b, 'tr')) - RESULT_SEVERITY.indexOf(testerValue(row, a, 'tr'))).map(n=>{
-            const r = testerValue(row, n, 'tr'), st = testerValue(row, n, 'ts'), note = testerValue(row, n, 'tn');
-            return `<div class="tester-note-row is-view">
-            <span class="tester-note-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span>
-            <span class="tester-note-val">${r ? `<span class="dot" aria-hidden="true" style="background:${RESULT_COLOR[r]}"></span>${escapeHtml(r)}` : '<span class="sub-txt">미실행</span>'}</span>
-            <span class="tester-note-val">${st ? escapeHtml(st) : '<span class="sub-txt">상태 없음</span>'}</span>
-            <div class="tester-note-text">${note ? escapeHtml(note) : '<span class="sub-txt">아직 없어요</span>'}</div>
-          </div>`;}).join('')
-          : `<div class="tester-note-text">${row.testNote ? escapeHtml(row.testNote) : '<span class="sub-txt">아직 없어요. 담당자를 지정하면 그 테스터 탭의 비고 칸에서 입력해요</span>'}</div>`}
-        </div>
-      </div>`}
       </div>
     `;
     list.appendChild(card);
@@ -2977,13 +2939,13 @@ function renderTable(){
       // Enter로 생긴 <div>·<br>을 줄바꿈으로 읽는다(textContent는 줄바꿈을 버린다). 끝에 붙는 빈 줄 하나는 뺀다
       tcData[idx][key] = el.innerText.replace(/\n$/, '');
       scheduleAutoSave(); // 글자를 고칠 때도 실시간 저장
-      if(key === 'category' || key === 'subCategory'){ // 표 칸(대분류 > 중분류)도 바로 맞춘다
-        const title = list.querySelector(`[data-title-idx="${idx}"]`);
-        if(title) title.textContent = title.title = tcTitleOf(tcData[idx]);
-      }
-      if(key === 'testDetail'){ // 표 칸(시험 내역)도 바로 맞춘다
-        const cell = list.querySelector(`[data-detail-idx="${idx}"]`);
-        if(cell) cell.textContent = tcData[idx].testDetail.replace(/\s*\n\s*/g, ' ') || '(시험 내역 없음)';
+      if(key === 'testNote' || key.startsWith('tn:')){
+        const multi = list.querySelector(`[data-note-idx="${idx}"]`);
+        if(multi){
+          const s = testersOf(tcData[idx]).map(n=>{ const v = testerValue(tcData[idx], n, 'tn'); return v ? `${n}: ${v}` : ''; }).filter(Boolean).join(' / ');
+          multi.textContent = s.replace(/\s*\n\s*/g, ' ') || '담당자별 비고';
+          multi.title = s || '눌러서 담당자별 비고 입력';
+        }
       }
     });
   });
@@ -3015,6 +2977,52 @@ function renderTable(){
       inp.addEventListener('blur', ()=>finish(true));
     });
   });
+  list.querySelectorAll('[data-catedit]').forEach(el=>{
+    el.addEventListener('dblclick', e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const idx = +el.closest('.tc-card').querySelector('[data-selidx]').dataset.selidx, key = el.dataset.catedit, row = tcData[idx];
+      const inp = document.createElement('input');
+      inp.className = 'ad-input tc-inline-input';
+      inp.value = row[key] || '';
+      inp.setAttribute('aria-label', `${row.tcId} ${key === 'category' ? '대분류' : '중분류'} 고치기`);
+      el.replaceWith(inp);
+      inp.focus();
+      inp.select();
+      let done = false;
+      const finish = save=>{
+        if(done) return;
+        done = true;
+        if(save && inp.value.trim() !== (row[key] || '')){ row[key] = inp.value.trim(); scheduleAutoSave(); }
+        renderTable();
+      };
+      inp.addEventListener('keydown', ev=>{
+        if(ev.key === 'Enter'){ ev.preventDefault(); finish(true); }
+        else if(ev.key === 'Escape'){ ev.preventDefault(); finish(false); }
+      });
+      inp.addEventListener('blur', ()=>finish(true));
+      inp.addEventListener('click', ev=>ev.stopPropagation());
+    });
+  });
+  list.querySelectorAll('[data-note-idx]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const pop = document.getElementById(btn.getAttribute('aria-controls'));
+      const open = pop.hidden;
+      closeNotePops();
+      if(!open) return;
+      // 표 상자는 가로 스크롤이라 패널을 화면 기준으로 버튼 바로 아래에 띄운다(넘치면 위로)
+      const r = btn.getBoundingClientRect();
+      pop.hidden = false;
+      const w = pop.offsetWidth, h = pop.offsetHeight;
+      pop.style.left = `${Math.max(16, Math.min(r.left, window.innerWidth - w - 16))}px`;
+      pop.style.top = `${r.bottom + 4 + h > window.innerHeight ? Math.max(16, r.top - 4 - h) : r.bottom + 4}px`;
+      btn.setAttribute('aria-expanded', 'true');
+      const first = pop.querySelector('.tc-note-cell');
+      if(first) first.focus();
+    });
+  });
+  list.querySelectorAll('.tc-note-pop').forEach(pop=>pop.addEventListener('click', e=>e.stopPropagation()));
   list.querySelectorAll('.tc-card-head').forEach(head=>{
     head.addEventListener('click', e=>{
       if(e.target.closest('button, input, select, a, label, [contenteditable="true"], .tc-id-input')) return;
@@ -3098,18 +3106,41 @@ function renderTable(){
   selectAllCb.dataset.viewIds = JSON.stringify(filtered.map(({row})=>row.tcId));
 }
 
+// 상세 행은 표 상자 안쪽 너비에 맞춰 왼쪽에 붙인다(표가 가로로 스크롤돼도 내용이 화면 밖으로 나가지 않게)
+function syncTableWrapWidth(){
+  const w = document.getElementById('tcTableWrap');
+  if(!w) return;
+  if(w.clientWidth) w.style.setProperty('--tc-wrap-w', `${w.clientWidth}px`); // 화면이 숨겨져 있으면(0) 건드리지 않는다
+}
+if(window.ResizeObserver) new ResizeObserver(syncTableWrapWidth).observe(document.getElementById('tcTableWrap'));
+else window.addEventListener('resize', syncTableWrapWidth);
+function closeNotePops(){
+  document.querySelectorAll('.tc-note-pop:not([hidden])').forEach(pop=>{
+    pop.hidden = true;
+    const btn = document.querySelector(`[aria-controls="${pop.id}"]`);
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+  });
+}
+document.addEventListener('click', e=>{ if(!e.target.closest('.tc-note-pop, [data-note-idx]')) closeNotePops(); });
+window.addEventListener('scroll', ()=>{ if(!document.activeElement || !document.activeElement.closest('.tc-note-pop')) closeNotePops(); }, { passive: true });
+document.getElementById('tcTableWrap').addEventListener('scroll', closeNotePops, { passive: true });
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  const pop = document.querySelector('.tc-note-pop:not([hidden])');
+  if(!pop) return;
+  const btn = document.querySelector(`[aria-controls="${pop.id}"]`);
+  closeNotePops();
+  if(btn) btn.focus();
+});
 document.getElementById('tcTypeSeg').addEventListener('click', e=>{
   const b = e.target.closest('[data-type]');
-  const sel = document.getElementById('tcFilterType');
-  if(!b || !sel) return;
-  sel.value = b.dataset.type;
-  sel.dispatchEvent(new Event('change'));
+  if(!b) return;
+  tcFilterType = b.dataset.type;
+  renderTable();
 });
 document.getElementById('tcListSearch').addEventListener('input', e=>{
-  const head = document.getElementById('tcSearchInput');
-  if(!head) return;
-  head.value = e.target.value;
-  head.dispatchEvent(new Event('input'));
+  tcSearchQuery = e.target.value.trim().toLowerCase();
+  renderTable();
 });
 document.getElementById('selectAllTc').addEventListener('change', (e)=>{
   const viewIds = JSON.parse(e.target.dataset.viewIds || '[]');
@@ -3333,23 +3364,23 @@ function renderSummary(t){
   const box = document.getElementById('tcSummary');
   box.hidden = !t;
   if(!t) return;
-  const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
-  const name = entry ? (entry.title || entry.fileName) : '새 프로젝트';
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
-  box.innerHTML = `<div class="sum-head"><h3 class="sum-title" title="${escapeHtml(name)}">${escapeHtml(name)}</h3><span class="legend">${today}</span></div>
-    <div class="sum-stats">${SUMMARY_RESULTS.map(l=>{ const key = l === '미실행' ? '' : l;
+  const testers = Array.from(new Set(tcData.flatMap(testersOf)));
+  document.getElementById('sumTitle').textContent = today;
+  document.getElementById('sumTesters').textContent = testers.length ? `담당 ${testers.join(', ')}` : '담당 미지정';
+  document.getElementById('sumStats').innerHTML = `${SUMMARY_RESULTS.map(l=>{ const key = l === '미실행' ? '' : l;
       return `<button type="button" class="sum-badge" data-sumres="${key || 'NT'}" aria-pressed="${tcFilterResult === key}" title="이 결과만 보기">${resultPill(key)}<b class="num">${v(l)}</b></button>`; }).join('')}
-      <span class="sum-progress"><span class="legend">진행률</span><strong class="num">${Math.round(parseFloat(v('진행률')))}%</strong><span class="legend">${done}/${tcData.length}</span></span></div>`;
+      <span class="sum-progress"><span class="legend">진행률</span><strong class="num">${Math.round(parseFloat(v('진행률')))}%</strong><span class="legend">${done}/${tcData.length}</span></span>`;
 }
-// 요약 줄 결과 알약: 누르면 헤더의 결과 필터를 그 값으로(다시 누르면 전체)
+// 요약 줄 결과 알약 = 결과 필터: 누르면 그 결과만, 다시 누르면 전체
 document.getElementById('tcSummary').addEventListener('click', e=>{
-  const b = e.target.closest('[data-sumres]'), sel = document.getElementById('tcFilterResult');
-  if(!b || !sel) return;
+  const b = e.target.closest('[data-sumres]');
+  if(!b) return;
   const v = b.dataset.sumres === 'NT' ? '' : b.dataset.sumres;
-  sel.value = tcFilterResult === v ? 'ALL' : v;
-  sel.dispatchEvent(new Event('change'));
+  tcFilterResult = tcFilterResult === v ? 'ALL' : v;
+  renderTable();
 });
 function renderDistribution(){
   renderStatDefs();
@@ -3797,12 +3828,12 @@ function createProjectFromList(){
 let pendingShare = '';
 const shareInput = document.getElementById('projectShareInput');
 function renderShareBox(){
-  if(document.activeElement === shareInput) return;
+  if(!shareInput || document.activeElement === shareInput) return; // 공유 내용 칸은 화면에서 뺐다(데이터 share는 그대로 둔다)
   const p = editingProject();
   shareInput.value = p ? (p.share || '') : pendingShare;
   document.getElementById('shareMeta').textContent = p ? `프로젝트마다 따로 · 실시간 저장 · 마지막 수정 ${p.date || '-'}` : '프로젝트마다 따로 · 테스트 시나리오가 생기면 저장돼요';
 }
-shareInput.addEventListener('input', ()=>{
+if(shareInput) shareInput.addEventListener('input', ()=>{
   const p = editingProject();
   if(p){ p.share = shareInput.value; saveHistory(); scheduleAutoSave(); }
   else pendingShare = shareInput.value;
@@ -3974,7 +4005,7 @@ function takeProjectRows(entry){
     syncShadow.rows.set(id, { tc_no: v.tc_no, project: key, data: rowDataOf(row) });
     otherRows.delete(id);
   });
-  mine.sort((a, b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId));
+  mine.sort(compareRowOrder);
   if(legacyNo) renumberTcIds(mine); // 한 번만: FO·BO 따로 1부터(바뀐 번호는 다음 동기화 때 서버로)
   if(mine.length || !entry) return mine;
   const rows = normalizeTcIds(clone(entry.snapshot || []));
@@ -4640,7 +4671,7 @@ async function loadFromServer(){
   syncShadow = { rows: new Map(), history: S.history, testers: S.testers };
   tcData = takeProjectRows(loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null)
     .concat(localOnlyRows)
-    .sort((a,b)=>tcSortKey(a.tcId) - tcSortKey(b.tcId));
+    .sort(compareRowOrder);
   lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber());
   syncLoaded = true;
   afterRemoteApply();
@@ -4710,9 +4741,11 @@ function applyRemoteChange(table, p){
     const merged = { ...(row.data || {}) };
     if(local) keep.forEach(k=>{ merged[k] = local[k]; });
     const next = rowFromServer(row.id, row.tc_no, merged);
-    if(local) tcData[idx] = next;
-    else{
-      const at = tcData.findIndex(r=>tcSortKey(r.tcId) > tcSortKey(next.tcId));
+    if(local){
+      tcData[idx] = next;
+      if(local.seq !== next.seq) tcData.sort(compareRowOrder); // 팀원이 순서를 바꿨으면(행 추가·삭제로 밀림) 같은 순서로
+    }else{
+      const at = tcData.findIndex(r=>compareRowOrder(r, next) > 0);
       tcData.splice(at === -1 ? tcData.length : at, 0, next);
     }
     syncShadow.rows.set(row.id, { tc_no: row.tc_no, project: row.project, data: rowDataOf(next) });
