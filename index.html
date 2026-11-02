@@ -2334,9 +2334,10 @@ function formatCircled(text){
   const parts = formatSentences(s).split('\n').map(x=>x.trim()).filter(Boolean);
   return parts.length > 1 ? parts.map((p, i)=>`${CIRCLED_NUMS[i] || '-'} ${p}`).join('\n') : s.trim();
 }
+// 시험 내역: 문장마다, 그리고 ①②③ 앞에서 줄을 나눈다(화면·엑셀 같이 쓴다)
 function formatSentences(text){
   if(!text) return '';
-  return String(text).replace(/([.!?])\s+/g, '$1\n').trim();
+  return String(text).replace(/\s*([①-⑳])\s*/g, '\n$1 ').replace(/([.!?])\s+/g, '$1\n').trim();
 }
 
 /* ---------- Generate a batch of a SINGLE screen type (FO or BO) — dedicated call for clarity + speed ---------- */
@@ -2478,6 +2479,27 @@ function tcNameOf(tcId){
 function maxTcNumber(){
   return tcData.reduce((max, r)=>Math.max(max, tcNumberOf(r.tcId)), 0);
 }
+const tcTypeOf = r => r && r.screenType === 'BO' ? 'BO' : 'FO';
+// 새 행 번호: 화면유형(types[i])마다 rows에서 그 유형의 가장 큰 번호 다음부터 따로 매긴다. foNos(서버가 발급한 FO 번호)가 있으면 FO는 그 번호를 쓴다 (순수 함수)
+function issueTcIds(types, name, rows, foNos){
+  const next = { FO: 0, BO: 0 }, fo = (foNos || []).slice();
+  (rows || []).forEach(r=>{ const t = tcTypeOf(r); next[t] = Math.max(next[t], tcNumberOf(r.tcId)); });
+  return types.map(t=>{
+    const type = t === 'BO' ? 'BO' : 'FO';
+    return formatTcId(type === 'FO' && fo.length ? fo.shift() : ++next[type], name, type);
+  });
+}
+// 번호가 섞였는지: 같은 유형에 번호가 겹치거나, 유형별로 1부터 빈칸 없이 이어지지 않거나, 접두사가 화면유형과 다르면(예전 QC-·TC- 포함) true (순수 함수)
+function tcNumbersMixed(rows){
+  const seen = { FO: new Set(), BO: new Set() }, max = { FO: 0, BO: 0 };
+  for(const r of rows || []){
+    const t = tcTypeOf(r), n = tcNumberOf(r.tcId);
+    if(!n || seen[t].has(n) || !String(r.tcId).startsWith(t + '-')) return true;
+    seen[t].add(n);
+    max[t] = Math.max(max[t], n);
+  }
+  return max.FO !== seen.FO.size || max.BO !== seen.BO.size;
+}
 function formatTcId(n, name, screenType){
   return (screenType === 'BO' ? 'BO' : 'FO') + '-' + (name ? name + '-' : '') + String(n).padStart(3,'0');
 }
@@ -2522,10 +2544,6 @@ function syncTcPrefixes(){
   const moved = normalizeTcIds(tcData).movedTcIds;
   if(!moved.size) return;
   [selectedTcIds, expandedTcRows].forEach(set=>{ moved.forEach((to, from)=>{ if(set.delete(from)) set.add(to); }); });
-}
-function nextTcId(name){
-  lastIssuedTcNumber = Math.max(lastIssuedTcNumber, maxTcNumber()) + 1;
-  return formatTcId(lastIssuedTcNumber, name);
 }
 // TC 번호를 리스트 순서대로 FO·BO 따로 1부터 다시 매긴다(이름 칸은 그대로). 삭제·되돌리기·생성·행 추가·화면유형 변경 뒤에 불러 번호에 빈칸이 없게 한다.
 // 선택·펼침 상태(tcId 기준)도 새 번호로 옮긴다. 바뀐 개수를 돌려준다.
@@ -2686,7 +2704,7 @@ async function runGeneration(startFresh){
       // 테스터는 자동으로 배정하지 않는다(생성된 TC는 미배정, 카드나 일괄 수정에서 직접 지정)
       const chunkName = chunkTcName(chunk, currentTcName()); // 화면 ID가 있으면 그 ID, 없으면 입력칸 이름
       if(merged.length){ if(screenIdFromText(chunk.text)) foundIds.add(chunkName); else if(round === 0) noIdChunks++; }
-      const newIds = await allocateTcIds(merged.length, chunkName); // 팀 동기화 중이면 서버가 번호를 발급해 겹치지 않는다
+      const newIds = await allocateTcIds(merged.map(tcTypeOf), chunkName); // FO·BO 따로 번호를 매긴다(FO는 팀 동기화 중이면 서버가 발급)
       merged.forEach((row, i)=>{ row.tcId = newIds[i]; });
 
       if(merged.length){
@@ -3288,7 +3306,7 @@ document.getElementById('bulkDeleteBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('addRowBtn').addEventListener('click', async ()=>{
-  const [tcId] = await allocateTcIds(1, currentTcName());
+  const [tcId] = await allocateTcIds(['FO'], currentTcName());
   tcData.push({
     tcId, screenType: 'FO', screen:'', category:'', subCategory:'', procedure:'',
     precondition:'', testDetail:'', expected:'', constraintTag:'없음', integrationTag:'없음', tester: '',
@@ -3474,6 +3492,13 @@ function mergeImportedHistory(existing, imported){
     return byKey.get(k);
   });
   return { list: [...added, ...existing], added: added.length, entries };
+}
+// 가져올 프로젝트(entry)와 같은 기존 프로젝트: 이름(제목·파일명)이 같으면 같은 프로젝트로 본다. 이름이 없으면 내용이 완전히 같을 때만 (순수 함수)
+// (내보낸 뒤 TC를 지우면 내용이 달라져, 내용으로만 비교하면 지운 TC가 든 옛 프로젝트가 새로 생겼다)
+function findImportProject(list, entry){
+  const nameOf = h => h.title || h.fileName || '';
+  const key = h => JSON.stringify(historyDataOf(h));
+  return list.find(h=>nameOf(entry) ? nameOf(h) === nameOf(entry) : key(h) === key(entry)) || null;
 }
 // 백업의 시나리오가 어느 프로젝트 항목 것인지(없으면 -1). 새 파일은 currentProject, 예전 파일은 저장본과 화면 내용이 같은 항목 (순수 함수)
 function importTargetIndex(d){
@@ -4022,9 +4047,12 @@ function takeProjectRows(entry){
     otherRows.delete(id);
   });
   mine.sort(compareRowOrder);
-  if(legacyNo) renumberTcIds(mine); // 한 번만: FO·BO 따로 1부터(바뀐 번호는 다음 동기화 때 서버로)
+  // 열 때 한 번: 예전 프로젝트(BO가 양수 tc_no)나 번호가 섞인 프로젝트는 리스트 순서대로 FO·BO 따로 1부터(바뀐 번호는 다음 동기화 때 서버로)
+  if(!remoteApplying && (legacyNo || tcNumbersMixed(mine))) renumberTcIds(mine);
   if(mine.length || !entry) return mine;
-  const rows = normalizeTcIds(clone(entry.snapshot || []));
+  const rows = clone(entry.snapshot || []);
+  if(tcNumbersMixed(rows)) renumberTcIds(rows); // 예전 저장본(QC- 접두사·이어진 번호)
+  normalizeTcIds(rows);
   // 행 ID를 프로젝트 ID로 정해, 두 사람이 동시에 처음 열어도 같은 행이 두 번 쌓이지 않게 한다
   if(SYNC_ENABLED) rows.forEach((r, i)=>{ r._id = `${entry._id}-r${i + 1}`; });
   return rows;
@@ -4566,7 +4594,9 @@ function sbCheck(res){
 }
 const chunksOf = (arr, n) => { const out = []; for(let i=0; i<arr.length; i+=n) out.push(arr.slice(i, i+n)); return out; };
 
-// 새 TC 행 저장. 연결이 안 될 때 이 브라우저에서 발급한 번호가 다른 사람 번호와 겹치면(23505) 서버에서 새 번호를 받아 다시 저장한다.
+// 새 TC 행 저장. 이 브라우저에서 발급한 번호가 다른 사람 번호와 겹치면(23505) 새 번호로 다시 저장한다.
+// FO는 서버에서 새 번호를 받고, BO는 서버 발급이 FO(양수)만 세므로 BO 번호를 하나씩 올려 빈 번호를 찾는다(팀원이 동시에 BO를 만들 때).
+// ponytail: BO는 서버 발급이 없어 동시 생성 시 겹침→재시도가 생긴다. 서버 함수에 유형 인자가 생기면 그쪽으로 옮긴다
 async function insertTcRows(rows){
   const toRecord = r => ({ id: r.id, tc_no: r.tc_no, project: r.project || '', data: r.data, updated_by: SYNC_CLIENT_ID });
   const ackRows = (data, list) => (data || []).forEach(d=>{
@@ -4581,8 +4611,10 @@ async function insertTcRows(rows){
       for(let attempt=0; ; attempt++){
         const one = await sb.from('cvt_tc_rows').upsert([toRecord(r)], { onConflict: 'id' }).select('id,updated_at');
         if(!one.error){ ackRows(one.data, [r]); break; }
-        if(one.error.code !== '23505' || attempt >= 3) sbCheck(one);
-        const [no] = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: r.project || '' }));
+        const bo = r.tc_no < 0;
+        if(one.error.code !== '23505' || attempt >= (bo ? 50 : 3)) sbCheck(one);
+        const no = bo ? Math.max(-r.tc_no, ...tcData.filter(x=>x.screenType === 'BO').map(x=>tcNumberOf(x.tcId))) + 1
+          : sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: 1, p_project: r.project || '' }))[0];
         r.tc_no = renumberLocalRow(r.id, no);
       }
     }
@@ -4918,19 +4950,21 @@ document.getElementById('appDialogInput').addEventListener('keydown', e=>{
   else dlg.close('ok');
 });
 
-/* TC 번호 n개 발급. 팀 동기화 중이면 서버가 발급해 다른 팀원과 겹치지 않는다.
-   서버에 닿지 않으면 이 브라우저에서 발급하고, 저장할 때 겹치면 새 번호로 바꾼다(insertTcRows). */
-async function allocateTcIds(n, name){
+/* 새 행의 TC ID 발급(types: 행마다 'FO'/'BO'). FO·BO는 각각 001부터 따로 매긴다.
+   FO는 팀 동기화 중이면 서버가 발급해 다른 팀원과 겹치지 않는다(서버 발급은 가장 큰 tc_no 다음이라 음수인 BO와 무관).
+   BO와 서버에 닿지 않을 때의 FO는 이 브라우저에서 발급하고, 저장할 때 겹치면 새 번호로 바꾼다(insertTcRows). */
+async function allocateTcIds(types, name){
+  const n = types.filter(t=>t !== 'BO').length;
+  let foNos = null;
   if(SYNC_ENABLED && sb && n > 0){
     try{
       const nos = sbCheck(await sb.rpc('allocate_cvt_tc_nos', { p_count: n, p_project: currentProjectKey() }));
-      if(Array.isArray(nos) && nos.length === n){
-        lastIssuedTcNumber = Math.max(lastIssuedTcNumber, ...nos);
-        return nos.map(no=>formatTcId(no, name));
-      }
+      if(Array.isArray(nos) && nos.length === n) foNos = nos;
     }catch(e){ /* 아래에서 이 브라우저 번호로 대신한다 */ }
   }
-  return Array.from({ length: n }, ()=>nextTcId(name));
+  const ids = issueTcIds(types, name, tcData, foNos);
+  lastIssuedTcNumber = Math.max(lastIssuedTcNumber, ...ids.map(tcNumberOf));
+  return ids;
 }
 
 // 동기화 오류·번호 바뀜 안내를 헤더 아래 한 줄(#syncStatus)에 보인다. 저장 상태·접속자 표시는 두지 않는다.
@@ -5022,23 +5056,25 @@ async function offerImport(data, fileName){
   const err = validateBackup(data);
   if(err){ showGlobalError(err); return false; }
   const count = (t, h, n) => `시나리오 ${t}건 · 프로젝트 ${h}건 · 테스터 ${n}명`;
-  const merged = mergeImportedHistory(historyList, data.historyList);
+  // 파일의 시나리오가 속한 프로젝트 1건만 가져온다. 파일 속 다른 프로젝트는 내보낸 순간의 사본이라(그 뒤 지운 TC·프로젝트가 살아난다) 가져오지 않는다
   const ti = importTargetIndex(data);
-  const target = ti > -1 ? merged.entries[ti] : null;
-  const keepServer = !!(target && target._id); // 이미 있는 프로젝트면 서버의 행(더 최근 수정)을 그대로 연다
+  const existing = ti > -1 ? findImportProject(historyList, data.historyList[ti]) : null;
+  const target = existing || (ti > -1 ? historyDataOf(data.historyList[ti]) : null);
+  const keepServer = !!existing; // 이미 있는 프로젝트면 서버의 지금 내용(지운 TC는 지운 그대로)을 연다
+  const others = data.historyList.length - (ti > -1 ? 1 : 0);
   const where = target ? `'${target.title || target.fileName || '이름 없는'}' 프로젝트로` : '새 프로젝트로';
   const ok = await openDialog({
     title: 'JSON 백업 가져오기',
     body: (fileName ? `파일: ${fileName}${data.exportedAt ? ` (내보낸 시각 ${formatExportedAt(data.exportedAt)})` : ''}\n` : '')
       + `백업 파일에서 ${count(data.tcData.length, data.historyList.length, data.testerList.length)}을 찾았어요.\n`
-      + `시나리오 ${data.tcData.length}건은 ${where} 열고${keepServer ? '(이미 있는 프로젝트라 서버 내용을 그대로 보여요)' : ''}, 테스터 ${data.testerList.length}명은 이 파일 내용으로 바꾸고, `
-      + `프로젝트 ${merged.added}건은 기존 프로젝트 ${historyList.length}건 위에 추가해요.`
-      + (merged.added < data.historyList.length ? ` (이미 있는 프로젝트 ${data.historyList.length - merged.added}건은 건너뛰어요)` : ''),
+      + (keepServer ? `${where} 이미 있어 서버의 지금 내용을 그대로 열어요(파일의 시나리오 ${data.tcData.length}건은 가져오지 않아요). `
+        : `시나리오 ${data.tcData.length}건은 ${where} ${existing || !target ? '' : '새로 추가해 '}열어요. `)
+      + `테스터 ${data.testerList.length}명은 이 파일 내용으로 바꿔요.`
+      + (others ? ` 파일 속 다른 프로젝트 ${others}건은 가져오지 않아요.` : ''),
     okLabel: '가져오기'
   });
   if(ok === null) return false;
-  historyList = merged.list;
-  if(target && !target._id) target._id = newRowId();
+  if(target && !existing){ target._id = newRowId(); historyList = [target, ...historyList]; }
   // 파일의 시나리오는 그 프로젝트 항목에 붙인다(예전에는 늘 새 프로젝트로 열어 가져올 때마다 이름 없는 사본이 생겼다). 지금 프로젝트는 그대로
   switchProject(target);
   if(!keepServer) tcData = normalizeTcIds(data.tcData.map(r=>toExportRow(r))); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
