@@ -666,6 +666,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .status-badge{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:32px;padding:0 10px;border-radius:var(--radius-xs);
     font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--line);white-space:nowrap;}
   /* 테스터 역할: 칩의 역할 셀렉트, 탭·담당자 고르기의 역할 꼬리표 */
+  .tester-chip .tester-name-btn{all:unset;cursor:pointer;font-weight:inherit;border-radius:4px;}
+  .tester-chip .tester-name-btn:hover{text-decoration:underline;}
+  .tester-chip .tester-name-btn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .tester-chip .tester-role-select{margin-left:6px;padding:2px 4px;font-size:11.5px;font-weight:700;border:1px solid var(--line);border-radius:var(--radius-xs);background:var(--panel);color:var(--ink);font-family:inherit;}
   .role-tag{display:inline-block;margin-left:4px;padding:0 6px;font-size:10.5px;font-weight:700;line-height:18px;border-radius:999px;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);}
   #testerRoleInput{flex:0 0 auto;width:auto;}
@@ -1015,6 +1018,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .tc-summary .stats-toggle{height:auto;padding:4px 8px;font-size:13px;font-weight:600;color:var(--ink-soft);}
   .tc-summary[hidden]{display:none;}
   .sum-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+  .sum-periods{margin-top:8px;}
+  .period-fields{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:4px;}
+  .period-field{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);}
+  .period-label{font-weight:700;color:var(--ink-soft);margin-right:2px;}
+  .period-input.ad-input{width:132px;height:28px;padding:2px 6px;font-size:12px;}
   .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
   .tc-summary .legend{font-size:12px;color:var(--muted);}
   .sum-stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -1107,6 +1115,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     <!-- 요약 줄(회귀 검증 화면 머리): 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 -->
     <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden>
       <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm stats-toggle" id="statsToggle" aria-expanded="false" aria-controls="tcStatsCard">담당자별 통계</button></div>
+      <div class="sum-periods" id="sumPeriods" hidden></div>
       <div class="sum-stats" id="sumStats"></div>
     </div>
     <div class="card ad-card ad-panel is-collapsed" id="tcStatsCard">
@@ -2044,6 +2053,24 @@ async function importFigmaScreens(progressBtn){
 function editingProject(){
   return loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) || null : null;
 }
+// 프로젝트마다 피그마 링크를 기억해, 다시 열어도 같은 피그마로 이어서 생성한다(링크는 프로젝트 항목의 figmaUrl에 저장된다)
+let figmaPrefilled = ''; // QC 생성 창에 자동으로 채운 링크(사용자가 직접 바꾼 링크는 덮어쓰지 않는다)
+function prefillProjectFigmaUrl(){
+  const input = document.getElementById('figmaUrlInput');
+  if(!input) return;
+  const typed = input.value.trim();
+  if(typed && typed !== figmaPrefilled) return;
+  const p = editingProject();
+  input.value = figmaPrefilled = (p && p.figmaUrl) || '';
+}
+function rememberProjectFigmaUrl(){
+  const p = editingProject();
+  if(!p || !figmaUrl || p.figmaUrl === figmaUrl) return;
+  p.figmaUrl = figmaUrl;
+  saveHistory();
+  renderHistory();
+  scheduleAutoSave(); // 팀 동기화 중이면 프로젝트 항목도 서버에 반영
+}
 function activeTesters(){
   const p = editingProject();
   return p && Array.isArray(p.testers) ? p.testers : testerList;
@@ -2089,7 +2116,7 @@ function renderTesterChips(){
   const scope = document.getElementById('testerScope');
   if(scope) scope.textContent = p ? `프로젝트: ${p.title || p.fileName}` : '기본 테스터';
   wrap.innerHTML = activeTesters().map((t,i)=>
-    `<span class="tester-chip">${escapeHtml(t)}<select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
+    `<span class="tester-chip"><button type="button" class="tester-name-btn" data-tren="${i}" title="눌러서 이름 바꾸기" aria-label="${escapeHtml(t)} 이름 바꾸기">${escapeHtml(t)}</button><select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
       <option value="">역할</option>${TESTER_ROLES.map(r=>`<option value="${r}" ${r===testerRoleOf(t)?'selected':''}>${r}</option>`).join('')}
     </select><button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
@@ -2097,6 +2124,44 @@ function renderTesterChips(){
   wrap.querySelectorAll('[data-tdel]').forEach(btn=>{
     btn.addEventListener('click', ()=>removeTester(activeTesters()[+btn.dataset.tdel]));
   });
+  wrap.querySelectorAll('[data-tren]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const old = activeTesters()[+btn.dataset.tren];
+      const next = await openDialog({ title: '테스터 이름 바꾸기', body: `'${old}'의 새 이름을 적어 주세요. 담당 시나리오·결과·비고도 새 이름으로 옮겨요.`, input: old, okLabel: '바꾸기' });
+      if(next !== null) renameTester(old, next);
+    });
+  });
+}
+// 행 하나에서 테스터 이름 바꾸기: 담당자 칸과 테스터별 칸(결과 tr:·작성 상태 ts:·비고 tn:)을 옮긴다. 바뀌었으면 true (순수 함수)
+function renameTesterInRow(row, from, to){
+  let changed = false;
+  const ts = testersOf(row);
+  if(ts.includes(from)){ row.tester = joinTesters(ts.map(n=>n === from ? to : n)); changed = true; }
+  ['tr', 'ts', 'tn'].forEach(k=>{
+    if(!(`${k}:${from}` in row)) return;
+    row[`${k}:${to}`] = row[`${k}:${from}`];
+    delete row[`${k}:${from}`];
+    changed = true;
+  });
+  return changed;
+}
+// 테스터 이름 바꾸기: 목록·역할·지금 리스트의 담당자와 테스터별 칸·열려 있는 담당자 탭을 함께 옮긴다. 같은 이름이 있으면 안내만 한다
+async function renameTester(from, to){
+  to = String(to || '').trim();
+  if(!from || !to || to === from) return false;
+  if(activeTesters().includes(to)){ showGlobalError(`'${to}' 테스터가 이미 있어요. 다른 이름으로 바꿔 주세요.`); return false; }
+  showGlobalError('');
+  await changeTesters(list=>list.map(n=>n === from ? to : n));
+  const p = editingProject(), roles = p ? p.testerRoles : pendingTesterRoles;
+  if(roles && from in roles){ roles[to] = roles[from]; delete roles[from]; if(p) saveHistory(); }
+  const n = tcData.filter(r=>renameTesterInRow(r, from, to)).length;
+  if(tcFilterTester === from){ tcFilterTester = to; try{ localStorage.setItem('cvt_tester_tab', to); }catch(e){ /* 이 화면에서만 */ } }
+  scheduleAutoSave();
+  renderTesterChips();
+  renderTable();
+  renderDistribution();
+  showUndoToast(`'${from}' 테스터 이름을 '${to}'(으)로 바꿨어요${n ? `(담당 시나리오 ${n}건도 옮겼어요)` : ''}.`, ()=>renameTester(to, from));
+  return true;
 }
 // 테스터 삭제: 목록에서 빼고, 지금 QC 리스트의 담당자에서도 뺀다(그대로 두면 담당자 탭·고르기 목록·카드에 계속 보였다).
 // 그 테스터가 적은 결과·테스트 내역 칸은 지우지 않는다(되돌리면 다시 보인다)
@@ -2730,6 +2795,7 @@ async function runGeneration(startFresh){
   }
 
   const madeCount = tcData.length - startCount;
+  if(madeCount) rememberProjectFigmaUrl(); // 이 프로젝트의 피그마 링크로 기억(새 프로젝트는 만들어질 때 함께 저장된다)
   if(roundErrors.length){
     showError(madeCount
       ? `${madeCount}개 생성됨 (일부 라운드 오류 있음). 부족하면 '테스트 시나리오 추가 생성'으로 이어서 만들 수 있습니다.`
@@ -3427,6 +3493,11 @@ function renderSummary(t){
   const testers = Array.from(new Set(tcData.flatMap(testersOf)));
   document.getElementById('sumTitle').textContent = today;
   document.getElementById('sumTesters').textContent = testers.length ? `담당 ${testers.join(', ')}` : '담당 미지정';
+  // 테스트 기간(DVT·CVT·UAT): 프로젝트가 만들어진 뒤에 입력한다(프로젝트 목록과 같은 칸)
+  const proj = editingProject(), periodsBox = document.getElementById('sumPeriods');
+  periodsBox.hidden = !proj;
+  periodsBox.innerHTML = proj ? periodFieldsHtml(proj, historyList.indexOf(proj)) : '';
+  if(proj) bindPeriodInputs(periodsBox);
   document.getElementById('sumStats').innerHTML = `${SUMMARY_RESULTS.map(l=>{ const key = l === '미실행' ? '' : l;
       return `<button type="button" class="sum-badge" data-sumres="${key || 'NT'}" aria-pressed="${tcFilterResult === key}" title="이 결과만 보기">${resultPill(key)}<b class="num">${v(l)}</b></button>`; }).join('')}
       <span class="sum-progress"><span class="legend">진행률</span><strong class="num">${Math.round(parseFloat(v('진행률')))}%</strong><span class="legend">${done}/${tcData.length}</span></span>`;
@@ -4239,6 +4310,35 @@ function categoryStats(list, added, hidden){
   }).filter(s=>s.cat !== UNCATEGORIZED || s.projects > 0);
 }
 // 프로젝트 분류를 바꾼다(미분류를 고르면 필드를 지운다). 저장하면 팀 동기화로 전달된다.
+/* 테스트 기간(DVT·CVT·UAT): 프로젝트 항목 data.periods = { DVT: {from, to}, ... }(YYYY-MM-DD). 서버 스키마 변경 없이 프로젝트 data 안에 둔다 */
+const PROJECT_PERIODS = ['DVT', 'CVT', 'UAT'];
+// 기간 한 칸을 바꾼 새 periods. 시작이 종료보다 늦으면 방금 고친 쪽에 맞춘다. 빈 기간은 뺀다 (순수 함수)
+function nextPeriods(periods, key, edge, value){
+  const all = { ...(periods || {}) }, p = { ...(all[key] || {}) };
+  if(value) p[edge] = value; else delete p[edge];
+  if(p.from && p.to && p.from > p.to){ if(edge === 'from') p.to = p.from; else p.from = p.to; }
+  if(p.from || p.to) all[key] = p; else delete all[key];
+  return all;
+}
+function periodFieldsHtml(h, idx){
+  return `<div class="period-fields" role="group" aria-label="테스트 기간">${PROJECT_PERIODS.map(k=>{
+    const p = (h.periods || {})[k] || {};
+    const input = (edge, label)=>`<input type="date" class="ad-input period-input cell-edit" data-pidx="${idx}" data-period="${k}" data-edge="${edge}" value="${escapeHtml(p[edge] || '')}" aria-label="${k} ${label}">`;
+    return `<span class="period-field" role="group" aria-label="${k} 기간"><span class="period-label">${k} 기간</span>${input('from', '시작일')}<span aria-hidden="true">~</span>${input('to', '종료일')}</span>`;
+  }).join('')}</div>`;
+}
+async function setProjectPeriod(idx, key, edge, value){
+  const entry = historyList[idx];
+  if(!entry) return;
+  const periods = nextPeriods(entry.periods, key, edge, value);
+  if(Object.keys(periods).length) entry.periods = periods; else delete entry.periods;
+  await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
+  renderHistory();
+  if(entry._id === loadedHistoryId) renderTable(); // 요약 줄의 기간 칸도 맞춘다
+}
+function bindPeriodInputs(root){
+  root.querySelectorAll('.period-input').forEach(inp=>inp.addEventListener('change', ()=>setProjectPeriod(+inp.dataset.pidx, inp.dataset.period, inp.dataset.edge, inp.value)));
+}
 async function setProjectCategory(idx, cat){
   const entry = historyList[idx];
   if(!entry) return;
@@ -4366,6 +4466,7 @@ function renderHistory(){
       <div class="meta">
         <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
         <div class="date">${escapeHtml(h.date)} · 시나리오 ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
+        ${periodFieldsHtml(h, idx)}
         <div class="history-mini-bar">${bar}</div>
       </div>
       <div class="history-actions">
@@ -4385,6 +4486,7 @@ function renderHistory(){
   wrap.querySelectorAll('[data-share]').forEach(btn=>{
     btn.addEventListener('click', ()=>copyProjectLink(+btn.dataset.share));
   });
+  bindPeriodInputs(wrap);
   // 분류 칩을 누르면 그 자리에 분류 선택이 열린다(기본·쓰인 분류, 미분류, 새 분류 입력)
   wrap.querySelectorAll('[data-cat-idx]').forEach(chip=>{
     chip.addEventListener('click', ()=>{
@@ -5289,6 +5391,8 @@ function renderViewTitle(){
 // QC 생성 창(워크보드 "업무 등록" 모달처럼 헤더의 "+ QC 생성"으로 연다). 생성하는 동안에는 닫기·Esc·바깥 클릭으로 닫히지 않는다
 const qcGenModal = document.getElementById('qcGenModal');
 function openQcGen(){
+  prefillProjectFigmaUrl(); // 이 프로젝트에서 쓴 피그마 링크를 채운다(이어서 생성)
+  updateButtons();
   if(!qcGenModal.open){ resetQcGenPosition(); qcGenModal.showModal(); }
   document.getElementById('figmaUrlInput').focus();
 }
