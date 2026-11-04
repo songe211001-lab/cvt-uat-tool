@@ -394,6 +394,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .gnb-sub[aria-current="page"] .count{color:var(--ink-soft);}
   .gnb-sub--add{color:var(--ink-soft);font-weight:600;}
   .gnb-sub[draggable="true"]{cursor:grab;}
+  .tc-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .tc-oneline{white-space:nowrap;overflow-x:auto;}
+  @media (max-width:640px){ .tc-field-row{grid-template-columns:1fr;} }
   .gnb-sub.is-dragging{opacity:.5;}
   .gnb-sub.is-drop{box-shadow:inset 0 2px 0 var(--primary);} /* 놓을 자리 */
   /* 접힘(64px): 대메뉴 아이콘만, 소메뉴는 숨김 */
@@ -2929,6 +2932,16 @@ function renderTable(){
       <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
       <div class="tc-detail">
         <div class="tc-detail-col">
+          <div class="tc-field-row">
+            <div class="tc-field-block">
+              <label class="tc-field-label">대분류</label>
+              <div class="cell-edit tc-editable tc-oneline" contenteditable="true" data-idx="${idx}" data-key="category">${escapeHtml(row.category || '')}</div>
+            </div>
+            <div class="tc-field-block">
+              <label class="tc-field-label">중분류</label>
+              <div class="cell-edit tc-editable tc-oneline" contenteditable="true" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory || '')}</div>
+            </div>
+          </div>
           <div class="tc-field-block">
             <label class="tc-field-label">전제조건<small>BO 설정 포함</small></label>
             <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="precondition">${escapeHtml(formatCircled(row.precondition))}</div>
@@ -2960,6 +2973,15 @@ function renderTable(){
     const key = el.dataset.key, label = key.startsWith('tn:') ? `${key.slice(3)} 테스트 내역` : (columnLabel[key] || '');
     el.setAttribute('aria-label', `${tcData[+el.dataset.idx].tcId} ${label}`);
     if(['precondition','procedure','testDetail','expected','testNote'].includes(key) || key.startsWith('tn:')) el.setAttribute('aria-multiline', 'true');
+    if(el.classList.contains('tc-oneline')) el.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } }); // 한 줄 칸: Enter는 입력 끝
+    if(el.classList.contains('tc-oneline')){
+      // 고치는 동안 같은 행의 표 칸(대분류·중분류)도 바로 바꾼다(다시 그리면 입력 중인 칸이 사라진다)
+      el.addEventListener('input', ()=>{
+        const cell = el.closest('.tc-card').querySelector(`[data-catedit="${key}"]`); // 이 리스너가 저장 리스너보다 먼저라 입력칸 글자를 바로 쓴다
+        if(cell) cell.textContent = el.innerText.trim() || (key === 'category' ? '-' : '(중분류 없음)');
+      });
+      el.addEventListener('blur', ()=>{ const r = tcData[+el.dataset.idx]; if(r && r[key] !== r[key].trim()){ r[key] = r[key].trim(); scheduleAutoSave(); } });
+    }
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
       // Enter로 생긴 <div>·<br>을 줄바꿈으로 읽는다(textContent는 줄바꿈을 버린다). 끝에 붙는 빈 줄 하나는 뺀다
@@ -3683,7 +3705,7 @@ function addQcListSheet(workbook, rows, title){
   qcSheetSections(rows).forEach(sec=>{
     ws.mergeCells(rowNum, 2, rowNum, totalCols);
     const groupCell = ws.getCell(rowNum, 2);
-    groupCell.value = `[${sec.type}] ${sec.category || '(대분류 없음)'} (${sec.rows.length}건)`;
+    groupCell.value = `${sec.category || '(대분류 없음)'} (${sec.rows.length}건)`; // FO/BO는 유형 칸에 있어 대분류 구분 행에는 넣지 않는다
     xlsStyleCell(groupCell, {fill:XLS_STYLE.groupFill, bold:true, size:10, align:'left', border:XLS_STYLE.dataBorderColor});
     ws.getRow(rowNum).height = 20;
     rowNum++;
@@ -3723,7 +3745,7 @@ function addQcListSheet(workbook, rows, title){
   return ws;
 }
 
-// 엑셀 가져오기: addQcListSheet가 만든 시트(열 머리 "TC ID"(예전 "QC ID"), 구분 행 "[FO] …", 데이터 행)를 TC 행으로 읽는다 (순수 함수)
+// 엑셀 가져오기: addQcListSheet가 만든 시트(열 머리 "TC ID"(예전 "QC ID"), 구분 행 "대분류 (n건)", 데이터 행)를 TC 행으로 읽는다 (순수 함수)
 // grid: 시트 칸 글자, grid[행][열](0부터, A열 = 0). 기본 칸은 열 머리 이름으로 찾는다(전제조건 열이 없는 예전 파일도 읽힌다).
 // 첫 "테스터" 열부터 4칸 = 취합 영역(테스터·테스트 내역·결과·비고), 그 뒤 4칸씩 테스터별 블록. 취합 영역이 비어 있으면 테스터별 블록에서 처음 적힌 값을 쓴다.
 // 테스터별 블록에 적힌 값은 그 테스터의 칸(tn:이름·tr:이름, 비고가 진행상태 값이면 ts:이름)으로도 읽는다.
