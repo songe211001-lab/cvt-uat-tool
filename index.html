@@ -1023,6 +1023,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .period-field{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);}
   .period-label{font-weight:700;color:var(--ink-soft);margin-right:2px;}
   .period-input.ad-input{width:132px;height:28px;padding:2px 6px;font-size:12px;}
+  /* 프로젝트 상태 배지(고르는 셀렉트): 진행중 파랑, 배포 완료 초록 */
+  .project-stage-select{appearance:none;-webkit-appearance:none;height:24px;padding:0 22px 0 10px;border:1px solid transparent;border-radius:999px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;
+    background:#E8F0FE url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231A56DB' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 8px center;color:#1A56DB;}
+  .project-stage-select.is-done{background-color:#E6F4EA;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23137333' stroke-width='1.5'/%3E%3C/svg%3E");color:#137333;}
+  .project-stage-select:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
   .tc-summary .legend{font-size:12px;color:var(--muted);}
   .sum-stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -4320,8 +4325,14 @@ function nextPeriods(periods, key, edge, value){
   if(p.from || p.to) all[key] = p; else delete all[key];
   return all;
 }
+// 프로젝트 상태(진행중·배포 완료, 정하지 않으면 진행중)와 배포 일정: data.stage, data.deployDate(YYYY-MM-DD)
+const PROJECT_STAGES = ['진행중', '배포 완료'];
+const stageOf = h => PROJECT_STAGES.includes(h.stage) ? h.stage : '진행중';
 function periodFieldsHtml(h, idx){
-  return `<div class="period-fields" role="group" aria-label="테스트 기간">${PROJECT_PERIODS.map(k=>{
+  const stage = stageOf(h);
+  return `<div class="period-fields" role="group" aria-label="상태·일정"><select class="project-stage-select cell-edit${stage === '배포 완료' ? ' is-done' : ''}" data-sidx="${idx}" aria-label="프로젝트 상태">${PROJECT_STAGES.map(s=>`<option value="${s}"${s === stage ? ' selected' : ''}>${s}</option>`).join('')}</select>`
+    + `<span class="period-field"><span class="period-label">배포 일정</span><input type="date" class="ad-input period-input cell-edit" data-didx="${idx}" value="${escapeHtml(h.deployDate || '')}" aria-label="배포 일정"></span>`
+    + `${PROJECT_PERIODS.map(k=>{
     const p = (h.periods || {})[k] || {};
     const input = (edge, label)=>`<input type="date" class="ad-input period-input cell-edit" data-pidx="${idx}" data-period="${k}" data-edge="${edge}" value="${escapeHtml(p[edge] || '')}" aria-label="${k} ${label}">`;
     return `<span class="period-field" role="group" aria-label="${k} 기간"><span class="period-label">${k} 기간</span>${input('from', '시작일')}<span aria-hidden="true">~</span>${input('to', '종료일')}</span>`;
@@ -4336,8 +4347,18 @@ async function setProjectPeriod(idx, key, edge, value){
   renderHistory();
   if(entry._id === loadedHistoryId) renderTable(); // 요약 줄의 기간 칸도 맞춘다
 }
+async function setProjectMeta(idx, key, value){
+  const entry = historyList[idx];
+  if(!entry) return;
+  if(value) entry[key] = value; else delete entry[key];
+  await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
+  renderHistory();
+  if(entry._id === loadedHistoryId) renderTable();
+}
 function bindPeriodInputs(root){
-  root.querySelectorAll('.period-input').forEach(inp=>inp.addEventListener('change', ()=>setProjectPeriod(+inp.dataset.pidx, inp.dataset.period, inp.dataset.edge, inp.value)));
+  root.querySelectorAll('.period-input[data-pidx]').forEach(inp=>inp.addEventListener('change', ()=>setProjectPeriod(+inp.dataset.pidx, inp.dataset.period, inp.dataset.edge, inp.value)));
+  root.querySelectorAll('.period-input[data-didx]').forEach(inp=>inp.addEventListener('change', ()=>setProjectMeta(+inp.dataset.didx, 'deployDate', inp.value)));
+  root.querySelectorAll('.project-stage-select').forEach(sel=>sel.addEventListener('change', ()=>setProjectMeta(+sel.dataset.sidx, 'stage', sel.value)));
 }
 async function setProjectCategory(idx, cat){
   const entry = historyList[idx];
