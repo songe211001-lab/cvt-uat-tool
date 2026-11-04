@@ -926,6 +926,13 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tc-item{all:unset;box-sizing:border-box;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
   #tcCardList .tc-item:hover, #tcCardList .tc-item:focus-visible{text-decoration:underline;}
   #tcCardList .tc-item:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  #tcCardList .c-detail{display:flex;align-items:center;gap:4px;min-width:0;}
+  #tcCardList .c-detail .tc-item{flex:1 1 auto;min-width:0;}
+  #tcCardList .tc-cat-edit{cursor:text;}
+  #tcCardList .row-toggle-btn{all:unset;flex:none;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;color:var(--muted);cursor:pointer;transition:transform .15s var(--ease);}
+  #tcCardList .row-toggle-btn:hover{background:var(--bg);color:var(--ink);}
+  #tcCardList .row-toggle-btn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:1px;}
+  #tcCardList .row-toggle-btn[aria-expanded="true"]{transform:rotate(180deg);}
   /* 결과: 알약 셀렉트(cvSel)·알약 배지(cvPill) */
   #tcCardList .c-res{display:flex;align-items:center;}
   #tcCardList .c-res .result-dot{display:none;}
@@ -2906,8 +2913,8 @@ function renderTable(){
         <div class="tc-c c-type"><select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
           ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
         </select></div>
-        <div class="tc-c c-cat"><div class="tc-screen-input tc-title" data-title-idx="${idx}" data-catedit="category" title="${escapeHtml(row.category || '')} (두 번 누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">-</span>'}</div></div>
-        <div class="tc-c c-detail"><button type="button" class="row-toggle-btn tc-item" data-toggle-tcid="${escapeHtml(row.tcId)}" data-catedit="subCategory" data-idx="${idx}" title="누르면 상세, 두 번 누르면 중분류를 고쳐요" aria-expanded="${!isCollapsed}">${escapeHtml(row.subCategory || '') || '(중분류 없음)'}</button></div>
+        <div class="tc-c c-cat"><div class="tc-screen-input tc-title tc-cat-edit" data-title-idx="${idx}" data-catedit="category" role="button" tabindex="0" title="${escapeHtml(row.category || '')} (누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">-</span>'}</div></div>
+        <div class="tc-c c-detail"><span class="tc-item tc-cat-edit" data-catedit="subCategory" data-idx="${idx}" role="button" tabindex="0" title="${escapeHtml(row.subCategory || '')} (누르면 고쳐요)">${escapeHtml(row.subCategory || '') || '(중분류 없음)'}</span><button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '펼치기' : '접기'}" title="상세 펼치기/접기" aria-expanded="${!isCollapsed}">▾</button></div>
         <div class="tc-c c-res">
           <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
           ${tabTester
@@ -3026,7 +3033,8 @@ function renderTable(){
     });
   });
   list.querySelectorAll('[data-catedit]').forEach(el=>{
-    el.addEventListener('dblclick', e=>{
+    el.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); el.click(); } });
+    el.addEventListener('click', e=>{
       e.preventDefault();
       e.stopPropagation();
       const idx = +el.closest('.tc-card').querySelector('[data-selidx]').dataset.selidx, key = el.dataset.catedit, row = tcData[idx];
@@ -3073,7 +3081,7 @@ function renderTable(){
   list.querySelectorAll('.tc-note-pop').forEach(pop=>pop.addEventListener('click', e=>e.stopPropagation()));
   list.querySelectorAll('.tc-card-head').forEach(head=>{
     head.addEventListener('click', e=>{
-      if(e.target.closest('button, input, select, a, label, [contenteditable="true"], .tc-id-input')) return;
+      if(e.target.closest('button, input, select, a, label, [contenteditable="true"], .tc-id-input, [data-catedit]')) return;
       head.querySelector('.row-toggle-btn').click();
     });
   });
@@ -3084,6 +3092,7 @@ function renderTable(){
       const willCollapse = body.style.display !== 'none';
       body.style.display = willCollapse ? 'none' : '';
       btn.setAttribute('aria-expanded', String(!willCollapse));
+      btn.setAttribute('aria-label', `${tcId} 상세 ${willCollapse ? '펼치기' : '접기'}`);
       if(willCollapse) expandedTcRows.delete(tcId); else expandedTcRows.add(tcId);
     });
   });
@@ -4541,6 +4550,12 @@ function localSyncMaps(){
 function emptyOp(){
   return { rowDel: [], rowIns: [], rowPatch: [], rowNo: [], histDel: [], histUp: [], testerDel: [], testerUp: [] };
 }
+// 저장 묶음을 변경 1건씩으로 나눈다(보내는 순서 그대로). 거절된 1건만 건너뛰려고 쓴다 (순수 함수)
+const SYNC_OP_KEYS = ['rowDel', 'histDel', 'testerDel', 'rowPatch', 'rowNo', 'rowIns', 'histUp', 'testerUp'];
+function syncOpSize(op){ return SYNC_OP_KEYS.reduce((n, k)=>n + ((op && op[k]) || []).length, 0); }
+function splitSyncOp(op){
+  return SYNC_OP_KEYS.flatMap(k=>((op && op[k]) || []).map(x=>({ ...emptyOp(), [k]: [x] })));
+}
 function isEmptyOp(op){
   return Object.values(op).every(a=>!a.length);
 }
@@ -4701,13 +4716,22 @@ async function flushSyncQueue(){
   clearTimeout(syncRetryTimer);
   renderSyncStatus();
   const renumberedBefore = syncRenumbered;
+  const skipped = [];
   try{
     while(syncQueue.length){
-      await sendSyncOp(syncQueue[0]);
+      try{
+        await sendSyncOp(syncQueue[0]);
+      }catch(err){
+        if(err.transient || isSchemaMissingError(err)) throw err;
+        // 서버가 받아들이지 않는 변경: 묶음이면 1건씩 나눠 다시 보내고, 1건이면 그것만 건너뛴다(함께 보낸 다른 수정은 지킨다)
+        if(syncOpSize(syncQueue[0]) > 1){ syncQueue.splice(0, 1, ...splitSyncOp(syncQueue[0])); persistSyncQueue(); continue; }
+        skipped.push(err.message);
+      }
       syncQueue.shift();
       persistSyncQueue();
-      syncErrorMsg = '';
     }
+    syncErrorMsg = skipped.length ? `저장하지 못한 변경 ${skipped.length}건을 건너뛰었습니다(${skipped[0]}). 서버 기준으로 다시 불러옵니다.` : '';
+    if(skipped.length) syncResyncWanted = true;
   }catch(err){
     if(err.transient){
       syncErrorMsg = `저장하지 못했습니다(${err.message}). 잠시 뒤 자동으로 다시 보냅니다.`;
@@ -4715,12 +4739,6 @@ async function flushSyncQueue(){
     }else if(isSchemaMissingError(err)){
       syncSchemaMissing = true;
       syncErrorMsg = SYNC_SCHEMA_MSG;
-    }else{
-      // 서버가 받아들이지 않는 변경은 버리고 서버 기준으로 다시 맞춘다 (계속 같은 오류로 막히지 않도록)
-      syncErrorMsg = `저장하지 못한 변경 1건을 건너뛰었습니다(${err.message}). 서버 기준으로 다시 불러옵니다.`;
-      syncQueue.shift();
-      persistSyncQueue();
-      syncResyncWanted = true;
     }
   }finally{
     syncFlushing = false;
