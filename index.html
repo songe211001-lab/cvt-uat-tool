@@ -1023,11 +1023,19 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .period-field{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);}
   .period-label{font-weight:700;color:var(--ink-soft);margin-right:2px;}
   .period-input.ad-input{width:132px;height:28px;padding:2px 6px;font-size:12px;}
-  /* 프로젝트 상태 배지(고르는 셀렉트): 진행중 파랑, 배포 완료 초록 */
-  .project-stage-select{appearance:none;-webkit-appearance:none;height:24px;padding:0 22px 0 10px;border:1px solid transparent;border-radius:999px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;
-    background:#E8F0FE url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231A56DB' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 8px center;color:#1A56DB;}
-  .project-stage-select.is-done{background-color:#E6F4EA;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23137333' stroke-width='1.5'/%3E%3C/svg%3E");color:#137333;}
-  .project-stage-select:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  /* 기간·배포 일정 칩: 누르면 그 자리에서 날짜를 고른다 */
+  .period-chip{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:12px;color:var(--ink);cursor:pointer;}
+  .period-chip b{font-weight:700;font-variant-numeric:tabular-nums;}
+  .period-chip:hover{border-color:var(--primary);}
+  .period-chip:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  .period-chip.is-empty b{font-weight:500;color:var(--muted);}
+  .period-chip .period-label{margin:0;font-size:11px;color:var(--muted);}
+  .period-editor{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border:1px solid var(--primary);border-radius:999px;background:var(--panel);font-size:12px;}
+  .period-editor .period-label{margin:0;font-size:11px;color:var(--muted);}
+  .period-editor .period-input.ad-input{height:24px;border-color:transparent;background:var(--bg);}
+  .project-stage-badge{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;background:#E8F0FE;color:#1A56DB;}
+  .project-stage-badge.is-done{background:#E6F4EA;color:#137333;}
+  .project-stage-badge:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
   .tc-summary .legend{font-size:12px;color:var(--muted);}
   .sum-stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -3496,7 +3504,8 @@ function renderSummary(t){
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
   const testers = Array.from(new Set(tcData.flatMap(testersOf)));
-  document.getElementById('sumTitle').textContent = today;
+  const projHead = editingProject();
+  document.getElementById('sumTitle').textContent = !projHead ? today : projHead.deployDate ? `배포 ${fullDate(projHead.deployDate)}` : '배포 일정 미정';
   document.getElementById('sumTesters').textContent = testers.length ? `담당 ${testers.join(', ')}` : '담당 미지정';
   // 테스트 기간(DVT·CVT·UAT): 프로젝트가 만들어진 뒤에 입력한다(프로젝트 목록과 같은 칸)
   const proj = editingProject(), periodsBox = document.getElementById('sumPeriods');
@@ -4328,37 +4337,72 @@ function nextPeriods(periods, key, edge, value){
 // 프로젝트 상태(진행중·배포 완료, 정하지 않으면 진행중)와 배포 일정: data.stage, data.deployDate(YYYY-MM-DD)
 const PROJECT_STAGES = ['진행중', '배포 완료'];
 const stageOf = h => PROJECT_STAGES.includes(h.stage) ? h.stage : '진행중';
+const shortDate = d => d ? d.slice(5).replace('-', '.') : ''; // 2026-11-03 → 11.03
+const fullDate = d => d ? d.replace(/-/g, '.') : '';         // 2026-11-03 → 2026.11.03
 function periodFieldsHtml(h, idx){
-  const stage = stageOf(h);
-  return `<div class="period-fields" role="group" aria-label="상태·일정"><select class="project-stage-select cell-edit${stage === '배포 완료' ? ' is-done' : ''}" data-sidx="${idx}" aria-label="프로젝트 상태">${PROJECT_STAGES.map(s=>`<option value="${s}"${s === stage ? ' selected' : ''}>${s}</option>`).join('')}</select>`
-    + `<span class="period-field"><span class="period-label">배포 일정</span><input type="date" class="ad-input period-input cell-edit" data-didx="${idx}" value="${escapeHtml(h.deployDate || '')}" aria-label="배포 일정"></span>`
-    + `${PROJECT_PERIODS.map(k=>{
-    const p = (h.periods || {})[k] || {};
-    const input = (edge, label)=>`<input type="date" class="ad-input period-input cell-edit" data-pidx="${idx}" data-period="${k}" data-edge="${edge}" value="${escapeHtml(p[edge] || '')}" aria-label="${k} ${label}">`;
-    return `<span class="period-field" role="group" aria-label="${k} 기간"><span class="period-label">${k} 기간</span>${input('from', '시작일')}<span aria-hidden="true">~</span>${input('to', '종료일')}</span>`;
-  }).join('')}</div>`;
+  const stage = stageOf(h), done = stage === '배포 완료';
+  const chip = (key, label, value, title)=>`<button type="button" class="period-chip${value ? '' : ' is-empty'}" data-pedit="${key}" data-idx="${idx}" title="${escapeHtml(title)}" aria-label="${escapeHtml(label)} ${escapeHtml(value || '입력')}"><span class="period-label">${label}</span><b>${escapeHtml(value || '입력')}</b></button>`;
+  const range = k=>{ const p = (h.periods || {})[k] || {}; return p.from || p.to ? `${shortDate(p.from) || '?'} ~ ${shortDate(p.to) || '?'}` : ''; };
+  return `<div class="period-fields" role="group" aria-label="상태·일정">`
+    + `<button type="button" class="project-stage-badge${done ? ' is-done' : ''}" data-sidx="${idx}" aria-pressed="${done}" title="눌러서 ${done ? '진행중' : '배포 완료'}(으)로 바꾸기">${stage}</button>`
+    + chip('deploy', '배포', shortDate(h.deployDate), h.deployDate ? `배포 일정 ${fullDate(h.deployDate)} (눌러서 고치기)` : '눌러서 배포 일정 입력')
+    + PROJECT_PERIODS.map(k=>chip(k, k, range(k), `${k} 기간 (눌러서 고치기)`)).join('')
+    + `</div>`;
 }
-async function setProjectPeriod(idx, key, edge, value){
+async function setProjectPeriod(idx, key, edge, value, render = true){
   const entry = historyList[idx];
   if(!entry) return;
   const periods = nextPeriods(entry.periods, key, edge, value);
   if(Object.keys(periods).length) entry.periods = periods; else delete entry.periods;
   await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
-  renderHistory();
-  if(entry._id === loadedHistoryId) renderTable(); // 요약 줄의 기간 칸도 맞춘다
+  if(render) rerenderProjectMeta(entry);
 }
-async function setProjectMeta(idx, key, value){
+async function setProjectMeta(idx, key, value, render = true){
   const entry = historyList[idx];
   if(!entry) return;
   if(value) entry[key] = value; else delete entry[key];
   await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
+  if(render) rerenderProjectMeta(entry);
+}
+function rerenderProjectMeta(entry){
   renderHistory();
-  if(entry._id === loadedHistoryId) renderTable();
+  if(entry._id === loadedHistoryId) renderTable(); // 요약 줄(제목의 배포 날짜·기간 칩)도 맞춘다
+}
+// 칩을 누르면 그 자리에서 날짜를 고른다. 고를 때마다 저장하고, 완료·Enter·Esc·바깥을 누르면 칩으로 돌아간다
+function openPeriodEditor(chip){
+  const idx = +chip.dataset.idx, key = chip.dataset.pedit, entry = historyList[idx];
+  if(!entry) return;
+  const ed = document.createElement('span');
+  ed.className = 'period-editor cell-edit'; // cell-edit: 고르는 동안 받은 변경 반영을 미룬다
+  ed.setAttribute('role', 'group');
+  const dateInput = (edge, label, value)=>`<input type="date" class="ad-input period-input" data-edge="${edge}" value="${escapeHtml(value || '')}" aria-label="${escapeHtml(label)}">`;
+  const p = (entry.periods || {})[key] || {};
+  ed.innerHTML = `<span class="period-label">${key === 'deploy' ? '배포' : key}</span>`
+    + (key === 'deploy' ? dateInput('deploy', '배포 일정', entry.deployDate)
+      : `${dateInput('from', `${key} 시작일`, p.from)}<span aria-hidden="true">~</span>${dateInput('to', `${key} 종료일`, p.to)}`)
+    + `<button type="button" class="ad-btn ad-btn--ghost ad-btn--sm period-done">완료</button>`;
+  chip.replaceWith(ed);
+  let closed = false;
+  const close = ()=>{ if(closed) return; closed = true; rerenderProjectMeta(entry); };
+  ed.querySelectorAll('.period-input').forEach(inp=>inp.addEventListener('change', async ()=>{
+    if(key === 'deploy') return setProjectMeta(idx, 'deployDate', inp.value, false);
+    await setProjectPeriod(idx, key, inp.dataset.edge, inp.value, false);
+    const now = (entry.periods || {})[key] || {}; // 시작·종료가 뒤바뀌면 맞춘 값을 다른 칸에도 보인다
+    ed.querySelectorAll('.period-input').forEach(x=>{ x.value = now[x.dataset.edge] || ''; });
+  }));
+  ed.querySelector('.period-done').addEventListener('click', close);
+  ed.addEventListener('keydown', e=>{ if(e.key === 'Escape' || (e.key === 'Enter' && e.target.matches('.period-input'))){ e.preventDefault(); close(); } });
+  ed.addEventListener('focusout', ()=>setTimeout(()=>{ if(!ed.contains(document.activeElement)) close(); }, 0));
+  ed.addEventListener('click', e=>e.stopPropagation()); // 목록 항목을 여는 클릭으로 번지지 않게
+  ed.querySelector('.period-input').focus();
 }
 function bindPeriodInputs(root){
-  root.querySelectorAll('.period-input[data-pidx]').forEach(inp=>inp.addEventListener('change', ()=>setProjectPeriod(+inp.dataset.pidx, inp.dataset.period, inp.dataset.edge, inp.value)));
-  root.querySelectorAll('.period-input[data-didx]').forEach(inp=>inp.addEventListener('change', ()=>setProjectMeta(+inp.dataset.didx, 'deployDate', inp.value)));
-  root.querySelectorAll('.project-stage-select').forEach(sel=>sel.addEventListener('change', ()=>setProjectMeta(+sel.dataset.sidx, 'stage', sel.value)));
+  root.querySelectorAll('.period-chip').forEach(chip=>chip.addEventListener('click', e=>{ e.stopPropagation(); openPeriodEditor(chip); }));
+  root.querySelectorAll('.project-stage-badge').forEach(b=>b.addEventListener('click', e=>{
+    e.stopPropagation();
+    const entry = historyList[+b.dataset.sidx];
+    if(entry) setProjectMeta(+b.dataset.sidx, 'stage', stageOf(entry) === '배포 완료' ? '진행중' : '배포 완료');
+  }));
 }
 async function setProjectCategory(idx, cat){
   const entry = historyList[idx];
@@ -4376,7 +4420,7 @@ function renderProjectSelect(){
   const short = s => s.length > 40 ? s.slice(0, 40) + '…' : s;
   const optionOf = (h, idx)=>{
     const name = h.title || h.fileName || '';
-    return `<option value="${idx}" title="${escapeHtml(name)} (${escapeHtml(h.date)})"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(short(name))} · ${escapeHtml(String(h.date || '').slice(5, 10))}</option>`;
+    return `<option value="${idx}" title="${escapeHtml(name)} (${escapeHtml(h.date)})"${h._id && h._id === loadedHistoryId ? ' selected' : ''}>${escapeHtml(short(name))} · ${h.deployDate ? `배포 ${escapeHtml(shortDate(h.deployDate))}` : escapeHtml(String(h.date || '').slice(5, 10))}</option>`;
   };
   // 분류별로 묶는다(기업, 알닷, 로밍, 다른 분류, 미분류). 프로젝트가 없는 분류는 묶음을 만들지 않는다
   sel.innerHTML = '<option value="">프로젝트 선택</option>' + categoryList(historyList, addedCategories, hiddenCategories).map(cat=>{
@@ -4486,7 +4530,7 @@ function renderHistory(){
     return `<div class="history-item${isEditing ? ' is-editing' : ''}" data-open="${idx}" tabindex="0" title="눌러서 프로젝트 열기">
       <div class="meta">
         <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
-        <div class="date">${escapeHtml(h.date)} · 시나리오 ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
+        <div class="date">배포 ${h.deployDate ? fullDate(h.deployDate) : '일정 미정'} · 시나리오 ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
         ${periodFieldsHtml(h, idx)}
         <div class="history-mini-bar">${bar}</div>
       </div>
