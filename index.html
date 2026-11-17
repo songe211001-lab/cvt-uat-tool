@@ -905,32 +905,34 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   /* ── 테스트 시나리오 표: 업무관리 "회귀 검증" 화면(.statWrap · .stable · .cvTable)과 같은 모양 ── */
   #tcTableWrap{--tc-cols:20px 120px 54px minmax(60px,1fr) minmax(100px,1.8fr) 104px minmax(80px,1.2fr) 84px 88px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
-  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:6px;align-items:center;padding:0 12px;min-width:838px;}
-  .tc-table-head{min-height:40px;background:var(--panel);border-bottom:2px solid var(--line);font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;}
+  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:10px;align-items:center;padding:0 14px;min-width:878px;}
+  /* 머리글: 작은 보조색 글자, 아래 선 하나 */
+  .tc-table-head{min-height:44px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
   .tc-table-head .tc-c{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-  #tcCardList .tc-card{--row-bg:var(--panel);min-width:838px;padding:0;margin:0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:var(--row-bg);box-shadow:none;} /* --row-bg: 행 바탕(고정 칸도 같은 색) */
-  #tcCardList .tc-card:nth-child(even){--row-bg:var(--bg);}
+  #tcCardList .tc-card{--row-bg:var(--panel);min-width:878px;padding:0;margin:0;border:none;border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);border-radius:0;background:var(--row-bg);box-shadow:none;transition:background-color .12s var(--ease);} /* --row-bg: 행 바탕(고정 칸도 같은 색). 줄무늬 대신 옅은 구분선 + 호버 */
   #tcCardList .tc-card:last-child{border-bottom:0;}
-  #tcCardList .tc-card:hover, #tcCardList .tc-card.selected{--row-bg:var(--primary-soft);}
+  #tcCardList .tc-card:hover{--row-bg:var(--bg);}
+  #tcCardList .tc-card.selected{--row-bg:var(--primary-soft);}
   #tcCardList .tc-card[data-result="MAJOR"], #tcCardList .tc-card[data-result="CRITICAL"], #tcCardList .tc-card[data-result="FATAL"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
-  #tcCardList .tc-card-head{min-height:48px;padding-top:6px;padding-bottom:6px;font-size:14.5px;cursor:pointer;}
+  #tcCardList .tc-card-head{min-height:56px;padding-top:10px;padding-bottom:10px;font-size:14.5px;cursor:pointer;}
   #tcCardList .tc-card-head > *{order:0;}
   #tcCardList .tc-c{min-width:0;}
   #tcCardList .c-id{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;}
   #tcCardList .tc-card-head button.tc-id-badge{max-width:100%;overflow:hidden;text-overflow:ellipsis;margin:0;}
-  #tcCardList .tc-card-head .tc-id-badge{font-size:14.5px;font-weight:700;color:var(--primary-dark);}
+  #tcCardList .tc-card-head .tc-id-badge{font-size:14px;font-weight:700;letter-spacing:.01em;font-variant-numeric:tabular-nums;color:var(--primary-dark);}
   #tcCardList .tc-mini-badge{height:auto;padding:0 4px;font-size:10px;line-height:16px;white-space:nowrap;}
   #tcCardList .tc-card-head .tc-inline-input{width:100%;height:32px;padding:4px 8px;font-size:14.5px;}
   #tcCardList .tc-card-head .tc-id-input{width:100%;height:32px;font-size:14.5px;}
   /* 서비스(FO/BO): 작은 굵은 회색 글자(cvSvc), 고를 수 있게 셀렉트는 테두리 없이 */
-  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:32px;padding:0 16px 0 6px;border:1px solid var(--line);border-radius:7px;background-color:var(--panel);background-position:calc(100% - 9px) 52%, calc(100% - 5px) 52%;font-size:13px;font-weight:700;color:var(--ink-soft);}
+  #tcCardList .tc-card-head select.screentype-select{width:100%;min-height:0;height:30px;padding:0 16px 0 7px;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;background-color:transparent;background-position:calc(100% - 9px) 52%, calc(100% - 5px) 52%;font-size:13px;font-weight:700;color:var(--ink-soft);}
   /* 이 탭에서 고칠 수 없는 칸: 입력칸 모양 없이 글자만 */
   #tcCardList .tc-ro-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;color:var(--ink-soft);}
   /* 고칠 수 있는 칸: 마우스를 올리면 테두리 강조 */
-  #tcCardList .tc-card-head select:hover, #tcCardList .tester-pick:hover, #tcCardList .tc-note-cell:hover, #tcCardList .tc-note-multi:hover{border-color:var(--primary);}
+  #tcCardList .tc-card-head select:hover, #tcCardList .tester-pick:hover, #tcCardList .tc-note-cell:hover, #tcCardList .tc-note-multi:hover,
+  #tcCardList .tc-card-head select:focus-visible, #tcCardList .tester-pick:focus-visible{border-color:var(--primary);}
   /* 케이스(대분류 > 중분류): cvGrp */
-  #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:400;color:var(--ink-soft);cursor:pointer;}
+  #tcCardList .tc-title{display:block;min-width:0;min-height:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:400;color:var(--muted);cursor:pointer;}
   /* 점검 항목(시험 내역): 누르면 펼치는 굵은 글자 버튼(cvItem) */
   #tcCardList .tc-item{all:unset;box-sizing:border-box;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
   #tcCardList .tc-item:hover, #tcCardList .tc-item:focus-visible{text-decoration:underline;}
@@ -945,8 +947,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   /* 결과: 알약 셀렉트(cvSel)·알약 배지(cvPill) */
   #tcCardList .c-res{display:flex;align-items:center;}
   #tcCardList .c-res .result-dot{display:none;}
-  #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:32px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:13.5px;font-weight:700;}
-  #tcCardList .result-badge{min-width:0;width:auto;height:auto;padding:3px 10px;border:0;border-radius:999px;font-size:13.5px;font-weight:700;}
+  #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:26px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:12.5px;font-weight:700;}
+  #tcCardList .result-badge{display:inline-flex;align-items:center;min-width:0;width:auto;height:26px;padding:0 10px;border:0;border-radius:999px;font-size:12.5px;font-weight:700;line-height:1;}
   .cvpill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
   .rp-PASS{background:var(--pass-soft) !important;color:var(--pass-text) !important;}
   .rp-MINOR{background:var(--minor-soft) !important;color:var(--minor-text) !important;}
@@ -955,24 +957,27 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
   .rp-NT{background:var(--grey-100) !important;color:var(--muted) !important;}
   /* 메모(비고): 28px 입력칸(cvMemo). 누르면 여러 줄로 펼쳐 쓴다 */
-  #tcCardList .tc-note-cell{display:block;min-height:32px;max-height:32px;padding:5px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14.5px;line-height:1.5;background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:text;}
+  #tcCardList .tc-note-cell{display:block;min-height:32px;max-height:32px;padding:5px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14px;line-height:1.5;background:transparent;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;cursor:text;}
+  #tcCardList .tc-note-cell:focus{background:var(--panel);}
   #tcCardList .tc-note-cell:empty::before{content:attr(data-placeholder);color:var(--muted);}
   #tcCardList .tc-note-cell:focus{max-height:none;min-height:64px;overflow:visible;white-space:pre-wrap;border-color:var(--primary);outline:none;}
   #tcCardList .tc-note-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;color:var(--ink-soft);}
   /* 비고(담당자 여러 명): 요약 글자 버튼 + 누르면 아래에 이름별 입력 패널 */
-  #tcCardList .tc-note-multi{all:unset;box-sizing:border-box;display:block;width:100%;min-height:32px;padding:5px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;line-height:1.5;color:var(--ink-soft);background:var(--panel);border:1px solid var(--line);border-radius:7px;cursor:pointer;}
+  #tcCardList .tc-note-multi{all:unset;box-sizing:border-box;display:block;width:100%;min-height:32px;padding:5px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:1.5;color:var(--ink-soft);background:transparent;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;cursor:pointer;}
   #tcCardList .tc-note-multi[aria-expanded="true"], #tcCardList .tc-note-multi:focus-visible{border-color:var(--primary);}
   #tcCardList .tc-note-pop{position:fixed;z-index:30;width:300px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:7px;box-shadow:0 8px 24px rgba(0,0,0,.12);cursor:default;}
   #tcCardList .tc-note-pop[hidden]{display:none;}
   #tcCardList .tc-note-pop-row{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:start;}
   #tcCardList .tc-note-pop-name{padding-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;color:var(--ink);}
   /* 담당자·상태: 28px 셀렉트 모양(.sel) */
-  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:32px;padding:0 8px;border-radius:7px;font-size:14.5px;font-weight:500;}
-  #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:32px;padding:0 22px 0 8px;border-radius:7px;font-size:14.5px;}
-  #tcCardList .status-badge{min-width:0;width:auto;height:auto;padding:3px 10px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:13.5px;font-weight:600;}
-  #tcCardList .c-del .icon-btn{width:24px;height:24px;color:var(--muted);}
+  #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:32px;padding:0 8px;border-radius:7px;border-color:color-mix(in srgb, var(--line) 60%, transparent);background-color:transparent;font-size:14px;font-weight:500;color:var(--ink-soft);}
+  #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:30px;padding:0 22px 0 8px;border-color:color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;background-color:transparent;font-size:14px;}
+  #tcCardList .status-badge{display:inline-flex;align-items:center;min-width:0;width:auto;height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:12.5px;font-weight:600;line-height:1;}
+  /* 삭제: 평소에는 흐리게, 행에 올리거나 키보드로 가면 또렷하게 */
+  #tcCardList .c-del .icon-btn{width:24px;height:24px;color:var(--muted);opacity:.45;transition:opacity .12s var(--ease);}
+  #tcCardList .tc-card:hover .c-del .icon-btn, #tcCardList .c-del .icon-btn:focus-visible{opacity:1;}
   /* 펼친 상세 행(cvDet): 연한 바탕, 2열, 굵은 제목 + 본문 */
-  #tcCardList .tc-card-body{position:sticky;left:0;box-sizing:border-box;width:var(--tc-wrap-w, 100%);margin:0;padding:12px 16px 14px 158px;background:var(--bg);border-top:1px solid var(--line);}
+  #tcCardList .tc-card-body{position:sticky;left:0;box-sizing:border-box;width:var(--tc-wrap-w, 100%);margin:0;padding:12px 16px 14px 164px;background:var(--bg);border-top:1px solid var(--line);}
   .tc-detail{display:grid;grid-template-columns:minmax(0, 1fr);gap:12px;} /* 펼친 상세는 1열: 전제조건 → 절차 → 시험 내역 → 기대결과 → 분류 → 화면 구분 */
   .tc-detail-col{display:flex;flex-direction:column;gap:12px;min-width:0;}
   #tcCardList .tc-field-block{display:block;margin:0;padding:0;border:0;}
@@ -992,8 +997,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     /* 고정 칸과 그 사이 틈은 행 바탕색(--row-bg)을 그대로 따른다(호버·선택·줄무늬에서 흰 선이 생기지 않게). 왼쪽 3px 결함 선은 가리지 않는다 */
     .tc-table-head{--row-bg:var(--panel);}
     .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:var(--row-bg);}
-    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-9px 0 0 var(--row-bg), 6px 0 0 var(--row-bg);}
-    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:26px;flex-wrap:wrap;box-shadow:6px 0 0 var(--row-bg);}
+    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:0;box-shadow:-11px 0 0 var(--row-bg), 10px 0 0 var(--row-bg);}
+    .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:30px;flex-wrap:wrap;box-shadow:10px 0 0 var(--row-bg);}
   }
   @media (max-width:640px){
     .tc-detail{grid-template-columns:1fr;}
@@ -2577,6 +2582,8 @@ function tcSortKey(tcId){
 function compareRowOrder(a, b){
   const sa = typeof a.seq === 'number' ? a.seq : Infinity, sb = typeof b.seq === 'number' ? b.seq : Infinity;
   if(sa !== sb) return sa < sb ? -1 : 1;
+  // seq가 같으면(둘이 동시에 만들어 같은 seq) 바뀌지 않는 행 ID로 정한다. 번호(tcId)는 겹치면 바뀌어, 브라우저마다 순서가 달라졌다
+  if(sa !== Infinity) return String(a._id || '').localeCompare(String(b._id || ''));
   const ka = tcSortKey(a.tcId), kb = tcSortKey(b.tcId);
   if(ka !== kb) return ka - kb;
   return String(a._id || '').localeCompare(String(b._id || ''));
