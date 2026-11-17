@@ -1018,9 +1018,48 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (max-width:640px){ .tc-list-tools{width:100%;margin-left:0;} .tc-search-box{flex:1 1 0;width:auto;min-width:0;} }
 
   /* 요약 줄(cvHead): 제목·날짜 / 결과 알약 + 건수 버튼(누르면 그 결과만) / 진행률 */
-  .ad-main-body .panel .card.ad-card.tc-summary, .ad-main-body .panel #tcStatsCard.card.ad-card, .ad-main-body .panel .card.ad-card.tc-list-card{
+  #panel-gen [data-dpanel][hidden], .detail-tabs[hidden]{display:none !important;}
+  /* 상세 탭 */
+  .detail-tabs{display:flex;gap:4px;margin:0 0 12px;border-bottom:1px solid var(--line);}
+  .detail-tabs [data-dtab]{all:unset;box-sizing:border-box;padding:10px 14px;margin-bottom:-1px;border-bottom:2px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;}
+  .detail-tabs [data-dtab]:hover{color:var(--ink);}
+  .detail-tabs [data-dtab][aria-selected="true"]{color:var(--primary-dark);border-bottom-color:var(--primary);}
+  .detail-tabs [data-dtab]:focus-visible{outline:2px solid var(--primary-dark);outline-offset:-2px;border-radius:6px;}
+  /* 테스트 계획: 일정표 + 타임라인 */
+  .plan-head{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+  .plan-head--sub{margin-top:20px;}
+  .plan-title{margin:0;font-size:15px;font-weight:700;color:var(--ink);}
+  .plan-table-wrap{overflow-x:auto;}
+  .plan-table{width:100%;min-width:640px;border-collapse:collapse;font-size:13.5px;}
+  .plan-table th, .plan-table td{padding:8px 8px;border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);text-align:left;vertical-align:middle;}
+  .plan-table thead th{font-size:12px;font-weight:600;color:var(--muted);border-bottom-color:var(--line);white-space:nowrap;}
+  .plan-table tbody th{width:56px;font-weight:700;color:var(--ink);}
+  .plan-table .plan-input.ad-input{width:100%;min-width:0;height:32px;padding:4px 8px;font-size:13.5px;border-color:color-mix(in srgb, var(--line) 60%, transparent);background:transparent;}
+  .plan-table .plan-input.ad-input:hover, .plan-table .plan-input.ad-input:focus{border-color:var(--primary);background:var(--panel);}
+  .plan-table input[type="date"].plan-input{width:140px;}
+  .plan-status{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--grey-100);color:var(--muted);}
+  .plan-status.is-planned{background:var(--grey-100);color:var(--ink-soft);}
+  .plan-status.is-active, .plan-tl-bar.is-active{background:var(--primary-soft);color:var(--primary-dark);}
+  .plan-status.is-done, .plan-tl-bar.is-done{background:var(--pass-soft);color:var(--pass-text);}
+  .plan-timeline{display:flex;flex-direction:column;gap:8px;}
+  .plan-tl-row{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:8px;}
+  .plan-tl-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+  .plan-tl-track{position:relative;height:28px;border-radius:7px;background:var(--bg);}
+  .plan-tl-axis .plan-tl-track{height:16px;background:none;}
+  .plan-tl-bar{position:absolute;top:3px;bottom:3px;min-width:6px;display:flex;align-items:center;padding:0 8px;overflow:hidden;white-space:nowrap;border-radius:6px;font-size:12px;font-weight:700;background:var(--grey-100);color:var(--ink-soft);box-sizing:border-box;}
+  /* 하루짜리(배포): 점 + 옆 글자(오른쪽 끝이면 글자를 왼쪽에) */
+  .plan-tl-pin{position:absolute;top:50%;display:flex;align-items:center;gap:6px;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:700;color:var(--ink-soft);}
+  .plan-tl-pin i{width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 3px var(--panel);}
+  .plan-tl-pin.is-flip{flex-direction:row-reverse;transform:translate(calc(-100% + 6px), -50%);}
+  .plan-tl-pin.is-flip i{margin-left:0;margin-right:0;}
+  .plan-tl-pin.is-active i{background:var(--primary);} .plan-tl-pin.is-done i{background:var(--pass-text);}
+  .plan-tl-none{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);}
+  .plan-tl-today{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--primary);}
+  .plan-tl-today-label{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--primary-dark);}
+  .ad-main-body .panel .card.ad-card.tc-summary, .ad-main-body .panel #tcStatsCard.card.ad-card, .ad-main-body .panel .card.ad-card.tc-list-card,
+  .ad-main-body .panel .card.ad-card.tc-board-card, .ad-main-body .panel .card.ad-card.tc-plan-card{
     margin:0 0 12px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:9px;} /* 테두리 있는 흰 카드 */
-  .ad-main-body #tcStatsCard + .card.tc-list-card{border-top:1px solid var(--line);} /* 통계 아래 카드도 테두리 그대로 */
+  .ad-main-body #tcStatsCard + .card.tc-list-card, .ad-main-body #tcStatsCard + .card.tc-plan-card{border-top:1px solid var(--line);} /* 통계 아래 카드도 테두리 그대로 */
   .tc-list-card .tc-section-head{justify-content:flex-end;margin-bottom:10px;}
   /* 목록 카드 안의 표는 카드 폭 끝까지(테두리는 카드가, 표는 위 선만) */
   .tc-list-card #tcTableWrap{margin:0 -16px;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;}
@@ -1040,6 +1079,8 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .period-chip:hover{border-color:var(--primary);}
   .period-chip:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .period-chip.is-empty b{font-weight:500;color:var(--muted);}
+  .period-chip.is-ro{cursor:default;background:var(--bg);border-color:transparent;}
+  .period-chip.is-ro:hover{border-color:transparent;}
   .period-chip .period-label{margin:0;font-size:11px;color:var(--muted);}
   .period-editor{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border:1px solid var(--primary);border-radius:999px;background:var(--panel);font-size:12px;}
   .period-editor .period-label{margin:0;font-size:11px;color:var(--muted);}
@@ -1138,17 +1179,27 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <div class="panel" id="panel-gen">
     <!-- 요약 줄(회귀 검증 화면 머리): 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 -->
     <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden>
-      <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm stats-toggle" id="statsToggle" aria-expanded="false" aria-controls="tcStatsCard">담당자별 통계</button></div>
+      <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span></div>
       <div class="sum-periods" id="sumPeriods" hidden></div>
+    </div>
+    <!-- 상세 탭: 테스트 목록 / 현황판(결과 건수·담당자별 통계) / 테스트 계획(DVT·CVT·UAT·배포 일정) -->
+    <div class="detail-tabs" id="detailTabs" role="tablist" aria-label="프로젝트 보기" hidden>
+      <button type="button" role="tab" id="dtab-list" data-dtab="list" aria-controls="dpanel-list">테스트 목록</button>
+      <button type="button" role="tab" id="dtab-board" data-dtab="board" aria-controls="tcBoardCard">현황판</button>
+      <button type="button" role="tab" id="dtab-plan" data-dtab="plan" aria-controls="tcPlanCard">테스트 계획</button>
+    </div>
+    <div class="card ad-card ad-panel tc-board-card" id="tcBoardCard" data-dpanel="board" role="tabpanel" aria-labelledby="dtab-board" hidden>
       <div class="sum-stats" id="sumStats"></div>
     </div>
-    <div class="card ad-card ad-panel is-collapsed" id="tcStatsCard">
+    <div class="card ad-card ad-panel" id="tcStatsCard" data-dpanel="board" hidden>
       <div class="stat-grid" id="distWrap" role="group" aria-label="테스트 시나리오 통계" hidden></div>
       <div id="statDefPop" class="stat-def-pop" popover role="dialog" aria-labelledby="statDefTitle"></div>
       <div id="distEmpty" class="ad-empty">테스트 시나리오를 생성하면 결과 통계가 여기에 보여요.</div>
     </div>
 
-    <div class="card ad-card ad-panel tc-list-card">
+    <div class="card ad-card ad-panel tc-plan-card" id="tcPlanCard" data-dpanel="plan" role="tabpanel" aria-labelledby="dtab-plan" hidden></div>
+
+    <div class="card ad-card ad-panel tc-list-card" id="dpanel-list" data-dpanel="list" role="tabpanel" aria-labelledby="dtab-list">
       <div class="tc-section-head section-head">
         <button class="ad-btn ad-btn--sm" id="tcCollapseAllBtn" type="button">전체 펼치기</button>
       </div>
@@ -3526,23 +3577,37 @@ function renderStatDefs(){
     <dl>${STAT_ROWS.map(l=>`<dt>${escapeHtml(l)}</dt><dd>${escapeHtml(STAT_DEFS[l] || '')}</dd>`).join('')}</dl>
     <p class="stat-def-note">합계 칸은 배정이 있는 테스터 열의 평균이에요.</p>`;
 }
-// 담당자별 통계 표는 접어 둘 수 있다(기본 접힘, 이 브라우저에 기억: cvt_stats_open)
-function setStatsOpen(open){
-  document.getElementById('tcStatsCard').classList.toggle('is-collapsed', !open);
-  document.getElementById('statsToggle').setAttribute('aria-expanded', String(open));
+// 상세 탭: 테스트 목록 / 현황판 / 테스트 계획. 마지막으로 본 탭은 이 브라우저에 기억한다(cvt_detail_tab). 시나리오가 없으면 목록만
+const DETAIL_TABS = ['list', 'board', 'plan'];
+let detailTab = (()=>{ try{ const t = localStorage.getItem('cvt_detail_tab'); return DETAIL_TABS.includes(t) ? t : 'list'; }catch(e){ return 'list'; } })();
+function applyDetailTab(){
+  const has = !document.getElementById('tcSummary').hidden, tab = has ? detailTab : 'list';
+  const tabs = document.getElementById('detailTabs');
+  tabs.hidden = !has;
+  tabs.querySelectorAll('[data-dtab]').forEach(b=>{ const on = b.dataset.dtab === tab; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+  document.querySelectorAll('#panel-gen [data-dpanel]').forEach(p=>{ p.hidden = p.dataset.dpanel !== tab; });
 }
-try{ setStatsOpen(localStorage.getItem('cvt_stats_open') === '1'); }catch(e){ setStatsOpen(false); }
-document.getElementById('statsToggle').addEventListener('click', ()=>{
-  const open = document.getElementById('tcStatsCard').classList.contains('is-collapsed');
-  setStatsOpen(open);
-  try{ localStorage.setItem('cvt_stats_open', open ? '1' : '0'); }catch(e){ /* 이번 화면에서만 */ }
+function setDetailTab(tab){
+  if(!DETAIL_TABS.includes(tab)) return;
+  detailTab = tab;
+  try{ localStorage.setItem('cvt_detail_tab', tab); }catch(e){ /* 이번 화면에서만 */ }
+  if(tab === 'plan') renderPlan();
+  applyDetailTab();
+}
+document.getElementById('detailTabs').addEventListener('click', e=>{ const b = e.target.closest('[data-dtab]'); if(b) setDetailTab(b.dataset.dtab); });
+document.getElementById('detailTabs').addEventListener('keydown', e=>{
+  if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const i = DETAIL_TABS.indexOf(detailTab), next = DETAIL_TABS[(i + (e.key === 'ArrowRight' ? 1 : DETAIL_TABS.length - 1)) % DETAIL_TABS.length];
+  e.preventDefault();
+  setDetailTab(next);
+  document.querySelector(`#detailTabs [data-dtab="${next}"]`).focus();
 });
 const SUMMARY_RESULTS = ['PASS', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL', 'BLOCK', 'N/A', '미실행'];
 // 요약 줄: 결과별 건수·진행률은 통계 표 합계 열과 같은 값. "M건 실행" = 담당자 모두(담당자가 없으면 그 행)가 결과를 넣은 시나리오
 function renderSummary(t){
   const box = document.getElementById('tcSummary');
   box.hidden = !t;
-  if(!t) return;
+  if(!t){ applyDetailTab(); return; }
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
@@ -3553,18 +3618,21 @@ function renderSummary(t){
   // 테스트 기간(DVT·CVT·UAT): 프로젝트가 만들어진 뒤에 입력한다(프로젝트 목록과 같은 칸)
   const proj = editingProject(), periodsBox = document.getElementById('sumPeriods');
   periodsBox.hidden = !proj;
-  periodsBox.innerHTML = proj ? periodFieldsHtml(proj, historyList.indexOf(proj)) : '';
-  if(proj) bindPeriodInputs(periodsBox);
+  periodsBox.innerHTML = proj ? periodFieldsHtml(proj, historyList.indexOf(proj), true) : ''; // 헤더의 기간은 보기만(고치기는 [테스트 계획] 탭)
+  if(proj) bindPeriodInputs(periodsBox); // 상태 배지는 여기서도 바꾼다
   document.getElementById('sumStats').innerHTML = `${SUMMARY_RESULTS.map(l=>{ const key = l === '미실행' ? '' : l;
       return `<button type="button" class="sum-badge" data-sumres="${key || 'NT'}" aria-pressed="${tcFilterResult === key}" title="이 결과만 보기">${resultPill(key)}<b class="num">${v(l)}</b></button>`; }).join('')}
       <span class="sum-progress"><span class="legend">진행률</span><strong class="num">${Math.round(parseFloat(v('진행률')))}%</strong><span class="legend">${done}/${tcData.length}</span></span>`;
+  renderPlan();
+  applyDetailTab();
 }
-// 요약 줄 결과 알약 = 결과 필터: 누르면 그 결과만, 다시 누르면 전체
-document.getElementById('tcSummary').addEventListener('click', e=>{
+// 현황판 결과 알약 = 결과 필터: 누르면 그 결과만 [테스트 목록]에 보이고, 다시 누르면 전체
+document.getElementById('sumStats').addEventListener('click', e=>{
   const b = e.target.closest('[data-sumres]');
   if(!b) return;
   const v = b.dataset.sumres === 'NT' ? '' : b.dataset.sumres;
   tcFilterResult = tcFilterResult === v ? 'ALL' : v;
+  if(tcFilterResult !== 'ALL') detailTab = 'list';
   renderTable();
 });
 function renderDistribution(){
@@ -4374,7 +4442,7 @@ function nextPeriods(periods, key, edge, value){
   const all = { ...(periods || {}) }, p = { ...(all[key] || {}) };
   if(value) p[edge] = value; else delete p[edge];
   if(p.from && p.to && p.from > p.to){ if(edge === 'from') p.to = p.from; else p.from = p.to; }
-  if(p.from || p.to) all[key] = p; else delete all[key];
+  if(p.from || p.to || p.owner || p.memo) all[key] = p; else delete all[key]; // 담당·메모만 있어도 남긴다
   return all;
 }
 // 프로젝트 상태(진행중·배포 완료, 정하지 않으면 진행중)와 배포 일정: data.stage, data.deployDate(YYYY-MM-DD)
@@ -4382,9 +4450,12 @@ const PROJECT_STAGES = ['진행중', '배포 완료'];
 const stageOf = h => PROJECT_STAGES.includes(h.stage) ? h.stage : '진행중';
 const shortDate = d => d ? d.slice(5).replace('-', '.') : ''; // 2026-11-03 → 11.03
 const fullDate = d => d ? d.replace(/-/g, '.') : '';         // 2026-11-03 → 2026.11.03
-function periodFieldsHtml(h, idx){
+// readOnly: 상세 요약 카드(헤더)에서는 기간을 보여주기만 한다(고치기는 [테스트 계획] 탭)
+function periodFieldsHtml(h, idx, readOnly = false){
   const stage = stageOf(h), done = stage === '배포 완료';
-  const chip = (key, label, value, title)=>`<button type="button" class="period-chip${value ? '' : ' is-empty'}" data-pedit="${key}" data-idx="${idx}" title="${escapeHtml(title)}" aria-label="${escapeHtml(label)} ${escapeHtml(value || '입력')}"><span class="period-label">${label}</span><b>${escapeHtml(value || '입력')}</b></button>`;
+  const chip = (key, label, value, title)=>readOnly
+    ? `<span class="period-chip is-ro${value ? '' : ' is-empty'}" data-period-view="${key}"><span class="period-label">${label}</span><b>${escapeHtml(value || '미정')}</b></span>`
+    : `<button type="button" class="period-chip${value ? '' : ' is-empty'}" data-pedit="${key}" data-idx="${idx}" title="${escapeHtml(title)}" aria-label="${escapeHtml(label)} ${escapeHtml(value || '입력')}"><span class="period-label">${label}</span><b>${escapeHtml(value || '입력')}</b></button>`;
   const range = k=>{ const p = (h.periods || {})[k] || {}; return p.from || p.to ? `${shortDate(p.from) || '?'} ~ ${shortDate(p.to) || '?'}` : ''; };
   return `<div class="period-fields" role="group" aria-label="상태·일정">`
     + `<button type="button" class="project-stage-badge${done ? ' is-done' : ''}" data-sidx="${idx}" aria-pressed="${done}" title="눌러서 ${done ? '진행중' : '배포 완료'}(으)로 바꾸기">${stage}</button>`
@@ -4440,12 +4511,81 @@ function openPeriodEditor(chip){
   ed.querySelector('.period-input').focus();
 }
 function bindPeriodInputs(root){
-  root.querySelectorAll('.period-chip').forEach(chip=>chip.addEventListener('click', e=>{ e.stopPropagation(); openPeriodEditor(chip); }));
+  root.querySelectorAll('button.period-chip').forEach(chip=>chip.addEventListener('click', e=>{ e.stopPropagation(); openPeriodEditor(chip); }));
   root.querySelectorAll('.project-stage-badge').forEach(b=>b.addEventListener('click', e=>{
     e.stopPropagation();
     const entry = historyList[+b.dataset.sidx];
     if(entry) setProjectMeta(+b.dataset.sidx, 'stage', stageOf(entry) === '배포 완료' ? '진행중' : '배포 완료');
   }));
+}
+/* 테스트 계획 탭: DVT·CVT·UAT·배포 일정표(시작·종료·담당·메모·상태)와 간트형 타임라인.
+   배포의 담당·메모는 deployOwner·deployMemo, 단계의 담당·메모는 periods[k].owner·memo에 둔다(프로젝트 data 안, 스키마 변경 없음) */
+const PLAN_KEYS = [...PROJECT_PERIODS, 'deploy'];
+const isoToday = ()=>{ const d = new Date(), p2 = n=>String(n).padStart(2, '0'); return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`; };
+// 단계 상태: 날짜가 없으면 미정, 오늘이 시작 전이면 예정, 종료 뒤면 종료, 그 사이면 진행 중 (순수 함수)
+function phaseStatus(from, to, today){
+  if(!from && !to) return '미정';
+  const s = from || to, e = to || from;
+  return today < s ? '예정' : today > e ? '종료' : '진행 중';
+}
+function planRowsOf(h){
+  return PLAN_KEYS.map(k=>k === 'deploy'
+    ? { key: k, label: '배포', single: true, from: h.deployDate || '', to: h.deployDate || '', owner: h.deployOwner || '', memo: h.deployMemo || '' }
+    : { key: k, label: k, from: '', to: '', owner: '', memo: '', ...((h.periods || {})[k] || {}) });
+}
+// 타임라인 막대 위치(%): 가장 이른 날 ~ 가장 늦은 날(오늘 포함), 종료일까지 칠한다 (순수 함수)
+function planBars(rows, today){
+  const day = d=>Date.parse(d + 'T00:00:00Z') / 864e5;
+  const dated = rows.filter(r=>r.from || r.to);
+  if(!dated.length) return null;
+  const all = dated.flatMap(r=>[r.from || r.to, r.to || r.from]).concat(today).map(day);
+  const min = Math.min(...all), span = Math.max(...all) + 1 - min;
+  const pct = n=>Math.round(n / span * 1000) / 10;
+  return {
+    start: new Date(min * 864e5).toISOString().slice(0, 10), end: new Date((min + span - 1) * 864e5).toISOString().slice(0, 10),
+    today: pct(day(today) - min + 0.5),
+    bars: rows.map(r=>{
+      if(!r.from && !r.to) return { key: r.key, empty: true };
+      const s = day(r.from || r.to), e = day(r.to || r.from);
+      return { key: r.key, left: pct(s - min), width: pct(e + 1 - s) };
+    })
+  };
+}
+const PLAN_STATUS_CLASS = { '미정': 'is-none', '예정': 'is-planned', '진행 중': 'is-active', '종료': 'is-done' };
+function renderPlan(){
+  const box = document.getElementById('tcPlanCard'), p = editingProject();
+  if(!box) return;
+  if(!p){ box.innerHTML = '<div class="ad-empty">프로젝트가 만들어지면 테스트 일정을 넣을 수 있어요.</div>'; return; }
+  // 다시 그려도 입력 중이던 칸으로 포커스를 돌려준다
+  const a = document.activeElement, keep = box.contains(a) && a.dataset.field ? [a.closest('[data-plan]').dataset.plan, a.dataset.field] : null;
+  const idx = historyList.indexOf(p), today = isoToday(), rows = planRowsOf(p), tl = planBars(rows, today);
+  const input = (r, field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input cell-edit" data-field="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(r.label)} ${label}" ${extra}>`;
+  box.innerHTML = `<div class="plan-head"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
+    <div class="plan-table-wrap"><table class="plan-table">
+      <thead><tr><th scope="col">단계</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">담당</th><th scope="col">메모</th><th scope="col">상태</th></tr></thead>
+      <tbody>${rows.map(r=>{ const st = phaseStatus(r.from, r.to, today);
+        return `<tr data-plan="${r.key}"><th scope="row">${r.label}</th>
+          <td>${input(r, 'from', 'date', r.single ? '배포일' : '시작일')}</td>
+          <td>${r.single ? '<span class="sub-txt">배포일 하루</span>' : input(r, 'to', 'date', '종료일')}</td>
+          <td>${input(r, 'owner', 'text', '담당', 'maxlength="30" placeholder="담당"')}</td>
+          <td>${input(r, 'memo', 'text', '메모', 'maxlength="100" placeholder="메모"')}</td>
+          <td><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span></td></tr>`; }).join('')}</tbody>
+    </table></div>
+    <div class="plan-head plan-head--sub"><h3 class="plan-title">타임라인</h3>${tl ? `<span class="legend">${fullDate(tl.start)} ~ ${fullDate(tl.end)}</span>` : ''}</div>
+    ${tl ? `<div class="plan-timeline" role="img" aria-label="테스트 일정 타임라인">${rows.map((r, i)=>{ const b = tl.bars[i], st = phaseStatus(r.from, r.to, today);
+        return `<div class="plan-tl-row"><span class="plan-tl-label">${r.label}</span><span class="plan-tl-track">${b.empty ? '<span class="plan-tl-none">미정</span>'
+          : r.single ? `<span class="plan-tl-pin ${PLAN_STATUS_CLASS[st]}${b.left > 70 ? ' is-flip' : ''}" style="left:${b.left + b.width / 2}%" title="${escapeHtml(r.label)} ${fullDate(r.from)}"><i aria-hidden="true"></i><b>${shortDate(r.from)}</b></span>`
+          : `<span class="plan-tl-bar ${PLAN_STATUS_CLASS[st]}" style="left:${b.left}%;width:${b.width}%" title="${escapeHtml(r.label)} ${fullDate(r.from || r.to)}${r.single ? '' : ` ~ ${fullDate(r.to || r.from)}`}">${shortDate(r.from) || '?'} ~ ${shortDate(r.to) || '?'}</span>`}<span class="plan-tl-today" style="left:${tl.today}%" aria-hidden="true"></span></span></div>`; }).join('')}
+      <div class="plan-tl-row plan-tl-axis"><span class="plan-tl-label"></span><span class="plan-tl-track"><span class="plan-tl-today-label" style="left:${tl.today}%">오늘</span></span></div></div>`
+      : '<div class="ad-empty plan-empty">일정을 넣으면 타임라인이 보여요.</div>'}`;
+  box.querySelectorAll('.plan-input').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
+  box.querySelectorAll('.plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
+  if(keep){ const f = box.querySelector(`[data-plan="${keep[0]}"] [data-field="${keep[1]}"]`); if(f) f.focus(); }
+}
+async function savePlanField(idx, key, field, value){
+  value = String(value || '').trim();
+  if(key === 'deploy') return setProjectMeta(idx, { from: 'deployDate', owner: 'deployOwner', memo: 'deployMemo' }[field], value);
+  return setProjectPeriod(idx, key, field, value);
 }
 async function setProjectCategory(idx, cat){
   const entry = historyList[idx];
