@@ -1064,6 +1064,16 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .plan-status.is-active, .plan-tl-bar.is-active{background:var(--primary-soft);color:var(--primary-dark);}
   .plan-status.is-done, .plan-tl-bar.is-done{background:var(--pass-soft);color:var(--pass-text);}
   .plan-timeline{display:flex;flex-direction:column;gap:8px;}
+  /* 회차 */
+  .round-pick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);}
+  .round-pick .ad-select{height:30px;min-width:160px;padding:0 26px 0 10px;font-size:13px;font-weight:700;color:var(--ink);}
+  .round-table tbody tr.is-current{background:var(--primary-soft);}
+  .round-table select.plan-input{width:78px;height:32px;padding:0 20px 0 8px;font-size:13px;}
+  .round-table tfoot td{padding-top:10px;border-bottom:0;}
+  .round-actions{white-space:nowrap;text-align:right;} .round-actions .ad-btn, .round-actions .ad-badge{margin-left:4px;}
+  .round-pg{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink-soft);}
+  .round-pg-bar{width:64px;height:6px;border-radius:999px;background:var(--grey-100);overflow:hidden;} .round-pg-bar span{display:block;height:100%;background:var(--primary);}
+  .round-failonly{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
   .plan-tl-row{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:8px;}
   .plan-tl-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);}
   .plan-tl-track{position:relative;height:28px;border-radius:7px;background:var(--bg);}
@@ -1232,7 +1242,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <div class="panel" id="panel-gen">
     <!-- 요약 줄(회귀 검증 화면 머리): 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 -->
     <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden>
-      <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span></div>
+      <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span><label class="round-pick" id="roundPick" hidden><span>회차</span><select class="ad-select" id="roundSelect" aria-label="지금 회차"></select></label></div>
       <div class="sum-periods" id="sumPeriods" hidden></div>
     </div>
     <div class="card ad-card ad-panel tc-progress" id="tcProgress" hidden></div>
@@ -1623,18 +1633,18 @@ function reviewStageForResult(res){
   return res === 'PASS' ? '완료' : FAIL_RESULTS.includes(res) ? '수정 접수' : res === 'BLOCK' ? '검수 보류' : res === 'N/A' ? '검수 제외' : '검수 대기';
 }
 const priorityOf = r => PRIORITY_OPTIONS.includes(r && r.priority) ? r.priority : 'Mid';
-const reviewStageOf = r => REVIEW_STAGES.includes(r && r.reviewStage) ? r.reviewStage : reviewStageForResult(effectiveResult(r));
+const reviewStageOf = r => REVIEW_STAGES.includes(rv(r, 'reviewStage')) ? rv(r, 'reviewStage') : reviewStageForResult(effectiveResult(r));
 const p2n = n => String(n).padStart(2, '0');
 const isoDate = (d = new Date()) => `${d.getFullYear()}-${p2n(d.getMonth() + 1)}-${p2n(d.getDate())}`;
 const stampNow = (d = new Date()) => `${p2n(d.getMonth() + 1)}-${p2n(d.getDate())} ${p2n(d.getHours())}:${p2n(d.getMinutes())}`;
 // 결과를 넣으면: 검수 단계를 정하고, 넣은 테스터·오늘 날짜를 적고, Fail이면 개발 수정을 '미확인'으로 연다
 function applyResultMeta(row, name){
   const res = effectiveResult(row);
-  row.reviewStage = reviewStageForResult(res);
+  row[rk('reviewStage')] = reviewStageForResult(res);
   if(!res) return row;
-  if(name) row.executedBy = name;
-  row.testDate = isoDate();
-  if(FAIL_RESULTS.includes(res) && !DEV_FIX_OPTIONS.includes(row.devFix)) row.devFix = '미확인';
+  if(name) row[rk('executedBy')] = name;
+  row[rk('testDate')] = isoDate();
+  if(FAIL_RESULTS.includes(res) && !DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))) row[rk('devFix')] = '미확인';
   return row;
 }
 // 진행률 바: Pass·Fail(MINOR~FATAL)·보류(BLOCK)·미실행. N/A(검수 제외)는 대상에서 뺀다 (순수 함수)
@@ -1663,30 +1673,37 @@ function toExportRow(row){
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
    테스터마다 칸이 따로라, 두 테스터가 같은 테스트 시나리오에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
    담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 값에서만 뺀다. */
-const TESTER_KEY_RE = /^t[rns]:/;
+const TESTER_KEY_RE = /^(t[rns]|rr):/; // 'rr:회차ID:칸' = 다른 회차의 칸(아래 rk)
+// 회차: 지금 보는 회차의 칸 이름. 기본 회차('base')는 예전 그대로의 칸, 다른 회차는 'rr:회차ID:칸'.
+// 회차마다 따로인 칸: 결과·작성 상태·비고(행·테스터별), 검수 단계·개발 수정·테스터·테스트 일자·테스트 환경. 시나리오 내용·우선순위·담당 테스터는 모든 회차가 같이 쓴다
+let currentRoundId = 'base';
+const ROUND_KEY_RE = /^(t[rns]:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$)/;
+const rk = (key, rid = currentRoundId) => rid === 'base' || !ROUND_KEY_RE.test(key) ? key : `rr:${rid}:${key}`;
+const rv = (row, key, rid) => row ? row[rk(key, rid)] : undefined;
+function withRound(rid, fn){ const prev = currentRoundId; currentRoundId = rid; try{ return fn(); }finally{ currentRoundId = prev; } }
 const RESULT_SEVERITY = ['N/A', 'PASS', 'BLOCK', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
 const assigneesOf = row => String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
 // 대표 결과: 담당 테스터 값(testerValue) 중 가장 심각한 값, 모두 비었으면 ''(미실행). 담당자가 없으면 행의 결과 (순수 함수)
 // 통계 표의 테스터 열과 같은 값으로 센다(비운 테스터 값을 행에 남은 예전 결과로 채우지 않는다)
 function effectiveResult(row){
   const ns = assigneesOf(row);
-  if(!ns.length) return row ? row.result : undefined;
+  if(!ns.length) return rv(row, 'result');
   const rs = ns.map(n=>testerValue(row, n, 'tr')).filter(r=>RESULT_SEVERITY.includes(r));
   return rs.length ? rs.reduce((w, r)=>RESULT_SEVERITY.indexOf(r) > RESULT_SEVERITY.indexOf(w) ? r : w) : '';
 }
 // 대표 진행상태: 담당 테스터의 작성 상태 중 가장 덜 진행된 값(작성중 < 개발 검토 < 테스트불가 < 완료). 담당자가 없으면 행의 진행상태 (순수 함수)
 function effectiveStatus(row){
   const ns = assigneesOf(row);
-  if(!ns.length) return row ? row.status : undefined;
+  if(!ns.length) return rv(row, 'status');
   const ss = ns.map(n=>testerValue(row, n, 'ts')).map(s=>STATUS_PROGRESS.includes(s) ? s : '작성중'); // 비었으면 작성중(통계 표와 같음)
   return ss.reduce((w, s)=>STATUS_PROGRESS.indexOf(s) < STATUS_PROGRESS.indexOf(w) ? s : w);
 }
 // 테스터 n의 값(k = 'tr' 결과 | 'ts' 작성 상태 | 'tn' 테스트 내역). 담당자가 1명이고 그 칸이 아직 없으면 행의 값(예전 데이터) (순수 함수)
 // 테스터가 비운 칸('')은 비운 그대로다(행에 남은 예전 값으로 되돌아가지 않게)
 function testerValue(row, n, k){
-  const v = row[k + ':' + n];
+  const v = row[rk(k + ':' + n)];
   if(v != null) return v;
-  return assigneesOf(row).length === 1 ? (row[{ tr: 'result', ts: 'status', tn: 'testNote' }[k]] || '') : '';
+  return assigneesOf(row).length === 1 ? (rv(row, { tr: 'result', ts: 'status', tn: 'testNote' }[k]) || '') : '';
 }
 
 /* ---------- 팀 동기화 (Supabase) 설정 ----------
@@ -2320,10 +2337,11 @@ function renameTesterInRow(row, from, to){
   let changed = false;
   const ts = testersOf(row);
   if(ts.includes(from)){ row.tester = joinTesters(ts.map(n=>n === from ? to : n)); changed = true; }
-  ['tr', 'ts', 'tn'].forEach(k=>{
-    if(!(`${k}:${from}` in row)) return;
-    row[`${k}:${to}`] = row[`${k}:${from}`];
-    delete row[`${k}:${from}`];
+  Object.keys(row).forEach(key=>{ // 'tr:이름'·'rr:회차:tr:이름'(모든 회차)
+    const m = /^((?:rr:[^:]+:)?t[rns]:)(.*)$/.exec(key);
+    if(!m || m[2] !== from) return;
+    row[m[1] + to] = row[key];
+    delete row[key];
     changed = true;
   });
   return changed;
@@ -3064,6 +3082,7 @@ function tcTitleOf(row){
   return figmaScreenLabel(row.category, row.subCategory, row.screen) || '(시험항목 없음)';
 }
 function renderTable(){
+  syncCurrentRound(); // 지금 회차(프로젝트마다 이 브라우저에 기억)
   syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
   // 리스트 순서(만든 순서)를 seq로 저장한다. 다시 정렬하지 않아 BO 줄이 옮겨가지 않는다.
   // 받은 변경을 그릴 때는 적지 않는다: 팀원이 보낸 순서를 그대로 두어야 양쪽이 같은 값을 서로 덮어쓰며 오래된 번호를 되돌리지 않는다
@@ -3160,7 +3179,7 @@ function renderTable(){
     // 표 한 줄(머리) = 펼침 · 선택 · ID · 유형 · 대분류 > 중분류 · 시험 내역 · 결과 · 비고 · 담당자 · 상태 · 삭제. 상세 행 = 전제조건·절차·시험 내역 | 기대결과·분류·화면 구분
     const noteText = assigned.length === 1 ? testerValue(row, assigned[0], 'tn')
       : assigned.length ? assigned.map(n=>{ const v = testerValue(row, n, 'tn'); return v ? `${n}: ${v}` : ''; }).filter(Boolean).join(' / ')
-      : (row.testNote || '');
+      : (rv(row, 'testNote') || '');
     const oneLine = v=>String(v || '').replace(/\s*\n\s*/g, ' ');
     const noteKey = tabTester ? `tn:${tabTester}` : !assigned.length ? 'testNote' : assigned.length === 1 ? `tn:${assigned[0]}` : null; // 여러 명이면 null(이름별 패널)
     card.setAttribute('role', 'row');
@@ -3187,13 +3206,13 @@ function renderTable(){
             : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         </div>
         <div class="tc-c c-review"><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${REVIEW_STAGES.map(o=>`<option value="${o}"${o === reviewStageOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
-        <div class="tc-c c-dev">${DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(row.devFix)
-          ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${DEV_FIX_OPTIONS.map(o=>`<option value="${o}"${o === (row.devFix || '미확인') ? ' selected' : ''}>${o}</option>`).join('')}</select>`
+        <div class="tc-c c-dev">${DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))
+          ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${DEV_FIX_OPTIONS.map(o=>`<option value="${o}"${o === (rv(row, 'devFix') || '미확인') ? ' selected' : ''}>${o}</option>`).join('')}</select>`
           : '<span class="sub-txt">-</span>'}</div>
         <div class="tc-c c-who">${testerOptions}</div>
-        <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(row.executedBy || '') || '<span class="sub-txt">-</span>'}</span></div>
-        <div class="tc-c c-env"><input type="text" class="ad-input env-input cell-edit" data-idx="${idx}" value="${escapeHtml(row.testEnv || '')}" maxlength="40" placeholder="단말·OS" aria-label="${escapeHtml(row.tcId)} 테스트 환경"></div>
-        <div class="tc-c c-date"><input type="date" class="ad-input tdate-input cell-edit" data-idx="${idx}" value="${escapeHtml(row.testDate || '')}" aria-label="${escapeHtml(row.tcId)} 테스트 일자"></div>
+        <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(rv(row, 'executedBy') || '') || '<span class="sub-txt">-</span>'}</span></div>
+        <div class="tc-c c-env"><input type="text" class="ad-input env-input cell-edit" data-idx="${idx}" value="${escapeHtml(rv(row, 'testEnv') || '')}" maxlength="40" placeholder="단말·OS" aria-label="${escapeHtml(row.tcId)} 테스트 환경"></div>
+        <div class="tc-c c-date"><input type="date" class="ad-input tdate-input cell-edit" data-idx="${idx}" value="${escapeHtml(rv(row, 'testDate') || '')}" aria-label="${escapeHtml(row.tcId)} 테스트 일자"></div>
         <div class="tc-c c-upd"><span class="tc-ro-text tc-upd" title="마지막으로 고친 시각">${escapeHtml(row.updatedAt || '') || '<span class="sub-txt">-</span>'}</span></div>
         <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
       </div>
@@ -3203,7 +3222,7 @@ function renderTable(){
         <div class="tc-detail-col">
           <div class="tc-field-row tc-meta-row">
             <div class="tc-field-block"><span class="tc-field-label">비고</span><div class="c-note">${noteKey
-          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (row.testNote || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
+          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (rv(row, 'testNote') || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
           : `<button type="button" class="tc-note-multi" data-note-idx="${idx}" aria-expanded="false" aria-controls="tcNotePop${idx}" title="${escapeHtml(noteText || '눌러서 담당자별 비고 입력')}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">담당자별 비고</span>'}</button>
           <div class="tc-note-pop" id="tcNotePop${idx}" role="group" aria-label="${escapeHtml(row.tcId)} 담당자별 비고" hidden>${assigned.map(n=>`<label class="tc-note-pop-row"><span class="tc-note-pop-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span><div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(n)}" data-placeholder="${escapeHtml(n)} 비고">${escapeHtml(testerValue(row, n, 'tn'))}</div></label>`).join('')}</div>`}</div></div>
             <div class="tc-field-block"><span class="tc-field-label">작성 상태</span><div class="c-st">${tabTester
@@ -3265,7 +3284,7 @@ function renderTable(){
     el.addEventListener('input', ()=>{
       const idx = +el.dataset.idx, key = el.dataset.key;
       // Enter로 생긴 <div>·<br>을 줄바꿈으로 읽는다(textContent는 줄바꿈을 버린다). 끝에 붙는 빈 줄 하나는 뺀다
-      tcData[idx][key] = el.innerText.replace(/\n$/, '');
+      tcData[idx][rk(key)] = el.innerText.replace(/\n$/, ''); // 비고는 지금 회차의 칸
       scheduleAutoSave(); // 글자를 고칠 때도 실시간 저장
       if(key === 'testNote' || key.startsWith('tn:')){
         const multi = list.querySelector(`[data-note-idx="${idx}"]`);
@@ -3373,9 +3392,9 @@ function renderTable(){
   list.querySelectorAll('.tester-result-select, .tester-status-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
       const row = tcData[+sel.dataset.idx];
-      row[(sel.classList.contains('tester-status-select') ? 'ts:' : 'tr:') + sel.dataset.name] = sel.value;
-      row.result = effectiveResult(row);
-      row.status = effectiveStatus(row);
+      row[rk((sel.classList.contains('tester-status-select') ? 'ts:' : 'tr:') + sel.dataset.name)] = sel.value;
+      row[rk('result')] = effectiveResult(row);
+      row[rk('status')] = effectiveStatus(row);
       if(sel.classList.contains('tester-result-select')) applyResultMeta(row, sel.dataset.name); // 검수 단계·테스터·테스트 일자
       renderTable();
       renderDistribution();
@@ -3384,13 +3403,13 @@ function renderTable(){
   // 우선순위·검수 단계·개발 수정(셀렉트), 테스트 환경·테스트 일자(입력)
   list.querySelectorAll('.pri-select, .review-select, .dev-select').forEach(sel=>sel.addEventListener('change', ()=>{
     const row = tcData[+sel.dataset.idx], key = sel.classList.contains('pri-select') ? 'priority' : sel.classList.contains('review-select') ? 'reviewStage' : 'devFix';
-    row[key] = sel.value;
-    if(key === 'reviewStage' && DEV_FIX_STAGES.includes(sel.value) && !DEV_FIX_OPTIONS.includes(row.devFix)) row.devFix = '미확인';
+    row[rk(key)] = sel.value;
+    if(key === 'reviewStage' && DEV_FIX_STAGES.includes(sel.value) && !DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))) row[rk('devFix')] = '미확인';
     renderTable();
     renderDistribution();
   }));
   list.querySelectorAll('.env-input, .tdate-input').forEach(inp=>{
-    inp.addEventListener('change', ()=>{ tcData[+inp.dataset.idx][inp.classList.contains('env-input') ? 'testEnv' : 'testDate'] = inp.value.trim(); scheduleAutoSave(); });
+    inp.addEventListener('change', ()=>{ tcData[+inp.dataset.idx][rk(inp.classList.contains('env-input') ? 'testEnv' : 'testDate')] = inp.value.trim(); scheduleAutoSave(); });
     inp.addEventListener('keydown', e=>{ if(e.key === 'Enter' && inp.type === 'text'){ e.preventDefault(); inp.blur(); } });
   });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
@@ -3589,7 +3608,7 @@ window.addEventListener('scroll', ()=>{ if(testerPickerIdx >= 0) closeTesterPick
 document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.result = val; assigneesOf(r).forEach(n=>{ r['tr:' + n] = val; }); applyResultMeta(r, null); } }); // 담당자가 있으면 담당자마다
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r[rk('result')] = val; assigneesOf(r).forEach(n=>{ r[rk('tr:' + n)] = val; }); applyResultMeta(r, null); } }); // 담당자가 있으면 담당자마다(지금 회차)
   e.target.value = '';
   renderTable();
   renderDistribution();
@@ -3597,7 +3616,7 @@ document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
 document.getElementById('bulkStatusSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.status = val; assigneesOf(r).forEach(n=>{ r['ts:' + n] = val; }); } });
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r[rk('status')] = val; assigneesOf(r).forEach(n=>{ r[rk('ts:' + n)] = val; }); } });
   e.target.value = '';
   renderTable();
 });
@@ -3677,7 +3696,7 @@ function qcStatTable(rows, testers){
   };
   const per = (testers || []).map(n=>({ label: n, nums: nums(rows.filter(r=>assigneesOf(r).includes(n)).map(r=>testerValue(r, n, 'tr'))) }));
   const used = per.filter(c=>c.nums[0] > 0); // 배정이 없는 테스터는 평균에서 뺀다
-  const avg = used.length ? STAT_ROWS.map((_, i)=>used.reduce((s, c)=>s + c.nums[i], 0) / used.length) : nums(rows.map(r=>r.result));
+  const avg = used.length ? STAT_ROWS.map((_, i)=>used.reduce((s, c)=>s + c.nums[i], 0) / used.length) : nums(rows.map(r=>rv(r, 'result')));
   const cols = [{ label: '합계', nums: avg }, ...per].map(c=>({ label: c.label, values: c.nums.map(statFmt) }));
   return { total: rows.length, fo: rows.filter(r=>r.screenType !== 'BO').length, bo: rows.filter(r=>r.screenType === 'BO').length,
     unassigned: rows.filter(r=>!assigneesOf(r).length).length, rows: STAT_ROWS, cols };
@@ -3724,11 +3743,12 @@ function renderSummary(t){
   renderProgressBar();
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
-  const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
+  const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!rv(r, 'result'); }).length;
   const testers = Array.from(new Set(tcData.flatMap(testersOf)));
   const projHead = editingProject();
   document.getElementById('sumTitle').textContent = !projHead ? today : projHead.deployDate ? `배포 ${fullDate(projHead.deployDate)}` : '배포 일정 미정';
   document.getElementById('sumTesters').textContent = testers.length ? `담당 ${testers.join(', ')}` : '담당 미지정';
+  renderRoundPick();
   // 테스트 기간(DVT·CVT·UAT): 프로젝트가 만들어진 뒤에 입력한다(프로젝트 목록과 같은 칸)
   const proj = editingProject(), periodsBox = document.getElementById('sumPeriods');
   periodsBox.hidden = !proj;
@@ -3976,8 +3996,8 @@ function addQcListSheet(workbook, rows, title){
   const testerGroups = activeTesters().slice(); // 지금 보이는 테스터(편집 중인 프로젝트의 테스터)만큼 개별 컬럼 블록 생성
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
   const BASE_COLS = 8; // TC ID~기대결과
-  const EXTRA = [['우선순위', 9, priorityOf], ['검수 단계', 11, reviewStageOf], ['개발 수정', 10, r=>r.devFix || ''], ['테스터', 10, r=>r.executedBy || ''],
-    ['테스트 환경', 16, r=>r.testEnv || ''], ['테스트 일자', 12, r=>r.testDate || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 검수 정보(테스터 블록 뒤)
+  const EXTRA = [['우선순위', 9, priorityOf], ['검수 단계', 11, reviewStageOf], ['개발 수정', 10, r=>rv(r, 'devFix') || ''], ['테스터', 10, r=>rv(r, 'executedBy') || ''],
+    ['테스트 환경', 16, r=>rv(r, 'testEnv') || ''], ['테스트 일자', 12, r=>rv(r, 'testDate') || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 지금 회차의 값 // 검수 정보(테스터 블록 뒤)
   const extraStart = 1 + BASE_COLS + groupCount * 4 + 1;
   const totalCols = extraStart + EXTRA.length - 1; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
@@ -4063,7 +4083,7 @@ function addQcListSheet(workbook, rows, title){
         xlsStyleCell(cell, {align: i >= 4 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor});
       });
       // 취합 영역: 담당 테스터/테스트 내역/대표 결과(테스터별 결과 중 가장 심각한 값)
-      const aggVals = [r.tester || '', r.testNote || '', effectiveResult(r) || '', effectiveStatus(r) || '']; // 비고 = 대표 진행상태
+      const aggVals = [r.tester || '', rv(r, 'testNote') || '', effectiveResult(r) || '', effectiveStatus(r) || '']; // 비고 = 대표 진행상태
       aggVals.forEach((v, i)=>{
         const cell = ws.getCell(rowNum, aggStartCol + i);
         cell.value = v;
@@ -4073,7 +4093,7 @@ function addQcListSheet(workbook, rows, title){
       // 테스터별 블록: 이름과 그 테스터가 화면에 적은 테스트 내역·결과(없으면 비워 두고 엑셀에서 각자 기입)
       testerGroups.forEach((name, gi)=>{
         const startCol = aggStartCol + (gi + 1) * 4;
-        [name, r['tn:' + name] || '', r['tr:' + name] || '', r['ts:' + name] || ''].forEach((v, i)=>{ // 비고 = 그 테스터의 작성 상태
+        [name, rv(r, 'tn:' + name) || '', rv(r, 'tr:' + name) || '', rv(r, 'ts:' + name) || ''].forEach((v, i)=>{ // 비고 = 그 테스터의 작성 상태
           const cell = ws.getCell(rowNum, startCol + i);
           cell.value = v;
           const isResult = i === 2;
@@ -4169,6 +4189,7 @@ async function handleExcelImportFile(file){
     const grid = [];
     if(ws) ws.eachRow({ includeEmpty: true }, (row, n)=>{ grid[n - 1] = Array.from({ length: ws.columnCount }, (_, c)=>row.getCell(c + 1).text); });
     rows = parseQcSheet(grid);
+    if(rows) rows = rows.map(r=>Object.fromEntries(Object.entries(r).map(([k, v])=>[rk(k), v]))); // 결과·테스터별 칸은 지금 회차로
   }catch(e){ showGlobalError(`엑셀 파일을 읽지 못했어요(${e.message}). .xlsx 파일이 맞는지 확인하고 다시 가져와주세요.`); return; }
   if(!rows || !rows.length){ showGlobalError('엑셀에서 테스트 시나리오 리스트를 찾지 못했어요. 이 도구의 내보내기 > EXCEL로 만든 파일인지 확인해주세요.'); return; }
   const same = rows.filter(r=>tcData.some(t=>tcKeyOf(t) === tcKeyOf(r))).length;
@@ -4304,7 +4325,8 @@ async function exportExcel(scope = 'ALL'){
   const projectName = rec.entry.title || rec.entry.fileName || historyEntry.fileName;
   addQcListSheet(workbook, rows, `${projectName} · ${categoryOf(rec.entry)} · ${EXPORT_SCOPE_LABEL[scope]} · ${dateStr}`);
 
-  await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}_${EXPORT_SCOPE_LABEL[scope]}.xlsx`);
+  const roundTag = roundsOf(rec.entry).length > 1 ? `_${roundOf(rec.entry, currentRoundId).name.replace(/[\\/:*?"<>|\s]+/g, '_')}` : ''; // 회차가 여럿이면 지금 회차 이름
+  await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}_${EXPORT_SCOPE_LABEL[scope]}${roundTag}.xlsx`);
 
   await saveHistory();
   renderHistory();
@@ -4744,7 +4766,7 @@ function renderPlan(){
   const a = document.activeElement, keep = box.contains(a) && a.dataset.field ? [a.closest('[data-plan]').dataset.plan, a.dataset.field] : null;
   const idx = historyList.indexOf(p), today = isoToday(), rows = planRowsOf(p), tl = planBars(rows, today);
   const input = (r, field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input cell-edit" data-field="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(r.label)} ${label}" ${extra}>`;
-  box.innerHTML = `<div class="plan-head"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
+  box.innerHTML = roundsHtml(p, today) + `<div class="plan-head plan-head--sub"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
     <div class="plan-table-wrap"><table class="plan-table">
       <thead><tr><th scope="col">단계</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">담당</th><th scope="col">메모</th><th scope="col">상태</th></tr></thead>
       <tbody>${rows.map(r=>{ const st = phaseStatus(r.from, r.to, today);
@@ -4762,9 +4784,111 @@ function renderPlan(){
           : `<span class="plan-tl-bar ${PLAN_STATUS_CLASS[st]}" style="left:${b.left}%;width:${b.width}%" title="${escapeHtml(r.label)} ${fullDate(r.from || r.to)}${r.single ? '' : ` ~ ${fullDate(r.to || r.from)}`}">${shortDate(r.from) || '?'} ~ ${shortDate(r.to) || '?'}</span>`}<span class="plan-tl-today" style="left:${tl.today}%" aria-hidden="true"></span></span></div>`; }).join('')}
       <div class="plan-tl-row plan-tl-axis"><span class="plan-tl-label"></span><span class="plan-tl-track"><span class="plan-tl-today-label" style="left:${tl.today}%">오늘</span></span></div></div>`
       : '<div class="ad-empty plan-empty">일정을 넣으면 타임라인이 보여요.</div>'}`;
-  box.querySelectorAll('.plan-input').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
-  box.querySelectorAll('.plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
+  box.querySelectorAll('[data-plan] .plan-input').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
+  bindRounds(box, p);
+  box.querySelectorAll('[data-plan] .plan-input[type="text"], [data-round] .plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
   if(keep){ const f = box.querySelector(`[data-plan="${keep[0]}"] [data-field="${keep[1]}"]`); if(f) f.focus(); }
+}
+/* 회차: 프로젝트 data.rounds = [{id, stage, name, from, to}]. 'base' = 처음부터 쓰던 칸(접두어 없는 칸)으로, 목록에 없어도 첫 회차로 있다.
+   지금 회차는 프로젝트마다 이 브라우저에 기억한다(cvt_round_sel). 기억이 없으면 가장 나중 회차 */
+const ROUND_STAGES = ['DVT', 'CVT', 'UAT'];
+function roundsOf(h){
+  const list = Array.isArray(h && h.rounds) ? h.rounds.filter(r=>r && r.id) : [];
+  return list.some(r=>r.id === 'base') ? list : [{ id: 'base', stage: '', name: '1차(기본)', from: '', to: '' }, ...list];
+}
+const roundOf = (h, rid)=>roundsOf(h).find(r=>r.id === rid) || roundsOf(h)[0];
+const roundLabel = r=>`${r.stage ? r.stage + ' ' : ''}${r.name || '회차'}`;
+function roundSelMap(){ try{ return JSON.parse(localStorage.getItem('cvt_round_sel') || '{}') || {}; }catch(e){ return {}; } }
+function syncCurrentRound(){
+  const p = editingProject(), list = p ? roundsOf(p) : [];
+  const want = p ? roundSelMap()[p._id] : null;
+  currentRoundId = !p ? 'base' : list.some(r=>r.id === want) ? want : list[list.length - 1].id;
+}
+function setCurrentRound(rid){
+  const p = editingProject();
+  if(!p) return;
+  const m = roundSelMap();
+  m[p._id] = rid;
+  try{ localStorage.setItem('cvt_round_sel', JSON.stringify(m)); }catch(e){ /* 이번 화면에서만 */ }
+  currentRoundId = rid;
+  renderTable();
+  renderDistribution();
+}
+function renderRoundPick(){
+  const wrap = document.getElementById('roundPick'), sel = document.getElementById('roundSelect'), p = editingProject();
+  wrap.hidden = !p;
+  if(!p) return;
+  sel.innerHTML = roundsOf(p).map(r=>`<option value="${escapeHtml(r.id)}"${r.id === currentRoundId ? ' selected' : ''}>${escapeHtml(roundLabel(r))}</option>`).join('');
+}
+document.getElementById('roundSelect').addEventListener('change', e=>setCurrentRound(e.target.value));
+async function saveRounds(entry, rounds){
+  entry.rounds = rounds;
+  await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
+  rerenderProjectMeta(entry);
+}
+async function saveRoundField(idx, rid, field, value){
+  const entry = historyList[idx];
+  if(!entry) return;
+  await saveRounds(entry, roundsOf(entry).map(r=>r.id === rid ? { ...r, [field]: String(value || '').trim() } : r));
+}
+// 새 회차: 시나리오·담당 테스터는 이어받고 결과는 비운다. failOnly면 지난(지금) 회차에서 Fail이 아닌 시나리오는 검수 제외(N/A)로 시작
+async function addRound(idx, { stage, name, from, to, failOnly }){
+  const entry = historyList[idx];
+  if(!entry) return;
+  const rid = 'r' + Date.now().toString(36), prev = currentRoundId;
+  if(failOnly) tcData.forEach(row=>{
+    if(FAIL_RESULTS.includes(withRound(prev, ()=>effectiveResult(row)))) return;
+    row[rk('result', rid)] = 'N/A';
+    row[rk('reviewStage', rid)] = '검수 제외';
+    assigneesOf(row).forEach(n=>{ row[rk('tr:' + n, rid)] = 'N/A'; });
+  });
+  await saveRounds(entry, [...roundsOf(entry), { id: rid, stage: ROUND_STAGES.includes(stage) ? stage : 'CVT', name: String(name || '').trim() || `${roundsOf(entry).length + 1}차`, from: from || '', to: to || '' }]);
+  setCurrentRound(rid);
+  scheduleAutoSave();
+}
+async function removeRound(idx, rid){
+  const entry = historyList[idx];
+  if(!entry || rid === 'base') return;
+  const r = roundOf(entry, rid);
+  const ok = await openDialog({ title: '회차 삭제', body: `'${roundLabel(r)}' 회차를 목록에서 지울까요? 이 회차에 넣은 결과는 지우지 않고 남겨 두어, 되돌리면 다시 보여요.`, okLabel: '삭제' });
+  if(ok === null) return;
+  const before = roundsOf(entry);
+  await saveRounds(entry, before.filter(x=>x.id !== rid));
+  if(currentRoundId === rid) setCurrentRound(roundsOf(entry)[roundsOf(entry).length - 1].id);
+  showUndoToast(`'${roundLabel(r)}' 회차를 지웠어요.`, async ()=>{ await saveRounds(entry, before); setCurrentRound(rid); });
+}
+function roundsHtml(p, today){
+  const idx = historyList.indexOf(p);
+  const stageSel = (v, attrs)=>`<select class="ad-select plan-input round-input" ${attrs}>${ROUND_STAGES.map(st=>`<option${st === v ? ' selected' : ''}>${st}</option>`).join('')}</select>`;
+  const rows = roundsOf(p).map(r=>{
+    const pg = withRound(r.id, ()=>progressSummary(tcData)), st = phaseStatus(r.from, r.to, today), on = r.id === currentRoundId;
+    const f = (field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input round-input" data-rfield="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(roundLabel(r))} ${label}" ${extra}>`;
+    return `<tr data-round="${escapeHtml(r.id)}"${on ? ' class="is-current"' : ''}>
+      <td>${stageSel(r.stage || 'CVT', `data-rfield="stage" aria-label="${escapeHtml(roundLabel(r))} 단계"`)}</td>
+      <td>${f('name', 'text', '이름', 'maxlength="30"')}</td><td>${f('from', 'date', '시작일')}</td><td>${f('to', 'date', '종료일')}</td>
+      <td><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span></td>
+      <td><span class="round-pg"><span class="round-pg-bar"><span style="width:${pg.pct}%"></span></span>${pg.pct}%</span></td>
+      <td class="round-actions">${on ? '<span class="ad-badge ad-badge--neutral">보는 중</span>' : `<button type="button" class="ad-btn ad-btn--sm" data-round-view="${escapeHtml(r.id)}">보기</button>`}${r.id === 'base' ? '' : `<button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-round-del="${escapeHtml(r.id)}" aria-label="${escapeHtml(roundLabel(r))} 회차 삭제">삭제</button>`}</td></tr>`;
+  }).join('');
+  return `<div class="plan-head"><h3 class="plan-title">회차</h3><span class="legend">보는 중: ${escapeHtml(roundLabel(roundOf(p, currentRoundId)))} · 결과는 회차마다 따로 넣어요</span></div>
+    <div class="plan-table-wrap"><table class="plan-table round-table" data-pidx="${idx}">
+      <thead><tr><th scope="col">단계</th><th scope="col">이름</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">상태</th><th scope="col">진행률</th><th scope="col"><span class="sr-only">동작</span></th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr class="round-add">
+        <td>${stageSel('CVT', 'id="roundAddStage" aria-label="새 회차 단계"')}</td>
+        <td><input type="text" class="ad-input plan-input" id="roundAddName" maxlength="30" placeholder="${roundsOf(p).length + 1}차 통합테스트" aria-label="새 회차 이름"></td>
+        <td><input type="date" class="ad-input plan-input" id="roundAddFrom" aria-label="새 회차 시작일"></td><td><input type="date" class="ad-input plan-input" id="roundAddTo" aria-label="새 회차 종료일"></td>
+        <td colspan="2"><label class="round-failonly"><input type="checkbox" id="roundAddFail"> 지난 회차 Fail만</label></td>
+        <td><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" id="roundAddBtn">회차 추가</button></td></tr></tfoot>
+    </table></div>`;
+}
+function bindRounds(box, p){
+  const idx = historyList.indexOf(p);
+  box.querySelectorAll('[data-round] .round-input').forEach(inp=>inp.addEventListener('change', ()=>saveRoundField(idx, inp.closest('[data-round]').dataset.round, inp.dataset.rfield, inp.value)));
+  box.querySelectorAll('[data-round-view]').forEach(b=>b.addEventListener('click', ()=>setCurrentRound(b.dataset.roundView)));
+  box.querySelectorAll('[data-round-del]').forEach(b=>b.addEventListener('click', ()=>removeRound(idx, b.dataset.roundDel)));
+  const add = box.querySelector('#roundAddBtn');
+  if(add) add.addEventListener('click', ()=>addRound(idx, { stage: box.querySelector('#roundAddStage').value, name: box.querySelector('#roundAddName').value, from: box.querySelector('#roundAddFrom').value, to: box.querySelector('#roundAddTo').value, failOnly: box.querySelector('#roundAddFail').checked }));
 }
 async function savePlanField(idx, key, field, value){
   value = String(value || '').trim();
