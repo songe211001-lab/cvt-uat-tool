@@ -1087,6 +1087,35 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .period-editor .period-input.ad-input{height:24px;border-color:transparent;background:var(--bg);}
   .project-stage-badge{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;background:#E8F0FE;color:#1A56DB;}
   .project-stage-badge.is-done{background:#E6F4EA;color:#137333;}
+  .project-stage-badge.is-wait{background:var(--grey-100);color:var(--ink-soft);}
+  /* 프로젝트 칸반: 대기 | 진행중 | 완료 */
+  .kanban{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:12px;align-items:start;}
+  .kb-col{display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px;border-radius:10px;background:var(--bg);border:1px dashed transparent;transition:border-color .12s var(--ease), background-color .12s var(--ease);}
+  .kb-col.is-drop{border-color:var(--primary);background:var(--primary-soft);}
+  .kb-col-head{display:flex;align-items:center;gap:6px;padding:2px 4px;font-size:13px;font-weight:700;color:var(--ink);}
+  .kb-count{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:999px;background:var(--panel);font-size:12px;font-weight:700;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;}
+  .kb-dot{width:8px;height:8px;border-radius:50%;background:#1A56DB;}
+  .kb-dot.is-wait{background:var(--grey-400);} .kb-dot.is-done{background:#137333;}
+  .kb-list{display:flex;flex-direction:column;gap:8px;min-height:48px;}
+  .kb-empty{padding:14px 8px;border:1px dashed var(--line);border-radius:8px;text-align:center;font-size:12px;color:var(--muted);}
+  .history-item.kb-card{position:relative;display:block;margin:0;padding:12px 36px 12px 12px;background:var(--panel);}
+  .kb-card.is-dragging{opacity:.5;}
+  .kb-card .meta{gap:6px;}
+  .kb-card .file-name{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;}
+  .kb-card .file-name .ad-badge{margin-left:0;}
+  .kb-progress{display:flex;align-items:center;gap:8px;}
+  .kb-progress .history-mini-bar{flex:1 1 auto;width:auto;margin-top:0;}
+  .kb-progress .legend{font-size:11.5px;white-space:nowrap;}
+  .kb-card .period-fields{gap:4px 6px;margin-top:0;}
+  .kb-card .period-chip{height:24px;padding:0 8px;font-size:11.5px;}
+  .kb-menu{position:absolute;top:8px;right:6px;}
+  .kb-menu > summary{list-style:none;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:var(--muted);cursor:pointer;font-weight:700;}
+  .kb-menu > summary::-webkit-details-marker{display:none;}
+  .kb-menu > summary:hover, .kb-menu[open] > summary{background:var(--bg);color:var(--ink);}
+  .kb-menu > summary:focus-visible{outline:2px solid var(--primary-dark);outline-offset:1px;}
+  .kb-menu-list{position:absolute;right:0;top:28px;z-index:20;display:flex;flex-direction:column;min-width:150px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);}
+  .kb-menu-list .ad-btn{justify-content:flex-start;width:100%;}
+  @media (max-width:900px){ .kanban{grid-template-columns:1fr;} }
   .project-stage-badge:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
   .sum-title{max-width:100%;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;color:var(--ink);}
   .tc-summary .legend{font-size:12px;color:var(--muted);}
@@ -4446,19 +4475,26 @@ function nextPeriods(periods, key, edge, value){
   return all;
 }
 // 프로젝트 상태(진행중·배포 완료, 정하지 않으면 진행중)와 배포 일정: data.stage, data.deployDate(YYYY-MM-DD)
-const PROJECT_STAGES = ['진행중', '배포 완료'];
-const stageOf = h => PROJECT_STAGES.includes(h.stage) ? h.stage : '진행중';
+const PROJECT_STAGES = ['대기', '진행중', '완료'];
+const stageOf = h => h.stage === '배포 완료' ? '완료' : PROJECT_STAGES.includes(h.stage) ? h.stage : '진행중'; // 예전 '배포 완료'는 '완료'로 읽는다
+const STAGE_CLASS = { '대기': ' is-wait', '진행중': '', '완료': ' is-done' };
+// 칸반 열로 나눈다(받은 순서 그대로) (순수 함수)
+function groupByStage(list){
+  const g = Object.fromEntries(PROJECT_STAGES.map(s=>[s, []]));
+  list.forEach(h=>g[stageOf(h)].push(h));
+  return g;
+}
 const shortDate = d => d ? d.slice(5).replace('-', '.') : ''; // 2026-11-03 → 11.03
 const fullDate = d => d ? d.replace(/-/g, '.') : '';         // 2026-11-03 → 2026.11.03
 // readOnly: 상세 요약 카드(헤더)에서는 기간을 보여주기만 한다(고치기는 [테스트 계획] 탭)
-function periodFieldsHtml(h, idx, readOnly = false){
-  const stage = stageOf(h), done = stage === '배포 완료';
+function periodFieldsHtml(h, idx, readOnly = false, withStage = true){
+  const stage = stageOf(h), done = stage === '완료';
   const chip = (key, label, value, title)=>readOnly
     ? `<span class="period-chip is-ro${value ? '' : ' is-empty'}" data-period-view="${key}"><span class="period-label">${label}</span><b>${escapeHtml(value || '미정')}</b></span>`
     : `<button type="button" class="period-chip${value ? '' : ' is-empty'}" data-pedit="${key}" data-idx="${idx}" title="${escapeHtml(title)}" aria-label="${escapeHtml(label)} ${escapeHtml(value || '입력')}"><span class="period-label">${label}</span><b>${escapeHtml(value || '입력')}</b></button>`;
   const range = k=>{ const p = (h.periods || {})[k] || {}; return p.from || p.to ? `${shortDate(p.from) || '?'} ~ ${shortDate(p.to) || '?'}` : ''; };
   return `<div class="period-fields" role="group" aria-label="상태·일정">`
-    + `<button type="button" class="project-stage-badge${done ? ' is-done' : ''}" data-sidx="${idx}" aria-pressed="${done}" title="눌러서 ${done ? '진행중' : '배포 완료'}(으)로 바꾸기">${stage}</button>`
+    + (withStage ? `<button type="button" class="project-stage-badge${STAGE_CLASS[stage]}" data-sidx="${idx}" aria-pressed="${done}" title="눌러서 ${PROJECT_STAGES[(PROJECT_STAGES.indexOf(stage) + 1) % PROJECT_STAGES.length]}(으)로 바꾸기">${stage}</button>` : '')
     + chip('deploy', '배포', shortDate(h.deployDate), h.deployDate ? `배포 일정 ${fullDate(h.deployDate)} (눌러서 고치기)` : '눌러서 배포 일정 입력')
     + PROJECT_PERIODS.map(k=>chip(k, k, range(k), `${k} 기간 (눌러서 고치기)`)).join('')
     + `</div>`;
@@ -4470,6 +4506,13 @@ async function setProjectPeriod(idx, key, edge, value, render = true){
   if(Object.keys(periods).length) entry.periods = periods; else delete entry.periods;
   await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
   if(render) rerenderProjectMeta(entry);
+}
+// 칸반에서 상태 바꾸기. 키보드로 옮겼으면 옮긴 카드에 포커스를 둔다
+async function moveProjectStage(idx, stage, refocus = false){
+  const entry = historyList[idx];
+  if(!entry || !PROJECT_STAGES.includes(stage) || stageOf(entry) === stage) return;
+  await setProjectMeta(idx, 'stage', stage);
+  if(refocus){ const c = document.querySelector(`#historyList .kb-card[data-open="${idx}"]`); if(c) c.focus(); }
 }
 async function setProjectMeta(idx, key, value, render = true){
   const entry = historyList[idx];
@@ -4515,7 +4558,7 @@ function bindPeriodInputs(root){
   root.querySelectorAll('.project-stage-badge').forEach(b=>b.addEventListener('click', e=>{
     e.stopPropagation();
     const entry = historyList[+b.dataset.sidx];
-    if(entry) setProjectMeta(+b.dataset.sidx, 'stage', stageOf(entry) === '배포 완료' ? '진행중' : '배포 완료');
+    if(entry) setProjectMeta(+b.dataset.sidx, 'stage', PROJECT_STAGES[(PROJECT_STAGES.indexOf(stageOf(entry)) + 1) % PROJECT_STAGES.length]); // 대기 → 진행중 → 완료 → 대기
   }));
 }
 /* 테스트 계획 탭: DVT·CVT·UAT·배포 일정표(시작·종료·담당·메모·상태)와 간트형 타임라인.
@@ -4696,7 +4739,8 @@ function renderHistory(){
   }
   empty.style.display = 'none';
 
-  wrap.innerHTML = filtered.map(h=>{
+  // 대기 | 진행중 | 완료 칸반. 카드를 다른 열로 끌어 놓거나(Alt+←/→, ⋯ 메뉴) 상태를 바꾼다
+  const card = h=>{
     const idx = historyList.indexOf(h);
     // 예전 버전에서 만들어진 UAT 이력도 TC 이력과 똑같이 보여 주고 불러오기·삭제할 수 있다(스냅샷 형식이 같다).
     const total = h.count || 1;
@@ -4704,31 +4748,61 @@ function renderHistory(){
       const pct = (h.counts[o]||0)/total*100;
       return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}"></span>` : '';
     }).join('');
+    const progress = h.count ? Math.round((h.count - ((h.counts || {})[''] || 0)) / h.count * 100) : 0; // 결과를 넣은 시나리오 비율
     const figmaLink = h.figmaUrl
-      ? ` · <a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 기획안 링크 ↗</a>`
+      ? ` · <a href="${escapeHtml(h.figmaUrl)}" target="_blank" rel="noopener">피그마 ↗</a>`
       : '';
     const name = h.title || h.fileName;
     const isEditing = !!h._id && h._id === loadedHistoryId;
-    const testerCount = (Array.isArray(h.testers) ? h.testers : testerList).length;
-    return `<div class="history-item${isEditing ? ' is-editing' : ''}" data-open="${idx}" tabindex="0" title="눌러서 프로젝트 열기">
+    const stage = stageOf(h);
+    return `<div class="history-item kb-card${isEditing ? ' is-editing' : ''}" data-open="${idx}" data-stage="${stage}" draggable="true" tabindex="0" title="눌러서 프로젝트 열기 · 끌어서 상태 바꾸기(Alt+←/→)">
       <div class="meta">
-        <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span></div>
-        <div class="date">배포 ${h.deployDate ? fullDate(h.deployDate) : '일정 미정'} · 시나리오 ${h.count}건 · 테스터 ${testerCount}명 · ${escapeHtml(h.summary)}${figmaLink}</div>
-        ${periodFieldsHtml(h, idx)}
-        <div class="history-mini-bar">${bar}</div>
+        <div class="file-name"><button type="button" class="ad-badge ad-badge--neutral category-chip${h.category ? '' : ' is-none'}" data-cat-idx="${idx}" title="눌러서 분류 바꾸기" aria-label="분류 바꾸기: ${escapeHtml(categoryOf(h))}">${escapeHtml(categoryOf(h))}</button><span class="history-title">${escapeHtml(name)}</span>${isEditing ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : ''}</div>
+        <div class="date">배포 ${h.deployDate ? fullDate(h.deployDate) : '일정 미정'} · 시나리오 ${h.count}건${figmaLink}</div>
+        <div class="kb-progress"><div class="history-mini-bar">${bar}</div><span class="legend">진행률 ${progress}%</span></div>
+        ${periodFieldsHtml(h, idx, false, false)}
       </div>
-      <div class="history-actions">
-        ${isEditing ? '<span class="ad-badge ad-badge--neutral">편집 중</span>' : ''}
-        <button class="ad-btn ad-btn--ghost" data-rename="${idx}" aria-label="프로젝트 이름 변경: ${escapeHtml(name)}">이름 변경</button>
-        <button class="ad-btn ad-btn--ghost" data-share="${idx}" title="이 프로젝트를 바로 여는 링크를 복사해요">링크 복사</button>
-        <button class="ad-btn ad-btn--ghost" data-remove="${idx}">삭제</button>
-      </div>
+      <details class="kb-menu">
+        <summary aria-label="${escapeHtml(name)} 메뉴" title="메뉴">⋯</summary>
+        <div class="kb-menu-list" role="menu">
+          ${PROJECT_STAGES.filter(st=>st !== stage).map(st=>`<button type="button" class="ad-btn ad-btn--ghost" role="menuitem" data-move-stage="${st}" data-midx="${idx}">${{ '대기': '대기로', '진행중': '진행중으로', '완료': '완료로' }[st]} 옮기기</button>`).join('')}
+          <button class="ad-btn ad-btn--ghost" role="menuitem" data-rename="${idx}" aria-label="프로젝트 이름 변경: ${escapeHtml(name)}">이름 변경</button>
+          <button class="ad-btn ad-btn--ghost" role="menuitem" data-share="${idx}" title="이 프로젝트를 바로 여는 링크를 복사해요">링크 복사</button>
+          <button class="ad-btn ad-btn--ghost" role="menuitem" data-remove="${idx}">삭제</button>
+        </div>
+      </details>
     </div>`;
-  }).join('');
+  };
+  const cols = groupByStage(filtered);
+  wrap.innerHTML = `<div class="kanban">${PROJECT_STAGES.map(st=>`<section class="kb-col" data-stage-col="${st}" aria-label="${st} 프로젝트">
+      <header class="kb-col-head"><span class="kb-dot${STAGE_CLASS[st]}" aria-hidden="true"></span>${st}<span class="kb-count">${cols[st].length}</span></header>
+      <div class="kb-list">${cols[st].map(card).join('') || '<div class="kb-empty">여기로 끌어 놓으면 이 상태가 돼요</div>'}</div>
+    </section>`).join('')}</div>`;
+  // 끌어 놓기·키보드·메뉴로 상태 바꾸기
+  wrap.querySelectorAll('.kb-card').forEach(c=>{
+    c.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', c.dataset.open); e.dataTransfer.effectAllowed = 'move'; c.classList.add('is-dragging'); });
+    c.addEventListener('dragend', ()=>{ c.classList.remove('is-dragging'); wrap.querySelectorAll('.is-drop').forEach(x=>x.classList.remove('is-drop')); });
+    c.addEventListener('keydown', e=>{
+      if(!e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.target !== c) return;
+      e.preventDefault();
+      const to = PROJECT_STAGES[PROJECT_STAGES.indexOf(c.dataset.stage) + (e.key === 'ArrowRight' ? 1 : -1)];
+      if(to) moveProjectStage(+c.dataset.open, to, true);
+    });
+  });
+  wrap.querySelectorAll('.kb-col').forEach(col=>{
+    col.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; col.classList.add('is-drop'); });
+    col.addEventListener('dragleave', e=>{ if(!col.contains(e.relatedTarget)) col.classList.remove('is-drop'); });
+    col.addEventListener('drop', e=>{ e.preventDefault(); col.classList.remove('is-drop'); const idx = e.dataTransfer.getData('text/plain'); if(idx !== '') moveProjectStage(+idx, col.dataset.stageCol); });
+  });
+  wrap.querySelectorAll('[data-move-stage]').forEach(b=>b.addEventListener('click', ()=>moveProjectStage(+b.dataset.midx, b.dataset.moveStage)));
+  wrap.querySelectorAll('.kb-menu').forEach(m=>{
+    m.addEventListener('toggle', ()=>{ if(m.open) wrap.querySelectorAll('.kb-menu[open]').forEach(o=>{ if(o !== m) o.open = false; }); });
+    m.addEventListener('keydown', e=>{ if(e.key === 'Escape' && m.open){ m.open = false; m.querySelector('summary').focus(); } });
+  });
 
   // 항목 어디를 눌러도(분류 칩·버튼·링크·입력칸 제외) 그 프로젝트를 연다. 키보드는 항목에서 Enter
   wrap.querySelectorAll('[data-open]').forEach(item=>{
-    item.addEventListener('click', e=>{ if(!e.target.closest('button, a, input, select')) openProjectItem(+item.dataset.open); });
+    item.addEventListener('click', e=>{ if(!e.target.closest('button, a, input, select, details')) openProjectItem(+item.dataset.open); });
     item.addEventListener('keydown', e=>{ if(e.key === 'Enter' && e.target === item){ e.preventDefault(); openProjectItem(+item.dataset.open); } });
   });
   wrap.querySelectorAll('[data-share]').forEach(btn=>{
