@@ -904,13 +904,13 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   }
 
   /* ── 테스트 시나리오 표: 업무관리 "회귀 검증" 화면(.statWrap · .stable · .cvTable)과 같은 모양 ── */
-  #tcTableWrap{--tc-cols:20px 120px 54px minmax(60px,1fr) minmax(100px,1.8fr) 104px minmax(80px,1.2fr) 84px 88px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
-  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:10px;align-items:center;padding:0 14px;min-width:878px;}
+  #tcTableWrap{--tc-cols:20px 132px minmax(120px,1fr) minmax(180px,2fr) 72px 104px 108px 96px 96px 72px minmax(100px,.9fr) 132px 84px 24px;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;}
+  .tc-table-head, #tcCardList .tc-card-head{display:grid;grid-template-columns:var(--tc-cols);column-gap:10px;align-items:center;padding:0 14px;min-width:1460px;}
   /* 머리글: 작은 보조색 글자, 아래 선 하나 */
   .tc-table-head{min-height:44px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--muted);white-space:nowrap;}
   .tc-table-head[hidden]{display:none;}
   .tc-table-head .tc-c{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-  #tcCardList .tc-card{--row-bg:var(--panel);min-width:878px;padding:0;margin:0;border:none;border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);border-radius:0;background:var(--row-bg);box-shadow:none;transition:background-color .12s var(--ease);} /* --row-bg: 행 바탕(고정 칸도 같은 색). 줄무늬 대신 옅은 구분선 + 호버 */
+  #tcCardList .tc-card{--row-bg:var(--panel);min-width:1460px;padding:0;margin:0;border:none;border-bottom:1px solid color-mix(in srgb, var(--line) 55%, transparent);border-radius:0;background:var(--row-bg);box-shadow:none;transition:background-color .12s var(--ease);} /* --row-bg: 행 바탕(고정 칸도 같은 색). 줄무늬 대신 옅은 구분선 + 호버 */
   #tcCardList .tc-card:last-child{border-bottom:0;}
   #tcCardList .tc-card:hover{--row-bg:var(--bg);}
   #tcCardList .tc-card.selected{--row-bg:var(--primary-soft);}
@@ -971,6 +971,20 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tc-note-pop-name{padding-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;color:var(--ink);}
   /* 담당자·상태: 28px 셀렉트 모양(.sel) */
   #tcCardList .tester-pick{min-width:0;max-width:none;width:100%;height:32px;padding:0 8px;border-radius:7px;border-color:color-mix(in srgb, var(--line) 60%, transparent);background-color:transparent;font-size:14px;font-weight:500;color:var(--ink-soft);}
+  /* 검수 정보 칸 */
+  #tcCardList .tc-card-head select.screentype-select.tc-type-mini{width:52px;height:24px;padding:0 14px 0 6px;font-size:11.5px;font-weight:700;border-radius:999px;background-position:calc(100% - 7px) 52%, calc(100% - 3px) 52%;}
+  #tcCardList .c-cat{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  #tcCardList .c-cat .tc-sub{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:600;color:var(--ink);cursor:text;}
+  #tcCardList .c-cat .tc-title{font-size:12.5px;}
+  #tcCardList .tc-scn{font-weight:500;}
+  #tcCardList .tc-card-head .c-pri select, #tcCardList .tc-card-head .c-review select, #tcCardList .tc-card-head .c-dev select{width:100%;min-height:0;height:30px;padding:0 20px 0 8px;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;background-color:transparent;font-size:13px;}
+  #tcCardList .pri-select.is-High{color:var(--fatal-text);font-weight:700;} #tcCardList .pri-select.is-Low{color:var(--muted);}
+  #tcCardList .review-select[data-stage="완료"]{color:var(--pass-text);font-weight:700;} #tcCardList .review-select[data-stage="수정 접수"], #tcCardList .review-select[data-stage="재검수 대기"]{color:var(--fatal-text);font-weight:700;}
+  #tcCardList .c-env .ad-input, #tcCardList .c-date .ad-input{width:100%;min-width:0;height:30px;padding:2px 8px;font-size:13px;border-color:color-mix(in srgb, var(--line) 60%, transparent);background:transparent;}
+  #tcCardList .c-env .ad-input:hover, #tcCardList .c-env .ad-input:focus, #tcCardList .c-date .ad-input:hover, #tcCardList .c-date .ad-input:focus{border-color:var(--primary);background:var(--panel);}
+  #tcCardList .tc-upd{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted);}
+  #tcCardList .tc-meta-row .c-note, #tcCardList .tc-meta-row .c-st{margin-top:4px;}
+  #tcCardList .tc-card-body select.tester-status-select{height:30px;padding:0 22px 0 8px;border-radius:7px;font-size:14px;}
   #tcCardList .tc-card-head select.tester-status-select{width:100%;min-height:0;height:30px;padding:0 22px 0 8px;border-color:color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;background-color:transparent;font-size:14px;}
   #tcCardList .status-badge{display:inline-flex;align-items:center;min-width:0;width:auto;height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:12.5px;font-weight:600;line-height:1;}
   /* 삭제: 평소에는 흐리게, 행에 올리거나 키보드로 가면 또렷하게 */
@@ -1018,7 +1032,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   @media (max-width:640px){ .tc-list-tools{width:100%;margin-left:0;} .tc-search-box{flex:1 1 0;width:auto;min-width:0;} }
 
   /* 요약 줄(cvHead): 제목·날짜 / 결과 알약 + 건수 버튼(누르면 그 결과만) / 진행률 */
-  #panel-gen [data-dpanel][hidden], .detail-tabs[hidden]{display:none !important;}
+  #panel-gen [data-dpanel][hidden], .detail-tabs[hidden], .tc-progress[hidden]{display:none !important;}
+  /* 진행률 바 */
+  .pg-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--grey-100);}
+  .pg-seg{height:100%;} .pg-seg.is-pass, .pg-dot.is-pass{background:var(--result-pass);} .pg-seg.is-fail, .pg-dot.is-fail{background:var(--result-fatal);} .pg-seg.is-hold, .pg-dot.is-hold{background:var(--result-major);} .pg-dot.is-na{background:var(--grey-400);}
+  .pg-legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+  .pg-stat b, .pg-item b{color:var(--ink);font-weight:700;}
+  .pg-item{all:unset;display:inline-flex;align-items:center;gap:5px;padding:2px 6px;margin:0 -6px;border-radius:6px;cursor:pointer;}
+  .pg-item:hover, .pg-item[aria-pressed="true"]{background:var(--bg);} .pg-item:focus-visible{outline:2px solid var(--primary-dark);}
+  .pg-dot{width:8px;height:8px;border-radius:50%;}
   /* 상세 탭 */
   .detail-tabs{display:flex;gap:4px;margin:0 0 12px;border-bottom:1px solid var(--line);}
   .detail-tabs [data-dtab]{all:unset;box-sizing:border-box;padding:10px 14px;margin-bottom:-1px;border-bottom:2px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;}
@@ -1057,7 +1079,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .plan-tl-today{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--primary);}
   .plan-tl-today-label{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--primary-dark);}
   .ad-main-body .panel .card.ad-card.tc-summary, .ad-main-body .panel #tcStatsCard.card.ad-card, .ad-main-body .panel .card.ad-card.tc-list-card,
-  .ad-main-body .panel .card.ad-card.tc-board-card, .ad-main-body .panel .card.ad-card.tc-plan-card{
+  .ad-main-body .panel .card.ad-card.tc-board-card, .ad-main-body .panel .card.ad-card.tc-plan-card, .ad-main-body .panel .card.ad-card.tc-progress{
     margin:0 0 12px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:9px;} /* 테두리 있는 흰 카드 */
   .ad-main-body #tcStatsCard + .card.tc-list-card, .ad-main-body #tcStatsCard + .card.tc-plan-card{border-top:1px solid var(--line);} /* 통계 아래 카드도 테두리 그대로 */
   .tc-list-card .tc-section-head{justify-content:flex-end;margin-bottom:10px;}
@@ -1172,7 +1194,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <summary class="ad-btn" aria-label="내보내기 형식 고르기"><span aria-hidden="true">↓</span> 내보내기</summary>
         <div class="export-menu__list" role="menu">
           <button type="button" class="ad-btn ad-btn--ghost" role="menuitem" id="jsonExportBtn" title="테스트 시나리오 리스트·프로젝트·테스터를 JSON 파일로 내보내요">JSON</button>
-          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBtn" title="테스트 시나리오 리스트를 엑셀 파일로 내보내고 프로젝트로 저장해요" disabled>EXCEL</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBtn" title="테스트 시나리오 전체를 엑셀 파일로 내보내고 프로젝트로 저장해요" disabled>EXCEL 전체</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportFoBtn" title="FO 테스트 시나리오만 엑셀 파일로 내려받아요" disabled>EXCEL FO</button>
+          <button type="button" class="ad-btn ad-btn--ghost tool-proj" role="menuitem" id="exportBoBtn" title="BO 테스트 시나리오만 엑셀 파일로 내려받아요" disabled>EXCEL BO</button>
         </div>
       </details>
       <details class="export-menu json-btn" id="importMenu">
@@ -1211,6 +1235,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span></div>
       <div class="sum-periods" id="sumPeriods" hidden></div>
     </div>
+    <div class="card ad-card ad-panel tc-progress" id="tcProgress" hidden></div>
     <!-- 상세 탭: 테스트 목록 / 현황판(결과 건수·담당자별 통계) / 테스트 계획(DVT·CVT·UAT·배포 일정) -->
     <div class="detail-tabs" id="detailTabs" role="tablist" aria-label="프로젝트 보기" hidden>
       <button type="button" role="tab" id="dtab-list" data-dtab="list" aria-controls="dpanel-list">테스트 목록</button>
@@ -1284,10 +1309,11 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <div class="tc-table-wrap" id="tcTableWrap">
         <div class="tc-table-head" id="tcTableHead" role="row" hidden>
           <span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
-          <span class="tc-c c-id" role="columnheader">ID</span><span class="tc-c c-type" role="columnheader">유형</span>
-          <span class="tc-c c-cat" role="columnheader">대분류</span><span class="tc-c c-detail" role="columnheader">중분류</span>
-          <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-note" role="columnheader">비고</span>
-          <span class="tc-c c-who" role="columnheader">담당자</span><span class="tc-c c-st" role="columnheader">상태</span><span class="tc-c c-del" role="columnheader" aria-label="삭제"></span>
+          <span class="tc-c c-id" role="columnheader">TC ID</span><span class="tc-c c-cat" role="columnheader">대분류 · 중분류</span>
+          <span class="tc-c c-detail" role="columnheader">테스트 시나리오</span><span class="tc-c c-pri" role="columnheader">우선순위</span>
+          <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-review" role="columnheader">검수 단계</span><span class="tc-c c-dev" role="columnheader">개발 수정</span>
+          <span class="tc-c c-who" role="columnheader">담당 테스터</span><span class="tc-c c-exec" role="columnheader">테스터</span><span class="tc-c c-env" role="columnheader">테스트 환경</span>
+          <span class="tc-c c-date" role="columnheader">테스트 일자</span><span class="tc-c c-upd" role="columnheader">최종 수정</span><span class="tc-c c-del" role="columnheader" aria-label="삭제"></span>
         </div>
         <div id="tcCardList" class="tc-table" role="rowgroup"></div>
       </div>
@@ -1585,6 +1611,39 @@ const RESULT_COLOR = {
 const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['완료','테스트불가','작성중','개발 검토']; // 고르는 순서(화면·통계 표)
 const STATUS_PROGRESS = ['작성중','개발 검토','테스트불가','완료']; // 진행 순서: 대표 진행상태는 가장 앞쪽(덜 진행된) 값
+// 검수 정보(표 열): 우선순위·검수 단계·개발 수정·테스터·테스트 환경·테스트 일자·최종 수정. 행 data의 새 키에 두고, 없으면 기본값으로 읽는다
+const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt'];
+const PRIORITY_OPTIONS = ['High', 'Mid', 'Low'];
+const REVIEW_STAGES = ['검수 대기', '수정 접수', '수정 진행', '재검수 대기', '완료', '검수 보류', '검수 제외'];
+const DEV_FIX_OPTIONS = ['미확인', '검토', '수정중', '수정 완료', '미해결', '버그 아님'];
+const DEV_FIX_STAGES = ['수정 접수', '수정 진행', '재검수 대기']; // 이 단계에서 개발 수정 칸을 고른다
+const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 통계의 Fail. BLOCK은 보류, N/A는 검수 제외
+// 결과 → 검수 단계(결과를 넣을 때 자동으로 정하고, 뒤에 사람이 바꿀 수 있다) (순수 함수)
+function reviewStageForResult(res){
+  return res === 'PASS' ? '완료' : FAIL_RESULTS.includes(res) ? '수정 접수' : res === 'BLOCK' ? '검수 보류' : res === 'N/A' ? '검수 제외' : '검수 대기';
+}
+const priorityOf = r => PRIORITY_OPTIONS.includes(r && r.priority) ? r.priority : 'Mid';
+const reviewStageOf = r => REVIEW_STAGES.includes(r && r.reviewStage) ? r.reviewStage : reviewStageForResult(effectiveResult(r));
+const p2n = n => String(n).padStart(2, '0');
+const isoDate = (d = new Date()) => `${d.getFullYear()}-${p2n(d.getMonth() + 1)}-${p2n(d.getDate())}`;
+const stampNow = (d = new Date()) => `${p2n(d.getMonth() + 1)}-${p2n(d.getDate())} ${p2n(d.getHours())}:${p2n(d.getMinutes())}`;
+// 결과를 넣으면: 검수 단계를 정하고, 넣은 테스터·오늘 날짜를 적고, Fail이면 개발 수정을 '미확인'으로 연다
+function applyResultMeta(row, name){
+  const res = effectiveResult(row);
+  row.reviewStage = reviewStageForResult(res);
+  if(!res) return row;
+  if(name) row.executedBy = name;
+  row.testDate = isoDate();
+  if(FAIL_RESULTS.includes(res) && !DEV_FIX_OPTIONS.includes(row.devFix)) row.devFix = '미확인';
+  return row;
+}
+// 진행률 바: Pass·Fail(MINOR~FATAL)·보류(BLOCK)·미실행. N/A(검수 제외)는 대상에서 뺀다 (순수 함수)
+function progressSummary(rows){
+  const c = { pass: 0, fail: 0, hold: 0, na: 0, none: 0 };
+  (rows || []).forEach(r=>{ const v = effectiveResult(r); if(v === 'PASS') c.pass++; else if(FAIL_RESULTS.includes(v)) c.fail++; else if(v === 'BLOCK') c.hold++; else if(v === 'N/A') c.na++; else c.none++; });
+  const target = (rows || []).length - c.na;
+  return { ...c, target, pct: target ? Math.round((c.pass + c.fail + c.hold) / target * 100) : 0 };
+}
 
 // 도메인 특화 태그: 하루 1회 제한 액션 / 동일 회원에 결합 불가한(단독 실행 필요) 액션.
 // 같은 테스터(=보통 같은 테스트 계정/회원을 사용)에게 이런 태그가 붙은 TC가 여러 건 배정되면
@@ -1598,6 +1657,7 @@ function toExportRow(row){
   const out = Object.fromEntries(COLUMNS.map(c=>[c.key, row[c.key]]));
   Object.keys(row || {}).forEach(k=>{ if(TESTER_KEY_RE.test(k)) out[k] = row[k]; });
   if(typeof (row && row.seq) === 'number') out.seq = row.seq; // 리스트 순서(만든 순서). 팀원 화면·새로고침 뒤에도 같은 순서
+  META_KEYS.forEach(k=>{ if(row && k in row) out[k] = row[k]; }); // 검수 정보(있는 칸만)
   return out;
 }
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
@@ -1906,7 +1966,7 @@ function updateButtons(){
   const ready = figmaImportNeeded() || (!!currentFile && (currentFileChunks.length > 0 || !!currentPdfPageTexts));
   document.getElementById('genBtn').disabled = qcGenerating || !ready;
   document.getElementById('appendBtn').disabled = qcGenerating || !(ready && tcData.length>0);
-  document.getElementById('exportBtn').disabled = !tcData.length;
+  ['exportBtn', 'exportFoBtn', 'exportBoBtn'].forEach(id=>{ document.getElementById(id).disabled = !tcData.length; });
   renderGenProgress();
 }
 // 생성 중에 QC 생성 창을 닫아도 생성은 계속된다. 창이 닫혀 있는 동안 화면 아래에 진행 상황을 보이고, 누르면 창을 다시 연다
@@ -3044,7 +3104,7 @@ function renderTable(){
     .map((row, idx)=>({row, idx}))
     .filter(({row})=>{
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
-      if(tcFilterResult !== 'ALL' && (effectiveResult(row) || '') !== tcFilterResult) return false;
+      if(tcFilterResult !== 'ALL' && !(tcFilterResult === 'FAIL' ? FAIL_RESULTS.includes(effectiveResult(row)) : (effectiveResult(row) || '') === tcFilterResult)) return false; // FAIL = MINOR~FATAL
       if(tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester)) return false;
       if(tcSearchQuery){
         const hay = [row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
@@ -3110,13 +3170,14 @@ function renderTable(){
         <div class="tc-c c-id">
           <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="${escapeHtml(row.tcId)} (눌러서 고칠 수 있어요)" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
           ${isDup ? '<span class="ad-badge ad-badge--warning tc-mini-badge" title="유사 시나리오: 화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사</span>' : ''}
+          <select class="screentype-select tc-type-mini" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
+          ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
+        </select>
           ${rowHasConflict ? `<span class="ad-badge ad-badge--danger tc-mini-badge" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨(배정 충돌)">충돌</span>` : ''}
         </div>
-        <div class="tc-c c-type"><select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
-          ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
-        </select></div>
-        <div class="tc-c c-cat"><div class="tc-screen-input tc-title tc-cat-edit" data-title-idx="${idx}" data-catedit="category" role="button" tabindex="0" title="${escapeHtml(row.category || '')} (누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">-</span>'}</div></div>
-        <div class="tc-c c-detail"><span class="tc-item tc-cat-edit" data-catedit="subCategory" data-idx="${idx}" role="button" tabindex="0" title="${escapeHtml(row.subCategory || '')} (누르면 고쳐요)">${escapeHtml(row.subCategory || '') || '(중분류 없음)'}</span><button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '펼치기' : '접기'}" title="상세 펼치기/접기" aria-expanded="${!isCollapsed}">▾</button></div>
+        <div class="tc-c c-cat"><span class="tc-title tc-cat-edit" data-title-idx="${idx}" data-catedit="category" role="button" tabindex="0" title="${escapeHtml(row.category || '')} (누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">대분류 없음</span>'}</span><span class="tc-sub tc-cat-edit" data-catedit="subCategory" data-idx="${idx}" role="button" tabindex="0" title="${escapeHtml(row.subCategory || '')} (누르면 고쳐요)">${escapeHtml(row.subCategory || '') || '<span class="sub-txt">중분류 없음</span>'}</span></div>
+        <div class="tc-c c-detail"><span class="tc-item tc-scn" title="${escapeHtml(row.screen || row.subCategory || '')}">${escapeHtml(row.screen || row.subCategory || '') || '<span class="sub-txt">(시나리오 없음)</span>'}</span><button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '펼치기' : '접기'}" title="상세 펼치기/접기" aria-expanded="${!isCollapsed}">▾</button></div>
+        <div class="tc-c c-pri"><select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${PRIORITY_OPTIONS.map(o=>`<option value="${o}"${o === priorityOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
         <div class="tc-c c-res">
           <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
           ${tabTester
@@ -3125,22 +3186,32 @@ function renderTable(){
           </select>`
             : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         </div>
-        <div class="tc-c c-note">${noteKey
-          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (row.testNote || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
-          : `<button type="button" class="tc-note-multi" data-note-idx="${idx}" aria-expanded="false" aria-controls="tcNotePop${idx}" title="${escapeHtml(noteText || '눌러서 담당자별 비고 입력')}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">담당자별 비고</span>'}</button>
-          <div class="tc-note-pop" id="tcNotePop${idx}" role="group" aria-label="${escapeHtml(row.tcId)} 담당자별 비고" hidden>${assigned.map(n=>`<label class="tc-note-pop-row"><span class="tc-note-pop-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span><div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(n)}" data-placeholder="${escapeHtml(n)} 비고">${escapeHtml(testerValue(row, n, 'tn'))}</div></label>`).join('')}</div>`}</div>
+        <div class="tc-c c-review"><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${REVIEW_STAGES.map(o=>`<option value="${o}"${o === reviewStageOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
+        <div class="tc-c c-dev">${DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(row.devFix)
+          ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${DEV_FIX_OPTIONS.map(o=>`<option value="${o}"${o === (row.devFix || '미확인') ? ' selected' : ''}>${o}</option>`).join('')}</select>`
+          : '<span class="sub-txt">-</span>'}</div>
         <div class="tc-c c-who">${testerOptions}</div>
-        <div class="tc-c c-st">${tabTester
-          ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
-          <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===ownStatus?'selected':''}>${o}</option>`).join('')}
-        </select>`
-          : `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '담당자를 지정하면 그 테스터 탭에서 작성 상태를 골라요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`}</div>
+        <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(row.executedBy || '') || '<span class="sub-txt">-</span>'}</span></div>
+        <div class="tc-c c-env"><input type="text" class="ad-input env-input cell-edit" data-idx="${idx}" value="${escapeHtml(row.testEnv || '')}" maxlength="40" placeholder="단말·OS" aria-label="${escapeHtml(row.tcId)} 테스트 환경"></div>
+        <div class="tc-c c-date"><input type="date" class="ad-input tdate-input cell-edit" data-idx="${idx}" value="${escapeHtml(row.testDate || '')}" aria-label="${escapeHtml(row.tcId)} 테스트 일자"></div>
+        <div class="tc-c c-upd"><span class="tc-ro-text tc-upd" title="마지막으로 고친 시각">${escapeHtml(row.updatedAt || '') || '<span class="sub-txt">-</span>'}</span></div>
         <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
       </div>
 
       <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
       <div class="tc-detail">
         <div class="tc-detail-col">
+          <div class="tc-field-row tc-meta-row">
+            <div class="tc-field-block"><span class="tc-field-label">비고</span><div class="c-note">${noteKey
+          ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (row.testNote || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
+          : `<button type="button" class="tc-note-multi" data-note-idx="${idx}" aria-expanded="false" aria-controls="tcNotePop${idx}" title="${escapeHtml(noteText || '눌러서 담당자별 비고 입력')}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">담당자별 비고</span>'}</button>
+          <div class="tc-note-pop" id="tcNotePop${idx}" role="group" aria-label="${escapeHtml(row.tcId)} 담당자별 비고" hidden>${assigned.map(n=>`<label class="tc-note-pop-row"><span class="tc-note-pop-name" title="${escapeHtml(n)}">${escapeHtml(n)}</span><div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="tn:${escapeHtml(n)}" data-placeholder="${escapeHtml(n)} 비고">${escapeHtml(testerValue(row, n, 'tn'))}</div></label>`).join('')}</div>`}</div></div>
+            <div class="tc-field-block"><span class="tc-field-label">작성 상태</span><div class="c-st">${tabTester
+          ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 작성 상태">
+          <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===ownStatus?'selected':''}>${o}</option>`).join('')}
+        </select>`
+          : `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '담당자를 지정하면 그 테스터 탭에서 작성 상태를 골라요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`}</div></div>
+          </div>
           <div class="tc-field-row">
             <div class="tc-field-block">
               <label class="tc-field-label">대분류</label>
@@ -3177,7 +3248,7 @@ function renderTable(){
   });
 
   const columnLabel = Object.fromEntries(COLUMNS.map(c=>[c.key, c.label]));
-  list.querySelectorAll('.cell-edit').forEach(el=>{
+  list.querySelectorAll('.cell-edit[data-key]').forEach(el=>{ // 글자 칸(contenteditable). 검수 정보 입력칸은 아래에서 따로
     el.setAttribute('role', 'textbox');
     const key = el.dataset.key, label = key.startsWith('tn:') ? `${key.slice(3)} 테스트 내역` : (columnLabel[key] || '');
     el.setAttribute('aria-label', `${tcData[+el.dataset.idx].tcId} ${label}`);
@@ -3305,9 +3376,22 @@ function renderTable(){
       row[(sel.classList.contains('tester-status-select') ? 'ts:' : 'tr:') + sel.dataset.name] = sel.value;
       row.result = effectiveResult(row);
       row.status = effectiveStatus(row);
+      if(sel.classList.contains('tester-result-select')) applyResultMeta(row, sel.dataset.name); // 검수 단계·테스터·테스트 일자
       renderTable();
       renderDistribution();
     });
+  });
+  // 우선순위·검수 단계·개발 수정(셀렉트), 테스트 환경·테스트 일자(입력)
+  list.querySelectorAll('.pri-select, .review-select, .dev-select').forEach(sel=>sel.addEventListener('change', ()=>{
+    const row = tcData[+sel.dataset.idx], key = sel.classList.contains('pri-select') ? 'priority' : sel.classList.contains('review-select') ? 'reviewStage' : 'devFix';
+    row[key] = sel.value;
+    if(key === 'reviewStage' && DEV_FIX_STAGES.includes(sel.value) && !DEV_FIX_OPTIONS.includes(row.devFix)) row.devFix = '미확인';
+    renderTable();
+    renderDistribution();
+  }));
+  list.querySelectorAll('.env-input, .tdate-input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{ tcData[+inp.dataset.idx][inp.classList.contains('env-input') ? 'testEnv' : 'testDate'] = inp.value.trim(); scheduleAutoSave(); });
+    inp.addEventListener('keydown', e=>{ if(e.key === 'Enter' && inp.type === 'text'){ e.preventDefault(); inp.blur(); } });
   });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
@@ -3505,7 +3589,7 @@ window.addEventListener('scroll', ()=>{ if(testerPickerIdx >= 0) closeTesterPick
 document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
   const val = e.target.value;
   if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.result = val; assigneesOf(r).forEach(n=>{ r['tr:' + n] = val; }); } }); // 담당자가 있으면 담당자마다
+  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r.result = val; assigneesOf(r).forEach(n=>{ r['tr:' + n] = val; }); applyResultMeta(r, null); } }); // 담당자가 있으면 담당자마다
   e.target.value = '';
   renderTable();
   renderDistribution();
@@ -3566,7 +3650,6 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
    미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/(PASS+Fail), Fail = MINOR·MAJOR·CRITICAL·FATAL(분모 0이면 0.0%). 엑셀 장표 계산식과 같다.
    테스터 열은 그 테스터의 값(testerValue). 합계 열 = 배정이 있는 테스터 열의 평균(엑셀 장표와 같음, 소수 첫째 자리).
    테스터가 아무도 없으면 시나리오 행의 결과로 센다 */
-const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL'];
 const STAT_ROWS = ['총 건수', ...RESULT_OPTIONS, '미실행', '진행률', '결함률'];
 // 구분 설명: 통계 표 "구분" 머리의 (?) 버튼을 누르면 보이는 정의
 const STAT_DEFS = {
@@ -3636,7 +3719,9 @@ const SUMMARY_RESULTS = ['PASS', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL', 'BLOCK',
 function renderSummary(t){
   const box = document.getElementById('tcSummary');
   box.hidden = !t;
+  document.getElementById('tcProgress').hidden = !t;
   if(!t){ applyDetailTab(); return; }
+  renderProgressBar();
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!r.result; }).length;
@@ -3655,6 +3740,23 @@ function renderSummary(t){
   renderPlan();
   applyDetailTab();
 }
+// 진행률 바: Pass·Fail·보류·미실행 누적 막대와 건수(N/A는 검수 제외로 따로). 항목을 누르면 그 결과만 [테스트 목록]에
+function renderProgressBar(){
+  const pg = progressSummary(tcData), box = document.getElementById('tcProgress'), w = n=>pg.target ? n / pg.target * 100 : 0;
+  const seg = (n, cls, label)=>n ? `<span class="pg-seg ${cls}" style="width:${w(n)}%" title="${label} ${n}건"></span>` : '';
+  const item = (key, cls, label, n)=>`<button type="button" class="pg-item" data-pgres="${key}" aria-pressed="${tcFilterResult === (key === 'NT' ? '' : key)}">${cls ? `<i class="pg-dot ${cls}" aria-hidden="true"></i>` : ''}${label} <b class="num">${n}</b></button>`;
+  box.innerHTML = `<div class="pg-bar" role="img" aria-label="진행률 ${pg.pct}% (Pass ${pg.pass}, Fail ${pg.fail}, 보류 ${pg.hold}, 미실행 ${pg.none})">${seg(pg.pass, 'is-pass', 'Pass')}${seg(pg.fail, 'is-fail', 'Fail')}${seg(pg.hold, 'is-hold', '보류')}</div>
+    <div class="pg-legend"><span class="pg-stat">대상 <b class="num">${pg.target}</b></span><span class="pg-stat">진행률 <b class="num">${pg.pct}%</b></span>
+      ${item('PASS', 'is-pass', 'Pass', pg.pass)}${item('FAIL', 'is-fail', 'Fail', pg.fail)}${item('BLOCK', 'is-hold', '보류', pg.hold)}${item('NT', '', '미실행', pg.none)}${item('N/A', 'is-na', '검수 제외(N/A)', pg.na)}</div>`;
+}
+document.getElementById('tcProgress').addEventListener('click', e=>{
+  const b = e.target.closest('[data-pgres]');
+  if(!b) return;
+  const v = b.dataset.pgres === 'NT' ? '' : b.dataset.pgres;
+  tcFilterResult = tcFilterResult === v ? 'ALL' : v;
+  if(tcFilterResult !== 'ALL') detailTab = 'list';
+  renderTable();
+});
 // 현황판 결과 알약 = 결과 필터: 누르면 그 결과만 [테스트 목록]에 보이고, 다시 누르면 전체
 document.getElementById('sumStats').addEventListener('click', e=>{
   const b = e.target.closest('[data-sumres]');
@@ -3874,7 +3976,10 @@ function addQcListSheet(workbook, rows, title){
   const testerGroups = activeTesters().slice(); // 지금 보이는 테스터(편집 중인 프로젝트의 테스터)만큼 개별 컬럼 블록 생성
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
   const BASE_COLS = 8; // TC ID~기대결과
-  const totalCols = 1 + BASE_COLS + groupCount * 4; // A열은 여백으로 비워둠(참고 양식과 동일)
+  const EXTRA = [['우선순위', 9, priorityOf], ['검수 단계', 11, reviewStageOf], ['개발 수정', 10, r=>r.devFix || ''], ['테스터', 10, r=>r.executedBy || ''],
+    ['테스트 환경', 16, r=>r.testEnv || ''], ['테스트 일자', 12, r=>r.testDate || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 검수 정보(테스터 블록 뒤)
+  const extraStart = 1 + BASE_COLS + groupCount * 4 + 1;
+  const totalCols = extraStart + EXTRA.length - 1; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
 
   const counts = {};
@@ -3887,6 +3992,7 @@ function addQcListSheet(workbook, rows, title){
   // 열 너비 (A열은 여백)
   const widths = [3, 14, 9, 18, 22, 40, 50, 50, 50];
   for(let g = 0; g < groupCount; g++){ widths.push(10, 22, 10, 16); }
+  EXTRA.forEach(e=>widths.push(e[1]));
   widths.forEach((w,i)=>{ ws.getColumn(i+1).width = w; });
 
   // 1행: 제목 (남색 배경 + 흰 글자)
@@ -3932,6 +4038,11 @@ function addQcListSheet(workbook, rows, title){
       xlsStyleCell(cell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
     });
   }
+  EXTRA.forEach(([label], i)=>{
+    const cell = ws.getCell(4, extraStart + i);
+    cell.value = label;
+    xlsStyleCell(cell, {fill:XLS_STYLE.headerFill, bold:true, align:'center', border:XLS_STYLE.headerBorderColor});
+  });
   ws.getRow(4).height = 30;
 
   // 5행부터: 구분 행 + 데이터
@@ -3969,6 +4080,11 @@ function addQcListSheet(workbook, rows, title){
           xlsStyleCell(cell, {align: i===1 ? 'left' : 'center', border: XLS_STYLE.dataBorderColor, fill: isResult ? XLS_STYLE.resultFill : undefined, bold: isResult});
         });
       });
+      EXTRA.forEach(([, , get], i)=>{
+        const cell = ws.getCell(rowNum, extraStart + i);
+        cell.value = get(r);
+        xlsStyleCell(cell, {align: 'center', border: XLS_STYLE.dataBorderColor});
+      });
       rowNum++;
     });
   });
@@ -3997,18 +4113,24 @@ function parseQcSheet(grid){
     if(key && col[key] == null) col[key] = c;
   });
   if(agg < 0) agg = 8;
+  // 검수 정보 열(내보낼 때 테스터 블록 뒤에 붙인다): 머리 이름으로 찾고, 테스터 블록은 그 앞까지만 읽는다
+  const EXTRA_KEYS = { '우선순위': 'priority', '검수 단계': 'reviewStage', '개발 수정': 'devFix', '테스터': 'executedBy', '테스트 환경': 'testEnv', '테스트 일자': 'testDate' };
+  const hdr = (grid[head] || []).map(h=>String(h == null ? '' : h).replace(/\s+/g, ' ').trim());
+  const extraStart = hdr.indexOf('우선순위', agg + 1) > -1 ? hdr.indexOf('우선순위', agg + 1) : Infinity;
+  const extraCols = Number.isFinite(extraStart) ? hdr.map((h, c)=>c >= extraStart && EXTRA_KEYS[h] ? [EXTRA_KEYS[h], c] : null).filter(Boolean) : [];
   const rows = [];
   for(let i = head + 1; i < grid.length; i++){
     const r = grid[i] || [];
     const tcId = cell(r, 1);
     if(!TC_ID_RE.test(tcId)) continue; // 구분 행·빈 행
     let tester = cell(r, agg), testNote = cell(r, agg + 1), result = cell(r, agg + 2).toUpperCase();
-    for(let c = agg + 4; c < r.length && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
+    const blockEnd = Math.min(r.length, extraStart);
+    for(let c = agg + 4; c < blockEnd && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
       if(!testNote && cell(r, c + 1)) testNote = cell(r, c + 1);
       if(!result && cell(r, c + 2)){ result = cell(r, c + 2).toUpperCase(); if(!tester) tester = cell(r, c); }
     }
     const perTester = {};
-    for(let c = agg + 4; c < r.length; c += 4){
+    for(let c = agg + 4; c < blockEnd; c += 4){
       const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3).replace(/^개발 검토중$/, '개발 검토');
       if(!name) continue;
       if(note) perTester['tn:' + name] = note;
@@ -4019,7 +4141,8 @@ function parseQcSheet(grid){
       tcId, screenType: cell(r, col.screenType).toUpperCase() === 'BO' ? 'BO' : 'FO', category: cell(r, col.category), subCategory: cell(r, col.subCategory),
       ...(col.precondition != null ? { precondition: cell(r, col.precondition) } : {}),
       procedure: col.procedure != null ? cell(r, col.procedure) : '', testDetail: col.testDetail != null ? cell(r, col.testDetail) : '', expected: col.expected != null ? cell(r, col.expected) : '',
-      tester, testNote, result: RESULT_OPTIONS.includes(result) ? result : '', ...perTester // 결과가 비었거나 모르는 값이면 미실행
+      tester, testNote, result: RESULT_OPTIONS.includes(result) ? result : '', ...perTester, // 결과가 비었거나 모르는 값이면 미실행
+      ...Object.fromEntries(extraCols.map(([k, c])=>[k, cell(r, c)]).filter(([k, v])=>v && (k === 'priority' ? PRIORITY_OPTIONS.includes(v) : k === 'reviewStage' ? REVIEW_STAGES.includes(v) : k === 'devFix' ? DEV_FIX_OPTIONS.includes(v) : true)))
     });
   }
   return rows;
@@ -4099,8 +4222,20 @@ function scheduleAutoSave(){
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(autoSaveNow, 300);
 }
+const rowStampSeen = new Map();
+const rowStampSig = r=>{ const { updatedAt, ...rest } = toExportRow(r); return JSON.stringify(rest); };
+function refreshRowStamps(){ tcData.forEach(r=>rowStampSeen.set(r._id || r.tcId, rowStampSig(r))); }
+function stampChangedRows(){
+  const now = stampNow();
+  tcData.forEach(r=>{
+    const key = r._id || r.tcId, sig = rowStampSig(r), prev = rowStampSeen.get(key);
+    if(prev !== undefined && prev !== sig) r.updatedAt = now;
+    rowStampSeen.set(key, sig);
+  });
+}
 function autoSaveNow(){
   autoSaveTimer = null;
+  stampChangedRows();
   if(SYNC_ENABLED && !syncLoaded) return; // 서버 목록을 받기 전(이 브라우저의 예전 임시저장)에는 프로젝트에 쓰지 않는다
   if(!loadedHistoryId && tcData.length) createProjectFromList(); // 새 프로젝트는 QC가 생기면 바로 프로젝트 목록에 올린다
   else saveProjectSnapshot();
@@ -4146,8 +4281,11 @@ function saveProjectSnapshot(){
   renderHistory();
   return true;
 }
-document.getElementById('exportBtn').addEventListener('click', async ()=>{
-  if(!tcData.length){ showError('내보낼 테스트 케이스가 없습니다.'); return; }
+// 엑셀 내보내기: 전체 / FO / BO 파일을 따로 내려받는다(프로젝트 저장은 셋 다 같다)
+const EXPORT_SCOPE_LABEL = { ALL: '전체', FO: 'FO', BO: 'BO' };
+async function exportExcel(scope = 'ALL'){
+  const rows = scope === 'ALL' ? tcData : tcData.filter(r=>(r.screenType === 'BO' ? 'BO' : 'FO') === scope);
+  if(!rows.length){ showError(scope === 'ALL' ? '내보낼 테스트 케이스가 없습니다.' : `내보낼 ${scope} 테스트 시나리오가 없어요.`); return; }
   showError('');
 
   const historyEntry = currentHistoryEntry();
@@ -4164,9 +4302,9 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   // ("프로젝트 관리" 시트는 더 만들지 않는다. addHistorySheet는 남겨 둔다)
   const workbook = new ExcelJS.Workbook();
   const projectName = rec.entry.title || rec.entry.fileName || historyEntry.fileName;
-  addQcListSheet(workbook, tcData, `${projectName} · ${categoryOf(rec.entry)} · ${dateStr}`);
+  addQcListSheet(workbook, rows, `${projectName} · ${categoryOf(rec.entry)} · ${EXPORT_SCOPE_LABEL[scope]} · ${dateStr}`);
 
-  await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}.xlsx`);
+  await downloadWorkbook(workbook, `CVT_자료_${dateStr.replace(/[: ]/g,'_')}_${EXPORT_SCOPE_LABEL[scope]}.xlsx`);
 
   await saveHistory();
   renderHistory();
@@ -4177,7 +4315,10 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     await saveHistory();
     renderHistory();
   });
-});
+}
+document.getElementById('exportBtn').addEventListener('click', ()=>exportExcel('ALL'));
+document.getElementById('exportFoBtn').addEventListener('click', ()=>exportExcel('FO'));
+document.getElementById('exportBoBtn').addEventListener('click', ()=>exportExcel('BO'));
 
 /* ---------- 작업 중인 TC 임시 저장 (새로고침·창 닫기로 인한 작업 손실 방지) ----------
    엑셀 내보내기 전까지 tcData는 화면에만 존재하므로, 편집할 때마다 draftDirty를
@@ -5339,6 +5480,7 @@ function drainRealtime(){
 
 // 받아온 값을 화면과 이 브라우저의 저장소에 반영한다 (사용자 편집이 아니므로 다시 보내지 않는다)
 function afterRemoteApply(){
+  refreshRowStamps(); // 받은 변경은 '내가 고친 것'으로 세지 않는다
   saveDraftNow();
   try{
     localStorage.setItem('cvt_uat_history', JSON.stringify(historyList));
