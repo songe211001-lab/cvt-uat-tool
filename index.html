@@ -914,7 +914,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tc-card:last-child{border-bottom:0;}
   #tcCardList .tc-card:hover{--row-bg:var(--bg);}
   #tcCardList .tc-card.selected{--row-bg:var(--primary-soft);}
-  #tcCardList .tc-card[data-result="MAJOR"], #tcCardList .tc-card[data-result="CRITICAL"], #tcCardList .tc-card[data-result="FATAL"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
+  #tcCardList .tc-card[data-result="Fail"]{box-shadow:inset 3px 0 0 var(--fatal);} /* 회귀 검증처럼 큰 결함만 왼쪽 빨간 선 */
   #tcCardList .tc-card-head{min-height:56px;padding-top:10px;padding-bottom:10px;font-size:14.5px;cursor:pointer;}
   #tcCardList .tc-card-head > *{order:0;}
   #tcCardList .tc-c{min-width:0;}
@@ -952,9 +952,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .cvpill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
   .rp-PASS{background:var(--pass-soft) !important;color:var(--pass-text) !important;}
   .rp-MINOR{background:var(--minor-soft) !important;color:var(--minor-text) !important;}
-  .rp-MAJOR, .rp-CRITICAL, .rp-FATAL{background:var(--fatal-soft) !important;color:var(--fatal-text) !important;}
+  .rp-Fail, .rp-MAJOR, .rp-CRITICAL, .rp-FATAL{background:var(--fatal-soft) !important;color:var(--fatal-text) !important;}
   .rp-NA{background:var(--grey-100) !important;color:var(--ink-soft) !important;}
-  .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
+  .rp-보류, .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
   .rp-NT{background:var(--grey-100) !important;color:var(--muted) !important;}
   /* 메모(비고): 28px 입력칸(cvMemo). 누르면 여러 줄로 펼쳐 쓴다 */
   #tcCardList .tc-note-cell{display:block;min-height:32px;max-height:32px;padding:5px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14px;line-height:1.5;background:transparent;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;cursor:text;}
@@ -1010,7 +1010,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     /* 고정 칸과 그 사이 틈은 행 바탕색(--row-bg)을 그대로 따른다(호버·선택·줄무늬에서 흰 선이 생기지 않게). 왼쪽 3px 결함 선은 가리지 않는다 */
     .tc-table-head{--row-bg:var(--panel);}
     .tc-table-head > .c-sel, .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{position:sticky;z-index:2;align-self:stretch;display:flex;align-items:center;background:var(--row-bg);}
-    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:14px;box-shadow:-11px 0 0 var(--row-bg), 10px 0 0 var(--row-bg);}
+    .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:14px;box-shadow:-11px 0 0 var(--row-bg), 10px 0 0 var(--row-bg);} /* 표 안쪽 여백(14px)만큼 띄워 고정: 테두리 위로 튀어나오지 않게, 맨 왼쪽 3px 결함 선은 남긴다 */
     .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:44px;flex-wrap:wrap;box-shadow:10px 0 0 var(--row-bg);}
   }
   @media (max-width:640px){
@@ -1032,6 +1032,193 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   /* 요약 줄(cvHead): 제목·날짜 / 결과 알약 + 건수 버튼(누르면 그 결과만) / 진행률 */
   #panel-gen [data-dpanel][hidden], .detail-tabs[hidden], .tc-progress[hidden]{display:none !important;}
+  /* 로그인 화면(워크보드와 같은 카드) */
+  #authGate{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);}
+  #authGate[hidden]{display:none;}
+  body.is-gated dialog[open]{visibility:hidden;}
+  .gate-card{width:min(400px, 100%);padding:28px 24px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(15,23,42,.08);}
+  .gate-card h1{margin:0 0 18px;font-size:19px;font-weight:800;color:var(--ink);}
+  .gate-tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+  .gate-tabs [data-gt]{all:unset;padding:8px 12px;margin-bottom:-1px;border-bottom:2px solid transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;}
+  .gate-tabs [data-gt][aria-selected="true"]{color:var(--primary-dark);border-bottom-color:var(--primary);}
+  .gate-form{display:flex;flex-direction:column;gap:6px;}
+  .gate-form label{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .gate-form input{height:40px;padding:0 12px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:var(--panel);color:var(--ink);}
+  .gate-form input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  .gate-form .ad-btn--primary{height:42px;margin-top:12px;justify-content:center;}
+  .gate-err{min-height:18px;margin:6px 0 0;font-size:12.5px;color:var(--fatal-text);}
+  .gate-lead{margin:0 0 10px;font-size:13.5px;color:var(--ink-soft);line-height:1.6;}
+  .gate-links{display:flex;justify-content:space-between;gap:8px;margin-top:8px;}
+  /* 헤더 오른쪽: 알림함(🔔) + 프로필 메뉴 (로그인했을 때만) */
+  .hdr-user{display:flex;align-items:center;gap:4px;margin-left:8px;flex-shrink:0;}
+  .hdr-user[hidden]{display:none;}
+  .hdr-pop-wrap{position:relative;}
+  .hdr-bell{position:relative;}
+  .hdr-bell{padding:0;}
+  .hdr-bell svg{flex:none;width:20px;height:20px;} /* 버튼 안쪽 여백 때문에 6px로 눌리던 아이콘 */
+  .hdr-bell[hidden]{display:none;}
+  .notif-count{position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--primary);color:#fff;font-size:10.5px;font-weight:800;line-height:17px;text-align:center;}
+  .notif-count[hidden]{display:none;}
+  .hdr-profile-btn{display:flex;align-items:center;gap:8px;max-width:180px;padding:4px 8px 4px 4px;border:1px solid transparent;border-radius:999px;background:none;font:inherit;color:var(--ink);cursor:pointer;}
+  .hdr-profile-btn:hover, .hdr-profile-btn[aria-expanded="true"]{background:var(--grey-100);}
+  .hdr-profile-btn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:1px;}
+  .hdr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:700;}
+  .gnb-avatar{flex:none;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--primary-soft);color:var(--primary-dark);font-weight:800;}
+  .hdr-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-3);}
+  .hdr-pop[hidden]{display:none;}
+  .profile-menu{width:260px;padding:6px;display:flex;flex-direction:column;gap:2px;}
+  .pm-head{display:flex;align-items:center;gap:10px;padding:8px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;}
+  .gnb-profile-txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;}
+  .gnb-profile-name{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--ink);}
+  .gnb-profile-txt small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--muted);}
+  .role-badge{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:999px;background:var(--grey-100);font-size:11px;font-weight:700;color:var(--ink-soft);}
+  .role-badge.is-admin{background:var(--primary-soft);color:var(--primary-dark);}
+  .pm-item{display:block;width:100%;padding:8px 10px;border:0;border-radius:var(--radius-sm, 6px);background:none;font:inherit;font-size:13.5px;text-align:left;color:var(--ink);cursor:pointer;}
+  .pm-item:hover, .pm-item:focus-visible{background:var(--grey-100);outline:none;}
+  .pm-item[aria-current="true"]{background:var(--primary-soft);color:var(--primary-dark);font-weight:700;}
+  .pm-sep{margin:4px 0 2px;padding:6px 10px 2px;border-top:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--muted);}
+  .pm-sep:empty{padding:0;margin:4px 0;}
+  .notif-panel{width:min(360px, calc(100vw - 24px));max-height:min(520px, calc(100vh - 90px));display:flex;flex-direction:column;}
+  .np-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);}
+  .np-list{list-style:none;margin:0;padding:4px;overflow:auto;flex:1 1 auto;}
+  .np-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;width:100%;padding:9px 8px;border:0;border-radius:var(--radius-sm, 6px);background:none;font:inherit;text-align:left;color:var(--ink-soft);cursor:pointer;}
+  .np-item:hover, .np-item:focus-visible{background:var(--grey-100);outline:none;}
+  .np-item.is-unread{color:var(--ink);background:color-mix(in srgb, var(--primary-soft) 55%, transparent);}
+  .np-type{padding:2px 7px;border-radius:999px;background:var(--grey-100);font-size:11px;font-weight:700;white-space:nowrap;}
+  .np-type.t-defect{background:var(--fatal-soft);color:var(--fatal-text);}
+  .np-type.t-mention{background:var(--primary-soft);color:var(--primary-dark);}
+  .np-main{display:flex;flex-direction:column;min-width:0;font-size:13px;}
+  .np-body{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
+  .np-time{font-size:11.5px;color:var(--muted);white-space:nowrap;}
+  .np-empty{padding:24px 12px;}
+  .np-mail{border-top:1px solid var(--line);padding:8px 12px;font-size:13px;}
+  .np-mail summary{cursor:pointer;font-weight:700;color:var(--ink-soft);}
+  .np-mail-types{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 4px;}
+  .np-mail-types label{display:flex;align-items:center;gap:6px;font-size:13px;}
+  .notify-admin{display:flex;flex-direction:column;align-items:flex-start;gap:8px;}
+  /* 시나리오 댓글 (펼친 상세 맨 아래) */
+  .tc-comments{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+  .cm-title{font-size:13px;font-weight:700;color:var(--ink);}
+  .cm-count{color:var(--primary-dark);}
+  .cm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .cm-list:empty{display:none;}
+  .cm-item{padding:8px 10px;border-radius:var(--radius-md, 8px);background:var(--panel);border:1px solid color-mix(in srgb, var(--line) 70%, transparent);}
+  .cm-meta{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+  .cm-meta b{color:var(--ink);font-size:13px;}
+  .cm-del{margin-left:auto;border:0;background:none;color:var(--muted);cursor:pointer;border-radius:4px;padding:0 4px;}
+  .cm-del:hover{color:var(--fatal-text);background:var(--grey-100);}
+  .cm-body{margin-top:2px;font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
+  .mention{color:var(--primary-dark);font-weight:700;}
+  .mention.is-me{background:var(--primary-soft);border-radius:4px;padding:0 2px;}
+  .cm-form{display:flex;gap:8px;align-items:flex-end;}
+  .cm-input{flex:1 1 auto;min-height:56px;resize:vertical;font:inherit;font-size:14px;}
+  .mention-box{position:fixed;z-index:95;width:240px;max-height:260px;overflow:auto;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-3);}
+  .mention-opt{display:flex;flex-direction:column;padding:6px 8px;border-radius:6px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .mention-opt small{font-size:11.5px;font-weight:400;color:var(--muted);}
+  .mention-opt.is-act, .mention-opt:hover{background:var(--primary-soft);}
+  @media (max-width:900px){ .hdr-name{display:none;} .hdr-profile-btn{padding:4px;} }
+  /* 테스트 계획: 단계 레일 (DVT → CVT → UAT) */
+  .plan-head .plan-title{flex-shrink:0;white-space:nowrap;} /* 좁은 화면에서 제목이 한 글자씩 꺾이지 않게 */
+  .stage-rail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+  .stage-card{--stage:var(--primary);display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px;border:1px solid var(--line);border-top:3px solid var(--stage);border-radius:var(--radius-lg);background:var(--panel);}
+  .stage-card.s-dvt{--stage:#5b5bd6;} .stage-card.s-cvt{--stage:var(--primary);} .stage-card.s-uat{--stage:#b4590a;}
+  .stage-card.is-current{box-shadow:0 0 0 2px color-mix(in srgb, var(--stage) 35%, transparent);}
+  .stage-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .stage-chip{font-weight:800;font-size:15px;color:var(--stage);}
+  .stage-verdict{margin-left:auto;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;}
+  .stage-verdict.is-go{background:var(--pass-soft);color:var(--pass-text);} .stage-verdict.is-nogo{background:var(--fatal-soft);color:var(--fatal-text);}
+  .stage-purpose{margin:0;font-size:13px;color:var(--ink-soft);}
+  .stage-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;margin:0;font-size:13px;}
+  .stage-meta dt{color:var(--muted);font-weight:700;} .stage-meta dd{margin:0;min-width:0;}
+  .stage-meta .stage-input{height:30px;width:100%;}
+  .stage-scope{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;} .stage-scope label{display:flex;align-items:center;gap:4px;}
+  .stage-rounds{display:flex;flex-wrap:wrap;gap:4px;}
+  .stage-round{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:2px 9px;font:inherit;font-size:12.5px;color:var(--ink-soft);cursor:pointer;}
+  .stage-round.is-on{border-color:var(--stage);color:var(--ink);font-weight:700;}
+  .gate-list{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:5px;}
+  .gate-item{display:flex;align-items:center;gap:8px;font-size:13px;}
+  .gate-item::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .gate-item.is-ok::before{background:var(--pass);} .gate-item.is-bad::before{background:var(--fatal);}
+  .gate-name{flex:1 1 auto;min-width:0;}
+  .gate-target{display:flex;align-items:center;gap:3px;color:var(--muted);font-size:12px;}
+  .gate-input{width:58px;height:26px;padding:0 6px;font-size:12.5px;text-align:right;}
+  .stage-forced{margin:0;padding:6px 8px;border-radius:6px;background:var(--grey-100);font-size:12px;color:var(--ink-soft);}
+  .stage-next{align-self:flex-start;}
+  @media (max-width:900px){ .stage-rail{grid-template-columns:1fr;} }
+  /* 현황판: 단계 관문 보드 */
+  .gate-board{display:flex;flex-direction:column;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--line);}
+  .gb-head{--stage:var(--primary);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .gb-head.s-dvt{--stage:#5b5bd6;} .gb-head.s-uat{--stage:#b4590a;}
+  .gb-stage{font-size:20px;font-weight:800;color:var(--stage);}
+  .gb-round{font-weight:700;color:var(--ink-soft);}
+  .gb-verdict{padding:4px 12px;border-radius:999px;font-weight:800;font-size:13.5px;}
+  .gb-verdict.is-go{background:var(--pass-soft);color:var(--pass-text);} .gb-verdict.is-nogo{background:var(--fatal-soft);color:var(--fatal-text);}
+  .gb-head .legend{margin-left:auto;}
+  .gb-gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+  .gb-gauge{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);font:inherit;text-align:left;color:var(--ink);}
+  button.gb-gauge{cursor:pointer;} button.gb-gauge:hover{border-color:var(--fatal);} button.gb-gauge:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  .gb-g-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:13px;}
+  .gb-g-top b{font-size:18px;}
+  .gb-g-bar{height:6px;border-radius:3px;background:var(--grey-100);overflow:hidden;}
+  .gb-g-bar i{display:block;height:100%;background:var(--pass);}
+  .gb-gauge.is-bad .gb-g-bar i{background:var(--fatal);}
+  .gb-g-tgt{font-size:11.5px;color:var(--muted);}
+  .gb-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  .gb-col{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .gb-title{margin:0;font-size:13.5px;font-weight:800;color:var(--ink);display:flex;gap:6px;align-items:baseline;}
+  .gb-blocks, .gb-people{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .gb-block{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;font-size:13px;}
+  .gb-block.is-zero{color:var(--muted);}
+  .gb-b-name{min-width:96px;}
+  .gb-block b{margin-right:4px;}
+  .gb-tc{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:0 7px;font:inherit;font-size:11.5px;color:var(--primary-dark);cursor:pointer;}
+  .gb-tc:hover{border-color:var(--primary);}
+  .gb-daily{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;align-items:end;height:96px;}
+  .gb-day{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:10.5px;color:var(--muted);}
+  .gb-day i{display:block;width:70%;min-height:2px;border-radius:3px 3px 0 0;background:var(--primary);}
+  .gb-day b{font-size:10.5px;color:var(--ink-soft);}
+  .gb-people li{display:grid;grid-template-columns:minmax(0,72px) minmax(0,1fr) auto auto;gap:6px;align-items:center;font-size:12.5px;}
+  .gb-p-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+  .gb-p-bar{height:6px;border-radius:3px;background:var(--grey-100);overflow:hidden;} .gb-p-bar i{display:block;height:100%;background:var(--pass);}
+  .gb-p-fail{color:var(--fatal-text);font-weight:700;}
+  @media (max-width:900px){ .gb-cols{grid-template-columns:1fr;} .gb-head .legend{margin-left:0;flex-basis:100%;} }
+  /* 회원 기반 테스터: 계정 / 게스트 표시 */
+  .acct-tag{display:inline-flex;align-items:center;height:18px;padding:0 6px;margin:0 4px 0 2px;border-radius:999px;background:var(--primary-soft);color:var(--primary-dark);font-size:10.5px;font-weight:700;}
+  .acct-tag.is-guest{background:var(--grey-100);color:var(--muted);}
+  /* 바통(공) 넘기기 */
+  .ball-badge{display:inline-flex;align-items:center;margin-top:4px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+  .ball-badge.b-dev{background:#fbeedd;color:#8a4307;} .ball-badge.b-qa{background:var(--primary-soft);color:var(--primary-dark);} .ball-badge.b-closed{background:var(--pass-soft);color:var(--pass-text);}
+  .ball-badge.is-stale{box-shadow:inset 0 0 0 1.5px var(--fatal);}
+  #tcCardList .c-review{display:flex;flex-direction:column;align-items:flex-start;}
+  .baton{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);}
+  .baton-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .baton-status{font-size:12.5px;font-weight:700;color:var(--ink-soft);} .baton-status.b-dev{color:#8a4307;} .baton-status.b-qa{color:var(--primary-dark);} .baton-status.b-closed{color:var(--pass-text);}
+  .baton-fields{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;}
+  .baton-fields label{display:flex;align-items:center;gap:6px;} .baton-fields .ad-select, .baton-fields .ad-input{height:32px;min-width:150px;}
+  .baton-send{display:flex;flex-direction:column;gap:6px;}
+  .baton-reason{min-height:52px;resize:vertical;font:inherit;font-size:14px;}
+  .baton-btns{display:flex;flex-wrap:wrap;gap:6px;}
+  .cm-item.is-handoff{border-style:dashed;background:var(--bg);}
+  .my-turn-btn[aria-pressed="true"]{border-color:var(--primary);color:var(--primary-dark);background:var(--primary-soft);}
+  .my-turn-btn[hidden]{display:none;}
+  /* 관리자 표 */
+  .admin-table td, .admin-table th{vertical-align:middle;}
+  .admin-table .ad-select{height:30px;padding:0 24px 0 8px;font-size:13px;}
+  .member-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .member-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;}
+  .member-chip .ad-select{height:24px;padding:0 18px 0 6px;font-size:12px;border:0;background-color:transparent;}
+  .member-del{all:unset;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;color:var(--muted);cursor:pointer;}
+  .member-del:hover{background:var(--bg);color:var(--ink);}
+  .member-add{display:flex;gap:4px;align-items:center;white-space:nowrap;}
+  .acc-active{display:inline-flex;align-items:center;gap:6px;font-size:13px;}
+  .tester-member-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;}
+  .tester-member-chips[hidden]{display:none;}
+  /* 보기 권한: 입력·생성·삭제를 잠근다 */
+  .readonly-banner{margin:0 0 12px;padding:10px 14px;border-radius:8px;background:var(--grey-100);font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .readonly-banner[hidden]{display:none;}
+  body.is-readonly #panel-gen #tcCardList :is(input, select, [contenteditable], .tc-cat-edit, [data-del], [data-edit-tcid], .tester-pick, .tc-note-multi),
+  body.is-readonly #panel-gen :is(#addRowBtn, #testerAddOpenBtn, .bulk-bar, #tcPlanCard input, #tcPlanCard select, #tcPlanCard button, #sumPeriods button),
+  body.is-readonly :is(#qcGenOpenBtn, #importMenu){pointer-events:none;opacity:.55;}
   /* 진행률 바 */
   .pg-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--grey-100);}
   .pg-seg{height:100%;} .pg-seg.is-pass, .pg-dot.is-pass{background:var(--result-pass);} .pg-seg.is-fail, .pg-dot.is-fail{background:var(--result-fatal);} .pg-seg.is-hold, .pg-dot.is-hold{background:var(--result-major);} .pg-dot.is-na{background:var(--grey-400);}
@@ -1064,7 +1251,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .plan-status.is-done, .plan-tl-bar.is-done{background:var(--pass-soft);color:var(--pass-text);}
   .plan-timeline{display:flex;flex-direction:column;gap:8px;}
   /* 회차 */
-  .round-pick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);}
+  .round-pick{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:none;font-size:12.5px;font-weight:600;color:var(--muted);}
   .round-pick .ad-select{height:30px;min-width:160px;padding:0 26px 0 10px;font-size:13px;font-weight:700;color:var(--ink);}
   .round-table tbody tr.is-current{background:var(--primary-soft);}
   .round-table select.plan-input{width:78px;height:32px;padding:0 20px 0 8px;font-size:13px;}
@@ -1220,6 +1407,17 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <button type="button" class="ad-btn ad-btn--primary tool-cat" id="newProjectBtn">+ 새 프로젝트</button>
       <button type="button" class="ad-btn ad-btn--primary tool-proj" id="qcGenOpenBtn" aria-haspopup="dialog" aria-controls="qcGenModal">+ 테스트 시나리오 생성</button>
     </div>
+    <!-- 로그인했을 때만: 알림함(🔔) + 프로필 메뉴(이름 바꾸기·관리자 메뉴·로그아웃) -->
+    <div class="hdr-user" id="hdrUser" hidden>
+      <div class="hdr-pop-wrap">
+        <button type="button" class="ad-btn ad-btn--ghost ad-btn--icon hdr-bell" id="notifBtn" aria-haspopup="true" aria-expanded="false" aria-controls="notifPanel" aria-label="알림함"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="notif-count" id="notifCount" hidden></span></button>
+        <div class="hdr-pop notif-panel" id="notifPanel" role="dialog" aria-label="알림함" hidden></div>
+      </div>
+      <div class="hdr-pop-wrap">
+        <button type="button" class="hdr-profile-btn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span class="gnb-avatar" id="profileAvatar" aria-hidden="true"></span><span class="hdr-name" id="profileBtnName"></span></button>
+        <div class="hdr-pop profile-menu" id="profileMenu" hidden></div>
+      </div>
+    </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
   </header>
 
@@ -1239,6 +1437,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 
   <!-- ===================== 프로젝트: QC 통계 + QC 리스트 ===================== -->
   <div class="panel" id="panel-gen">
+    <div class="readonly-banner" id="readonlyBanner" role="status" hidden>보기 권한이에요. 이 프로젝트는 볼 수만 있어요.</div>
     <!-- 요약 줄(회귀 검증 화면 머리): 프로젝트 이름·날짜, 결과별 건수 배지, 진행률 -->
     <div class="card ad-card ad-panel tc-summary" id="tcSummary" hidden>
       <div class="sum-head"><h3 class="sum-title" id="sumTitle"></h3><span class="legend" id="sumTesters"></span><span class="sum-spacer"></span><label class="round-pick" id="roundPick" hidden><span>회차</span><select class="ad-select" id="roundSelect" aria-label="지금 회차"></select></label></div>
@@ -1252,6 +1451,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
       <button type="button" role="tab" id="dtab-plan" data-dtab="plan" aria-controls="tcPlanCard">테스트 계획</button>
     </div>
     <div class="card ad-card ad-panel tc-board-card" id="tcBoardCard" data-dpanel="board" role="tabpanel" aria-labelledby="dtab-board" hidden>
+      <div class="gate-board" id="gateBoard" hidden></div>
       <div class="sum-stats" id="sumStats"></div>
     </div>
     <div class="card ad-card ad-panel" id="tcStatsCard" data-dpanel="board" hidden>
@@ -1271,6 +1471,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <div class="tester-tabs" id="testerTabs" role="group" aria-label="담당자별 보기"></div>
         <button class="ad-btn ad-btn--sm" id="testerAddOpenBtn" type="button" aria-haspopup="dialog">+ 테스터 추가</button>
         <div class="tc-list-tools">
+          <button type="button" class="ad-btn ad-btn--sm my-turn-btn" id="myTurnBtn" aria-pressed="false" title="지금 내가 움직일 차례인 결함만 보기" hidden>내 차례 <b class="num">0</b></button>
           <div class="tc-type-seg" id="tcTypeSeg" role="group" aria-label="화면유형 보기">
             <button type="button" class="ad-btn ad-btn--sm" data-type="ALL" aria-pressed="true">전체</button>
             <button type="button" class="ad-btn ad-btn--sm" data-type="FO" aria-pressed="false">FO</button>
@@ -1296,12 +1497,9 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         <select class="ad-select" id="bulkResultSelect" aria-label="선택한 테스트 시나리오 결과 일괄 변경">
           <option value="">결과값 일괄 변경…</option>
           <option value="PASS">PASS</option>
-          <option value="MINOR">MINOR</option>
+          <option value="Fail">Fail</option>
           <option value="N/A">N/A</option>
-          <option value="MAJOR">MAJOR</option>
-          <option value="FATAL">FATAL</option>
-          <option value="CRITICAL">CRITICAL</option>
-          <option value="BLOCK">BLOCK</option>
+          <option value="보류">보류</option>
         </select>
         <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 테스트 시나리오 진행상태 일괄 변경">
           <option value="">진행상태 일괄 변경…</option>
@@ -1335,6 +1533,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   </div>
 
   <!-- ===================== 분류: 프로젝트 목록 ===================== -->
+  <div class="panel" id="panel-admin"></div>
   <div class="panel" id="panel-hist">
     <div class="card ad-card ad-panel">
       <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
@@ -1389,6 +1588,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
         </div>
         <span class="hint">추가한 테스터는 담당자 탭과 담당자 고르기에 역할과 함께 보여요. 칩의 역할은 언제든 바꿀 수 있고, ✕를 누르면 삭제돼요.</span>
         <div class="tester-chips" id="testerChips"></div>
+        <div class="tester-member-chips" id="testerMemberChips" hidden></div>
       </div>
     </div>
     <footer><div class="r"><button type="button" class="ad-btn" id="testerModalDone">완료</button></div></footer>
@@ -1609,27 +1809,36 @@ const COLUMNS = [
   {key:'result', label:'결과'},
   {key:'status', label:'진행상태'}
 ];
-const RESULT_OPTIONS = ['PASS','MINOR','N/A','MAJOR','FATAL','CRITICAL','BLOCK']; // 결과를 고르지 않은 TC('')는 "미실행"
-// 결과 6단계 색 (style_content.html의 --result-* → 알닷 토큰)
-const RESULT_COLOR = {
-  PASS:'var(--result-pass)', MINOR:'var(--result-minor)', 'N/A':'var(--result-na)',
-  MAJOR:'var(--result-major)', FATAL:'var(--result-fatal)', CRITICAL:'var(--result-critical)', BLOCK:'var(--result-block)'
-};
+const RESULT_OPTIONS = ['PASS', 'Fail', 'N/A', '보류']; // 결과를 고르지 않은 TC('')는 "미실행"
+// 결과 색 (style_content.html의 --result-* → 알닷 토큰)
+const RESULT_COLOR = { PASS:'var(--result-pass)', Fail:'var(--result-fatal)', 'N/A':'var(--result-na)', '보류':'var(--result-block)' };
+// 예전 결과 값 → 새 값. 심각도(MINOR~FATAL)는 Fail 하나로, BLOCK은 보류로. 모르는 값은 미실행 (순수 함수)
+const LEGACY_RESULT = { PASS: 'PASS', FAIL: 'Fail', 'N/A': 'N/A', NA: 'N/A', MINOR: 'Fail', MAJOR: 'Fail', CRITICAL: 'Fail', FATAL: 'Fail', BLOCK: '보류', HOLD: '보류' };
+function normResult(v){
+  const s = String(v == null ? '' : v).trim();
+  return RESULT_OPTIONS.includes(s) ? s : LEGACY_RESULT[s.toUpperCase()] || '';
+}
+// 행의 결과 칸(result · tr:이름, 다른 회차는 rr:회차ID: 접두어)을 새 값으로 바꾼다. 서버·저장본·파일에서 읽을 때 부른다
+const RESULT_KEY_RE = /^(rr:[^:]+:)?(tr:.+|result)$/;
+function normalizeRowResults(row){
+  if(row) Object.keys(row).forEach(k=>{ if(RESULT_KEY_RE.test(k) && row[k]){ const n = normResult(row[k]); if(n !== row[k]) row[k] = n; } });
+  return row;
+}
 // QC 행의 결과 셀렉트는 글자색(style_content.html select.result-select[data-result])으로 구분하고,
 // 이 색(RESULT_COLOR)은 프로젝트 목록의 결과 막대에 쓴다.
 const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['완료','테스트불가','작성중','개발 검토']; // 고르는 순서(화면·통계 표)
 const STATUS_PROGRESS = ['작성중','개발 검토','테스트불가','완료']; // 진행 순서: 대표 진행상태는 가장 앞쪽(덜 진행된) 값
 // 검수 정보(표 열): 우선순위·검수 단계·개발 수정·테스터·테스트 환경·테스트 일자·최종 수정. 행 data의 새 키에 두고, 없으면 기본값으로 읽는다
-const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt'];
+const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt', 'ball', 'ballAt', 'devOwner', 'jira']; // ball~jira: 바통(공) 넘기기
 const PRIORITY_OPTIONS = ['High', 'Mid', 'Low'];
 const REVIEW_STAGES = ['검수 대기', '수정 접수', '수정 진행', '재검수 대기', '완료', '검수 보류', '검수 제외'];
 const DEV_FIX_OPTIONS = ['미확인', '검토', '수정중', '수정 완료', '미해결', '버그 아님'];
 const DEV_FIX_STAGES = ['수정 접수', '수정 진행', '재검수 대기']; // 이 단계에서 개발 수정 칸을 고른다
-const FAIL_RESULTS = ['MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 통계의 Fail. BLOCK은 보류, N/A는 검수 제외
+const FAIL_RESULTS = ['Fail']; // 통계의 Fail. 보류는 보류, N/A는 검수 제외
 // 결과 → 검수 단계(결과를 넣을 때 자동으로 정하고, 뒤에 사람이 바꿀 수 있다) (순수 함수)
 function reviewStageForResult(res){
-  return res === 'PASS' ? '완료' : FAIL_RESULTS.includes(res) ? '수정 접수' : res === 'BLOCK' ? '검수 보류' : res === 'N/A' ? '검수 제외' : '검수 대기';
+  return res === 'PASS' ? '완료' : FAIL_RESULTS.includes(res) ? '수정 접수' : res === '보류' ? '검수 보류' : res === 'N/A' ? '검수 제외' : '검수 대기';
 }
 const priorityOf = r => PRIORITY_OPTIONS.includes(r && r.priority) ? r.priority : 'Mid';
 const reviewStageOf = r => REVIEW_STAGES.includes(rv(r, 'reviewStage')) ? rv(r, 'reviewStage') : reviewStageForResult(effectiveResult(r));
@@ -1637,19 +1846,35 @@ const p2n = n => String(n).padStart(2, '0');
 const isoDate = (d = new Date()) => `${d.getFullYear()}-${p2n(d.getMonth() + 1)}-${p2n(d.getDate())}`;
 const stampNow = (d = new Date()) => `${p2n(d.getMonth() + 1)}-${p2n(d.getDate())} ${p2n(d.getHours())}:${p2n(d.getMinutes())}`;
 // 결과를 넣으면: 검수 단계를 정하고, 넣은 테스터·오늘 날짜를 적고, Fail이면 개발 수정을 '미확인'으로 연다
+// 바통(공): 'dev' 개발 차례 · 'qa' 재검수 차례 · 'closed' 끝 · '' 아직 넘기지 않음 (회차 칸)
+const BALL_LABEL = { dev: '개발', qa: '재검수', closed: '닫힘' };
+const ballOf = r=>['dev', 'qa', 'closed'].includes(rv(r, 'ball')) ? rv(r, 'ball') : '';
+const ballDays = (r, now = Date.now())=>{ const t = Date.parse(rv(r, 'ballAt') || ''); return t ? Math.max(0, Math.floor((now - t) / 864e5)) : 0; };
+// 공을 옮기고 검수 단계를 맞춘다 (순수 함수): 개발 → 수정 접수(개발 수정은 미확인부터), 재검수 → 재검수 대기, 닫힘 → 완료
+function moveBall(row, to, at = new Date().toISOString()){
+  row[rk('ball')] = to;
+  row[rk('ballAt')] = at;
+  if(to === 'dev'){ row[rk('reviewStage')] = '수정 접수'; if(!['미확인', '검토', '수정중'].includes(rv(row, 'devFix'))) row[rk('devFix')] = '미확인'; }
+  else if(to === 'qa') row[rk('reviewStage')] = '재검수 대기';
+  else if(to === 'closed') row[rk('reviewStage')] = '완료';
+  return row;
+}
 function applyResultMeta(row, name){
   const res = effectiveResult(row);
   row[rk('reviewStage')] = reviewStageForResult(res);
+  // 공이 돌고 있으면: PASS면 닫고, 재검수에서 다시 Fail이면 개발에게 돌려보낸다
+  const ball = ballOf(row);
+  if(ball === 'dev' || ball === 'qa'){ if(res === 'PASS') moveBall(row, 'closed'); else if(res === 'Fail' && ball === 'qa') moveBall(row, 'dev'); else if(res === 'Fail') row[rk('reviewStage')] = '수정 접수'; }
   if(!res) return row;
   if(name) row[rk('executedBy')] = name;
   row[rk('testDate')] = isoDate();
   if(FAIL_RESULTS.includes(res) && !DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))) row[rk('devFix')] = '미확인';
   return row;
 }
-// 진행률 바: Pass·Fail(MINOR~FATAL)·보류(BLOCK)·미실행. N/A(검수 제외)는 대상에서 뺀다 (순수 함수)
+// 진행률 바: Pass·Fail·보류·미실행. N/A(검수 제외)는 대상에서 뺀다 (순수 함수)
 function progressSummary(rows){
   const c = { pass: 0, fail: 0, hold: 0, na: 0, none: 0 };
-  (rows || []).forEach(r=>{ const v = effectiveResult(r); if(v === 'PASS') c.pass++; else if(FAIL_RESULTS.includes(v)) c.fail++; else if(v === 'BLOCK') c.hold++; else if(v === 'N/A') c.na++; else c.none++; });
+  (rows || []).forEach(r=>{ const v = effectiveResult(r); if(v === 'PASS') c.pass++; else if(FAIL_RESULTS.includes(v)) c.fail++; else if(v === '보류') c.hold++; else if(v === 'N/A') c.na++; else c.none++; });
   const target = (rows || []).length - c.na;
   return { ...c, target, pct: target ? Math.round((c.pass + c.fail + c.hold) / target * 100) : 0 };
 }
@@ -1676,11 +1901,11 @@ const TESTER_KEY_RE = /^(t[rns]|rr):/; // 'rr:회차ID:칸' = 다른 회차의 �
 // 회차: 지금 보는 회차의 칸 이름. 기본 회차('base')는 예전 그대로의 칸, 다른 회차는 'rr:회차ID:칸'.
 // 회차마다 따로인 칸: 결과·작성 상태·비고(행·테스터별), 검수 단계·개발 수정·테스터·테스트 일자·테스트 환경. 시나리오 내용·우선순위·담당 테스터는 모든 회차가 같이 쓴다
 let currentRoundId = 'base';
-const ROUND_KEY_RE = /^(t[rns]:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$)/;
+const ROUND_KEY_RE = /^(t[rns]:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$|ball$|ballAt$)/;
 const rk = (key, rid = currentRoundId) => rid === 'base' || !ROUND_KEY_RE.test(key) ? key : `rr:${rid}:${key}`;
 const rv = (row, key, rid) => row ? row[rk(key, rid)] : undefined;
 function withRound(rid, fn){ const prev = currentRoundId; currentRoundId = rid; try{ return fn(); }finally{ currentRoundId = prev; } }
-const RESULT_SEVERITY = ['N/A', 'PASS', 'BLOCK', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL']; // 뒤로 갈수록 심각
+const RESULT_SEVERITY = ['N/A', 'PASS', '보류', 'Fail']; // 뒤로 갈수록 심각(대표 결과는 담당자 값 중 가장 뒤)
 const assigneesOf = row => String((row && row.tester) || '').split(',').map(s=>s.trim()).filter(Boolean);
 // 대표 결과: 담당 테스터 값(testerValue) 중 가장 심각한 값, 모두 비었으면 ''(미실행). 담당자가 없으면 행의 결과 (순수 함수)
 // 통계 표의 테스터 열과 같은 값으로 센다(비운 테스터 값을 행에 남은 예전 결과로 채우지 않는다)
@@ -2309,13 +2534,48 @@ function setTesterRole(name, role){
   renderTable();
 }
 const roleTag = name=>{ const r = testerRoleOf(name); return r ? `<span class="role-tag">${escapeHtml(r)}</span>` : ''; };
+/* 회원 기반 테스터: 테스터는 화면·엑셀에서 이름으로 보이고, 프로젝트 data.testerAccounts = {이름: 계정 id}로 계정에 잇는다.
+   이어진 테스터에게 알림이 가고(서버도 이 표를 먼저 본다), 이어지지 않은 이름은 '게스트'(알림 없음).
+   표에 없으면 같은 이름의 활성 계정이 딱 하나일 때 그 계정으로 본다(예전 데이터 자동 연결) (순수 함수) */
+function testerAccountOf(name, p, st){
+  if(!st || !name) return '';
+  const linked = ((p && p.testerAccounts) || {})[name];
+  if(linked && (st.profiles || []).some(x=>x.user_id === linked && x.active)) return linked;
+  const same = (st.profiles || []).filter(x=>x.active && x.name === name);
+  return same.length === 1 ? same[0].user_id : '';
+}
+// 계정을 테스터로 넣을 이름: 계정 이름, 같은 이름의 다른 테스터가 이미 있으면 메일 앞부분을 붙인다 (순수 함수)
+function testerNameForAccount(prof, names, p, st){
+  const base = prof.name || String(prof.email || '').split('@')[0];
+  const taken = n=>names.includes(n) && testerAccountOf(n, p, st) !== prof.user_id;
+  return taken(base) ? `${base}(${String(prof.email || '').split('@')[0]})` : base;
+}
+async function addAccountTester(prof){
+  const p = editingProject(), name = testerNameForAccount(prof, activeTesters(), p, authState);
+  if(p){ p.testerAccounts = { ...(p.testerAccounts || {}), [name]: prof.user_id }; }
+  await changeTesters(list=>list.includes(name) ? list : list.concat(name)); // 프로젝트면 saveHistory로 연결표도 함께 저장된다
+}
+// 로그인을 쓰면 프로젝트 멤버(멤버가 없으면 직원 모두)를 테스터 후보로 보여 준다. 누르면 계정으로 이어진 테스터가 된다
+function renderTesterMembers(){
+  const box = document.getElementById('testerMemberChips');
+  if(!box) return;
+  const st = typeof authState === 'undefined' ? null : authState;
+  if(!st){ box.hidden = true; return; }
+  const key = currentProjectKey(), ms = st.members.filter(m=>m.project === key);
+  const pool = (ms.length ? ms.map(m=>st.profiles.find(p=>p.user_id === m.user_id)) : st.profiles).filter(p=>p && p.active && p.name);
+  const proj = editingProject(), linked = new Set(activeTesters().map(n=>testerAccountOf(n, proj, st)).filter(Boolean)), cand = pool.filter(p=>!linked.has(p.user_id));
+  box.hidden = !cand.length;
+  box.innerHTML = cand.length ? `<span class="legend">${ms.length ? '프로젝트 멤버' : '직원'}에서 추가</span>${cand.map(p=>`<button type="button" class="ad-btn ad-btn--sm" data-add-member="${escapeHtml(p.user_id)}" title="${escapeHtml(p.email)}">+ ${escapeHtml(p.name)}</button>`).join('')}` : '';
+  box.querySelectorAll('[data-add-member]').forEach(b=>b.addEventListener('click', ()=>{ const prof = st.profiles.find(x=>x.user_id === b.dataset.addMember); if(prof) addAccountTester(prof); }));
+}
 function renderTesterChips(){
+  renderTesterMembers();
   const wrap = document.getElementById('testerChips');
   const p = editingProject();
   const scope = document.getElementById('testerScope');
   if(scope) scope.textContent = p ? `프로젝트: ${p.title || p.fileName}` : '기본 테스터';
   wrap.innerHTML = activeTesters().map((t,i)=>
-    `<span class="tester-chip"><button type="button" class="tester-name-btn" data-tren="${i}" title="눌러서 이름 바꾸기" aria-label="${escapeHtml(t)} 이름 바꾸기">${escapeHtml(t)}</button><select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
+    `<span class="tester-chip"><button type="button" class="tester-name-btn" data-tren="${i}" title="눌러서 이름 바꾸기" aria-label="${escapeHtml(t)} 이름 바꾸기">${escapeHtml(t)}</button>${typeof authState !== 'undefined' && authState ? (testerAccountOf(t, p, authState) ? '<span class="acct-tag" title="계정으로 이어진 테스터(알림을 받아요)">계정</span>' : '<span class="acct-tag is-guest" title="계정이 없는 테스터(알림을 받지 않아요)">게스트</span>') : ''}<select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
       <option value="">역할</option>${TESTER_ROLES.map(r=>`<option value="${r}" ${r===testerRoleOf(t)?'selected':''}>${r}</option>`).join('')}
     </select><button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
@@ -2354,6 +2614,7 @@ async function renameTester(from, to){
   await changeTesters(list=>list.map(n=>n === from ? to : n));
   const p = editingProject(), roles = p ? p.testerRoles : pendingTesterRoles;
   if(roles && from in roles){ roles[to] = roles[from]; delete roles[from]; if(p) saveHistory(); }
+  if(p && p.testerAccounts && from in p.testerAccounts){ p.testerAccounts[to] = p.testerAccounts[from]; delete p.testerAccounts[from]; saveHistory(); } // 계정 연결도 새 이름으로
   const n = tcData.filter(r=>renameTesterInRow(r, from, to)).length;
   if(tcFilterTester === from){ tcFilterTester = to; try{ localStorage.setItem('cvt_tester_tab', to); }catch(e){ /* 이 화면에서만 */ } }
   scheduleAutoSave();
@@ -2784,6 +3045,7 @@ function formatTcId(n, name, screenType){
 function normalizeTcIds(rows){
   const moved = new Map();
   (rows || []).forEach(r=>{
+    normalizeRowResults(r); // 예전 결과 값(MINOR·BLOCK 등)도 여기서 새 값으로
     if(!r || !TC_ID_RE.test(r.tcId || '')) return;
     const next = formatTcId(tcNumberOf(r.tcId), tcNameOf(r.tcId), r.screenType);
     if(next !== r.tcId){ moved.set(r.tcId, next); r.tcId = next; }
@@ -3074,7 +3336,7 @@ function paintResult(card, result){
   if(on){ card.dataset.result = result; card.style.setProperty('--tc-res', RESULT_COLOR[result]); }
   else{ delete card.dataset.result; card.style.removeProperty('--tc-res'); }
 }
-// 결과 알약 색(회귀 검증 화면과 같은 규칙): rp-PASS · rp-MINOR · rp-MAJOR · rp-CRITICAL · rp-FATAL · rp-BLOCK · rp-NA · rp-NT(미실행)
+// 결과 알약 색: rp-PASS · rp-Fail · rp-보류 · rp-NA · rp-NT(미실행)
 const resultTone = v=>'rp-' + (v ? String(v).replace('/', '') : 'NT');
 const resultPill = v=>`<span class="cvpill ${resultTone(v)}">${escapeHtml(v || '미실행')}</span>`;
 function tcTitleOf(row){
@@ -3082,6 +3344,7 @@ function tcTitleOf(row){
 }
 function renderTable(){
   syncCurrentRound(); // 지금 회차(프로젝트마다 이 브라우저에 기억)
+  applyReadOnly(); // 보기 권한이면 입력을 잠근다
   syncTcPrefixes(); // TC ID 접두사 = 화면유형(FO/BO)
   // 리스트 순서(만든 순서)를 seq로 저장한다. 다시 정렬하지 않아 BO 줄이 옮겨가지 않는다.
   // 받은 변경을 그릴 때는 적지 않는다: 팀원이 보낸 순서를 그대로 두어야 양쪽이 같은 값을 서로 덮어쓰며 오래된 번호를 되돌리지 않는다
@@ -3124,6 +3387,7 @@ function renderTable(){
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
       if(tcFilterResult !== 'ALL' && !(tcFilterResult === 'FAIL' ? FAIL_RESULTS.includes(effectiveResult(row)) : (effectiveResult(row) || '') === tcFilterResult)) return false; // FAIL = MINOR~FATAL
       if(tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester)) return false;
+      if(tcMyTurn && !isMyTurn(row, editingProject(), authState)) return false; // 내 차례만
       if(tcSearchQuery){
         const hay = [row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
           .join(' ').toLowerCase();
@@ -3133,6 +3397,8 @@ function renderTable(){
     });
 
   document.getElementById('tcTableHead').hidden = !filtered.length; // 표 너비는 ResizeObserver가 맞춘다(여기서 재면 목록이 빈 순간 높이로 계산돼 스크롤이 맨 위로 튄다)
+  const mt = document.getElementById('myTurnBtn'), st = typeof authState === 'undefined' ? null : authState;
+  if(mt){ mt.hidden = !st; if(st){ const n = tcData.filter(r=>isMyTurn(r, editingProject(), st)).length; mt.querySelector('b').textContent = n; mt.setAttribute('aria-pressed', String(tcMyTurn)); } }
   document.querySelectorAll('#tcTypeSeg [data-type]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.type === tcFilterType)));
   if(!tcData.length){
     document.getElementById('emptyState').style.display = 'block';
@@ -3204,7 +3470,7 @@ function renderTable(){
           </select>`
             : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
         </div>
-        <div class="tc-c c-review"><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${REVIEW_STAGES.map(o=>`<option value="${o}"${o === reviewStageOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
+        <div class="tc-c c-review"><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${REVIEW_STAGES.map(o=>`<option value="${o}"${o === reviewStageOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select>${ballBadge(row)}</div>
         <div class="tc-c c-dev">${DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))
           ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${DEV_FIX_OPTIONS.map(o=>`<option value="${o}"${o === (rv(row, 'devFix') || '미확인') ? ' selected' : ''}>${o}</option>`).join('')}</select>`
           : '<span class="sub-txt">-</span>'}</div>
@@ -3264,12 +3530,15 @@ function renderTable(){
           </div>
         </div>
       </div>
+      ${batonHtml(row, idx)}
+      ${commentsHtml(row)}
       </div>
     `;
     list.appendChild(card);
   });
 
   const columnLabel = Object.fromEntries(COLUMNS.map(c=>[c.key, c.label]));
+  bindBaton(list);
   list.querySelectorAll('.cell-edit[data-key]').forEach(el=>{ // 글자 칸(contenteditable). 검수 정보 입력칸은 아래에서 따로
     el.setAttribute('role', 'textbox');
     const key = el.dataset.key, label = key.startsWith('tn:') ? `${key.slice(3)} 테스트 내역` : (columnLabel[key] || '');
@@ -3398,7 +3667,9 @@ function renderTable(){
       row[rk((sel.classList.contains('tester-status-select') ? 'ts:' : 'tr:') + sel.dataset.name)] = sel.value;
       row[rk('result')] = effectiveResult(row);
       row[rk('status')] = effectiveStatus(row);
+      const ballBefore = ballOf(row);
       if(sel.classList.contains('tester-result-select')) applyResultMeta(row, sel.dataset.name); // 검수 단계·테스터·테스트 일자
+      if(ballBefore === 'qa' && ballOf(row) === 'dev') passBall(row, 'dev', '재검수에서 다시 Fail이에요. 다시 확인 부탁해요.', '', true); // 자동으로 개발에게 되돌림(전달 기록·알림)
       renderTable();
       renderDistribution();
     });
@@ -3497,6 +3768,7 @@ document.addEventListener('keydown', e=>{
   closeNotePops();
   if(btn) btn.focus();
 });
+document.getElementById('myTurnBtn').addEventListener('click', ()=>{ tcMyTurn = !tcMyTurn; renderTable(); });
 document.getElementById('tcTypeSeg').addEventListener('click', e=>{
   const b = e.target.closest('[data-type]');
   if(!b) return;
@@ -3669,7 +3941,7 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 
 /* ---------- 테스트 시나리오 통계 ---------- */
 /* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 합계 · 담당 테스터마다 (순수 함수)
-   미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/(PASS+Fail), Fail = MINOR·MAJOR·CRITICAL·FATAL(분모 0이면 0.0%). 엑셀 장표 계산식과 같다.
+   미실행 = 결과 없음, 진행률 = 실행(총-미실행)/총, 결함률 = Fail/(PASS+Fail)(분모 0이면 0.0%). 엑셀 장표 계산식과 같다.
    테스터 열은 그 테스터의 값(testerValue). 합계 열 = 배정이 있는 테스터 열의 평균(엑셀 장표와 같음, 소수 첫째 자리).
    테스터가 아무도 없으면 시나리오 행의 결과로 센다 */
 const STAT_ROWS = ['총 건수', ...RESULT_OPTIONS, '미실행', '진행률', '결함률'];
@@ -3677,15 +3949,12 @@ const STAT_ROWS = ['총 건수', ...RESULT_OPTIONS, '미실행', '진행률', '�
 const STAT_DEFS = {
   '총 건수': '테스터에게 배정된 시나리오 수예요. 합계 칸은 테스터 열의 평균이에요.',
   PASS: '기대결과대로 동작했어요.',
-  MINOR: '사용에 큰 지장이 없는 가벼운 결함이에요. 예: 문구 오타, 정렬·간격 어긋남.',
+  Fail: '기대결과와 다르게 동작했어요(결함). 중요도는 우선순위(High·Mid·Low)로 봐요.',
   'N/A': '이번 테스트 대상이 아니거나 이 환경에서 확인할 수 없는 항목이에요.',
-  MAJOR: '기능이 기대와 다르게 동작하지만 다른 방법으로 쓸 수는 있는 결함이에요.',
-  FATAL: '서비스를 쓸 수 없게 만드는 가장 심각한 결함이에요. 예: 앱 강제 종료, 데이터 손실, 결제 오류.',
-  CRITICAL: '핵심 기능이 동작하지 않고 다른 방법도 없는 결함이에요.',
-  BLOCK: '선행 조건이나 환경 문제로 테스트를 진행할 수 없었어요.',
+  '보류': '선행 조건이나 환경 문제로 지금은 테스트를 진행할 수 없어요.',
   '미실행': '아직 결과를 입력하지 않았어요.',
-  '진행률': '결과를 입력한 비율이에요. (PASS + Fail + N/A + BLOCK) / 총 건수. 합계 칸은 테스터별 진행률의 평균이에요.',
-  '결함률': 'PASS와 Fail 중 Fail의 비율이에요. Fail / (PASS + Fail), Fail = MINOR + MAJOR + CRITICAL + FATAL. N/A·BLOCK은 넣지 않아요. 합계 칸은 테스터별 결함률의 평균이에요.'
+  '진행률': '결과를 입력한 비율이에요. (PASS + Fail + N/A + 보류) / 총 건수. 합계 칸은 테스터별 진행률의 평균이에요.',
+  '결함률': 'PASS와 Fail 중 Fail의 비율이에요. Fail / (PASS + Fail). N/A·보류는 넣지 않아요. 합계 칸은 테스터별 결함률의 평균이에요.'
 };
 // 건수는 정수면 그대로, 평균이라 소수가 생기면 첫째 자리까지. 마지막 두 행(진행률·결함률)은 %
 const statFmt = (v, i)=>i >= STAT_ROWS.length - 2 ? `${v.toFixed(1)}%` : Math.round(v * 10) / 10;
@@ -3736,7 +4005,7 @@ document.getElementById('detailTabs').addEventListener('keydown', e=>{
   setDetailTab(next);
   document.querySelector(`#detailTabs [data-dtab="${next}"]`).focus();
 });
-const SUMMARY_RESULTS = ['PASS', 'MINOR', 'MAJOR', 'CRITICAL', 'FATAL', 'BLOCK', 'N/A', '미실행'];
+const SUMMARY_RESULTS = ['PASS', 'Fail', '보류', 'N/A', '미실행'];
 // 요약 줄: 결과별 건수·진행률은 통계 표 합계 열과 같은 값. "M건 실행" = 담당자 모두(담당자가 없으면 그 행)가 결과를 넣은 시나리오
 function renderSummary(t){
   const box = document.getElementById('tcSummary');
@@ -3744,6 +4013,7 @@ function renderSummary(t){
   document.getElementById('tcProgress').hidden = !t;
   if(!t){ applyDetailTab(); return; }
   renderProgressBar();
+  renderGateBoard(); // 현황판 맨 위: 단계 관문
   const d = new Date(), today = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const v = label=>t.cols[0].values[t.rows.indexOf(label)];
   const done = tcData.filter(r=>{ const ns = assigneesOf(r); return ns.length ? ns.every(n=>testerValue(r, n, 'tr')) : !!rv(r, 'result'); }).length;
@@ -3770,7 +4040,7 @@ function renderProgressBar(){
   const item = (key, cls, label, n)=>`<button type="button" class="pg-item" data-pgres="${key}" aria-pressed="${tcFilterResult === (key === 'NT' ? '' : key)}">${cls ? `<i class="pg-dot ${cls}" aria-hidden="true"></i>` : ''}${label} <b class="num">${n}</b></button>`;
   box.innerHTML = `<div class="pg-bar" role="img" aria-label="진행률 ${pg.pct}% (Pass ${pg.pass}, Fail ${pg.fail}, 보류 ${pg.hold}, 미실행 ${pg.none})">${seg(pg.pass, 'is-pass', 'Pass')}${seg(pg.fail, 'is-fail', 'Fail')}${seg(pg.hold, 'is-hold', '보류')}</div>
     <div class="pg-legend"><span class="pg-stat">대상 <b class="num">${pg.target}</b></span><span class="pg-stat">진행률 <b class="num">${pg.pct}%</b></span>
-      ${item('PASS', 'is-pass', 'Pass', pg.pass)}${item('FAIL', 'is-fail', 'Fail', pg.fail)}${item('BLOCK', 'is-hold', '보류', pg.hold)}${item('NT', '', '미실행', pg.none)}${item('N/A', 'is-na', '검수 제외(N/A)', pg.na)}</div>`;
+      ${item('PASS', 'is-pass', 'Pass', pg.pass)}${item('FAIL', 'is-fail', 'Fail', pg.fail)}${item('보류', 'is-hold', '보류', pg.hold)}${item('NT', '', '미실행', pg.none)}${item('N/A', 'is-na', '검수 제외(N/A)', pg.na)}</div>`;
 }
 document.getElementById('tcProgress').addEventListener('click', e=>{
   const b = e.target.closest('[data-pgres]');
@@ -4146,15 +4416,15 @@ function parseQcSheet(grid){
     const r = grid[i] || [];
     const tcId = cell(r, 1);
     if(!TC_ID_RE.test(tcId)) continue; // 구분 행·빈 행
-    let tester = cell(r, agg), testNote = cell(r, agg + 1), result = cell(r, agg + 2).toUpperCase();
+    let tester = cell(r, agg), testNote = cell(r, agg + 1), result = normResult(cell(r, agg + 2)); // 예전 엑셀의 MAJOR·BLOCK 등도 새 값으로
     const blockEnd = Math.min(r.length, extraStart);
     for(let c = agg + 4; c < blockEnd && (!testNote || !result); c += 4){ // 테스터별 블록: 테스터·테스트 내역·결과·비고
       if(!testNote && cell(r, c + 1)) testNote = cell(r, c + 1);
-      if(!result && cell(r, c + 2)){ result = cell(r, c + 2).toUpperCase(); if(!tester) tester = cell(r, c); }
+      if(!result && normResult(cell(r, c + 2))){ result = normResult(cell(r, c + 2)); if(!tester) tester = cell(r, c); }
     }
     const perTester = {};
     for(let c = agg + 4; c < blockEnd; c += 4){
-      const name = cell(r, c), note = cell(r, c + 1), res = cell(r, c + 2).toUpperCase(), st = cell(r, c + 3).replace(/^개발 검토중$/, '개발 검토');
+      const name = cell(r, c), note = cell(r, c + 1), res = normResult(cell(r, c + 2)), st = cell(r, c + 3).replace(/^개발 검토중$/, '개발 검토');
       if(!name) continue;
       if(note) perTester['tn:' + name] = note;
       if(RESULT_OPTIONS.includes(res)) perTester['tr:' + name] = res;
@@ -4242,7 +4512,7 @@ function currentHistoryEntry(){
    팀원에게서 받은 변경은 저장본에 쓰지 않는다(고친 사람의 화면이 쓴다) */
 let autoSaveTimer = null, remoteApplying = false;
 function scheduleAutoSave(){
-  if(!appInitialized || remoteApplying) return; // 처음 그릴 때·복원 중·받은 변경을 그릴 때는 저장하지 않는다
+  if(!appInitialized || remoteApplying || projectReadOnly()) return; // 보기 권한 프로젝트는 저장하지 않는다 // 처음 그릴 때·복원 중·받은 변경을 그릴 때는 저장하지 않는다
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(autoSaveNow, 300);
 }
@@ -4769,7 +5039,7 @@ function renderPlan(){
   const a = document.activeElement, keep = box.contains(a) && a.dataset.field ? [a.closest('[data-plan]').dataset.plan, a.dataset.field] : null;
   const idx = historyList.indexOf(p), today = isoToday(), rows = planRowsOf(p), tl = planBars(rows, today);
   const input = (r, field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input cell-edit" data-field="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(r.label)} ${label}" ${extra}>`;
-  box.innerHTML = roundsHtml(p, today) + `<div class="plan-head plan-head--sub"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
+  box.innerHTML = stageRailHtml(p, today) + roundsHtml(p, today) + `<div class="plan-head plan-head--sub"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
     <div class="plan-table-wrap"><table class="plan-table">
       <thead><tr><th scope="col">단계</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">담당</th><th scope="col">메모</th><th scope="col">상태</th></tr></thead>
       <tbody>${rows.map(r=>{ const st = phaseStatus(r.from, r.to, today);
@@ -4789,6 +5059,7 @@ function renderPlan(){
       : '<div class="ad-empty plan-empty">일정을 넣으면 타임라인이 보여요.</div>'}`;
   box.querySelectorAll('[data-plan] .plan-input').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
   bindRounds(box, p);
+  bindStageRail(box, p);
   box.querySelectorAll('[data-plan] .plan-input[type="text"], [data-round] .plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
   if(keep){ const f = box.querySelector(`[data-plan="${keep[0]}"] [data-field="${keep[1]}"]`); if(f) f.focus(); }
 }
@@ -4835,12 +5106,178 @@ async function saveRoundField(idx, rid, field, value){
   await saveRounds(entry, roundsOf(entry).map(r=>r.id === rid ? { ...r, [field]: String(value || '').trim() } : r));
 }
 // 새 회차: 시나리오·담당 테스터는 이어받고 결과는 비운다. failOnly면 지난(지금) 회차에서 Fail이 아닌 시나리오는 검수 제외(N/A)로 시작
+/* ---------- 단계 레일 (테스트 계획 탭): DVT → CVT → UAT ----------
+   단계마다 목적·참여·범위(우선순위)·종료 기준을 두고, 그 단계의 마지막 회차로 판정한다(현황판 관문과 같은 판정).
+   프로젝트 data.stages[단계] = { purpose, who, scope:{priority:[]}, exit:{기준:값}, signedBy, signedAt, forced:{by,at,reason} } (스키마 변경 없음) */
+const STAGE_INFO = {
+  DVT: { purpose: '개발 결과가 설계대로 동작하는지 확인해요', who: '개발·기획', scope: { priority: ['High'] }, exit: { highPass: 90, openHighFail: 0 } },
+  CVT: { purpose: '전체 기능과 연동의 품질을 확인해요', who: 'QA', scope: { priority: [] }, exit: { progress: 100, openHighFail: 0, openFail: 3, retestWait: 0 } },
+  UAT: { purpose: '실제 업무에 써도 되는지 사업·운영이 확인해요', who: '사업·운영', scope: { priority: [] }, exit: { progress: 100, openFail: 0, signoff: 1 } }
+};
+// 기준: [이름, 단위, 비교] — ≥ 이상이면 통과, ≤ 이하이면 통과, signoff는 승인 여부
+const GATE_LABEL = { progress: ['진행률', '%', '≥'], highPass: ['High 통과율', '%', '≥'], openHighFail: ['열린 High Fail', '건', '≤'], openFail: ['열린 Fail', '건', '≤'], retestWait: ['재검수 대기', '건', '≤'], signoff: ['담당자 승인', '', ''] };
+function stageConf(p, k){
+  const s = ((p && p.stages) || {})[k] || {}, d = STAGE_INFO[k];
+  return { purpose: s.purpose || d.purpose, who: s.who != null ? s.who : d.who, scope: { ...d.scope, ...(s.scope || {}) }, exit: { ...d.exit, ...(s.exit || {}) },
+    signedBy: s.signedBy || '', signedAt: s.signedAt || '', forced: s.forced || null };
+}
+const roundStage = r=>ROUND_STAGES.includes(r && r.stage) ? r.stage : 'CVT'; // 처음 회차(단계 없음)는 CVT로 본다
+const inStageScope = (row, scope)=>!((scope && scope.priority) || []).length || scope.priority.includes(priorityOf(row));
+// 종료 기준 판정 (순수 함수): 그 단계의 마지막 회차에서, 범위 안 시나리오로 센다. 회차가 없으면 판정하지 않는다
+function stageGate(p, k, rows){
+  const conf = stageConf(p, k), rs = roundsOf(p).filter(r=>roundStage(r) === k), last = rs[rs.length - 1] || null;
+  const targets = Object.entries(conf.exit).filter(([key])=>GATE_LABEL[key]);
+  if(!last) return { conf, round: null, pass: false, checks: targets.map(([key, target])=>({ key, label: GATE_LABEL[key][0], unit: GATE_LABEL[key][1], op: GATE_LABEL[key][2], target: +target, value: null, ok: null })) };
+  const scoped = (rows || []).filter(r=>inStageScope(r, conf.scope));
+  const res = r=>withRound(last.id, ()=>effectiveResult(r));
+  const high = scoped.filter(r=>priorityOf(r) === 'High' && res(r) !== 'N/A');
+  const value = {
+    progress: withRound(last.id, ()=>progressSummary(scoped)).pct,
+    highPass: high.length ? Math.round(high.filter(r=>res(r) === 'PASS').length / high.length * 100) : 100,
+    openHighFail: scoped.filter(r=>priorityOf(r) === 'High' && res(r) === 'Fail').length,
+    openFail: scoped.filter(r=>res(r) === 'Fail').length,
+    retestWait: scoped.filter(r=>withRound(last.id, ()=>reviewStageOf(r)) === '재검수 대기').length,
+    signoff: conf.signedBy ? 1 : 0
+  };
+  const checks = targets.map(([key, target])=>{
+    const [label, unit, op] = GATE_LABEL[key], v = value[key];
+    return { key, label, unit, op, target: +target, value: v, ok: key === 'signoff' ? v === 1 : op === '≥' ? v >= +target : v <= +target };
+  });
+  return { conf, round: last, checks, pass: checks.length > 0 && checks.every(c=>c.ok) };
+}
+function stageRailHtml(p, today){
+  return `<div class="plan-head"><h3 class="plan-title">단계</h3><span class="legend">DVT → CVT → UAT · 종료 기준을 모두 채우면 다음 단계를 시작해요</span></div>
+  <div class="stage-rail">${ROUND_STAGES.map((k, i)=>{
+    const g = stageGate(p, k, tcData), conf = g.conf, per = (p.periods || {})[k] || {}, st = phaseStatus(per.from, per.to, today);
+    const rounds = roundsOf(p).filter(r=>roundStage(r) === k), next = ROUND_STAGES[i + 1];
+    const nextStarted = next && roundsOf(p).some(r=>roundStage(r) === next);
+    const bad = g.checks.filter(c=>c.ok === false).length;
+    return `<section class="stage-card s-${k.toLowerCase()}${rounds.some(r=>r.id === currentRoundId) ? ' is-current' : ''}" data-stage="${k}" aria-label="${k} 단계">
+      <div class="stage-top"><span class="stage-chip">${k}</span><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span>${g.round ? `<span class="stage-verdict ${g.pass ? 'is-go' : 'is-nogo'}">${g.pass ? '종료 기준 충족' : `기준 미달 ${bad}`}</span>` : ''}</div>
+      <p class="stage-purpose">${escapeHtml(conf.purpose)}</p>
+      <dl class="stage-meta">
+        <dt>참여</dt><dd><input type="text" class="ad-input plan-input stage-input" data-sfield="who" value="${escapeHtml(conf.who)}" maxlength="30" aria-label="${k} 참여"></dd>
+        <dt>기간</dt><dd>${per.from || per.to ? `${shortDate(per.from) || '?'} ~ ${shortDate(per.to) || '?'}` : '<span class="sub-txt">아래 일정에서 입력</span>'}</dd>
+        <dt>범위</dt><dd class="stage-scope">${PRIORITY_OPTIONS.map(o=>`<label><input type="checkbox" data-scope="${o}"${(conf.scope.priority || []).includes(o) ? ' checked' : ''}> ${o}</label>`).join('')}${(conf.scope.priority || []).length ? '' : '<span class="sub-txt">(전체)</span>'}</dd>
+        <dt>회차</dt><dd class="stage-rounds">${rounds.length ? rounds.map(r=>`<button type="button" class="stage-round${r.id === currentRoundId ? ' is-on' : ''}" data-round-view="${escapeHtml(r.id)}" aria-pressed="${r.id === currentRoundId}">${escapeHtml(r.name || '회차')} <b class="num">${withRound(r.id, ()=>progressSummary(tcData.filter(x=>inStageScope(x, conf.scope)))).pct}%</b></button>`).join('') : '<span class="sub-txt">아직 없어요</span>'}</dd>
+      </dl>
+      <ul class="gate-list" aria-label="${k} 종료 기준">${g.checks.map(c=>`<li class="gate-item${c.ok === true ? ' is-ok' : c.ok === false ? ' is-bad' : ''}" data-gate="${c.key}"><span class="gate-name">${c.label}</span>${c.key === 'signoff'
+        ? (conf.signedBy ? `<b>${escapeHtml(conf.signedBy)}</b>` : `<button type="button" class="ad-btn ad-btn--sm" data-signoff="${k}">승인하기</button>`)
+        : `<b class="num">${c.value == null ? '-' : c.value + c.unit}</b><span class="gate-target">${c.op} <input type="number" class="ad-input gate-input" data-exit="${c.key}" value="${c.target}" min="0" max="${c.unit === '%' ? 100 : 9999}" aria-label="${k} ${c.label} 기준"> ${c.unit}</span>`}</li>`).join('')}</ul>
+      ${conf.forced ? `<p class="stage-forced">기준 미달로 넘어갔어요 · ${escapeHtml(conf.forced.by)} · ${escapeHtml(conf.forced.reason)}</p>` : ''}
+      ${next && !nextStarted && g.round ? `<button type="button" class="ad-btn ad-btn--sm${g.pass ? ' ad-btn--primary' : ''} stage-next" data-next-stage="${next}">${g.pass ? `${next} 시작` : `사유 쓰고 ${next} 시작`}</button>` : ''}
+    </section>`; }).join('')}</div>`;
+}
+/* ---------- 현황판: 단계 관문 보드 ----------
+   지금 보는 회차의 단계 종료 기준(stageGate)을 게이지로 보여 주고 Go / No-Go를 판정한다. 아래에 막힌 것·일자별 처리·사람별 남은 일 */
+// 현황판 숫자 (순수 함수): 지금 회차 기준. 막힌 것은 TC ID 목록, 일자별은 결과를 넣은 날(testDate) 최근 10일
+function boardSnapshot(p, rows, today){
+  const r0 = roundOf(p, currentRoundId), stage = roundStage(r0), gate = stageGate(p, stage, rows);
+  const scope = gate.conf.scope, scoped = (rows || []).filter(r=>inStageScope(r, scope));
+  const res = r=>effectiveResult(r), ids = list=>list.map(r=>r.tcId);
+  const blocked = {
+    retest: ids(scoped.filter(r=>reviewStageOf(r) === '재검수 대기')),
+    devUnseen: ids(scoped.filter(r=>res(r) === 'Fail' && (rv(r, 'devFix') || '미확인') === '미확인')),
+    hold: ids(scoped.filter(r=>res(r) === '보류')),
+    unassigned: ids(scoped.filter(r=>!assigneesOf(r).length && res(r) !== 'N/A')),
+    stale: ids(scoped.filter(r=>(ballOf(r) === 'dev' || ballOf(r) === 'qa') && ballDays(r, Date.parse(today + 'T23:59:59Z')) >= 3))
+  };
+  const days = Array.from({ length: 10 }, (_, i)=>new Date(Date.parse(today + 'T00:00:00Z') - (9 - i) * 864e5).toISOString().slice(0, 10));
+  const daily = days.map(d=>({ date: d, n: scoped.filter(r=>res(r) && rv(r, 'testDate') === d).length }));
+  const people = Array.from(new Set(scoped.flatMap(assigneesOf))).map(name=>{
+    const mine = scoped.filter(r=>assigneesOf(r).includes(name)), v = r=>testerValue(r, name, 'tr');
+    return { name, total: mine.length, left: mine.filter(r=>!v(r)).length, fail: mine.filter(r=>v(r) === 'Fail').length };
+  }).sort((a, b)=>b.left - a.left || a.name.localeCompare(b.name, 'ko'));
+  return { stage, round: r0, gate, blocked, daily, people };
+}
+const BLOCK_LABEL = { stale: '공 3일 넘게', retest: '재검수 대기', devUnseen: 'Fail · 개발 미확인', hold: '보류', unassigned: '담당 없음' };
+function renderGateBoard(){
+  const box = document.getElementById('gateBoard'), p = editingProject();
+  if(!box) return;
+  if(!p || !tcData.length){ box.innerHTML = ''; box.hidden = true; return; }
+  box.hidden = false;
+  const s = boardSnapshot(p, tcData, isoToday()), g = s.gate, bad = g.checks.filter(c=>c.ok === false);
+  const gauge = c=>{
+    const pct = c.unit === '%' ? Math.min(100, c.value) : c.key === 'signoff' ? (c.value ? 100 : 0) : (c.value <= c.target ? 100 : Math.max(8, Math.round(c.target / c.value * 100)));
+    const filter = c.key === 'progress' ? 'NT' : (c.key === 'openFail' || c.key === 'openHighFail') ? 'FAIL' : '';
+    const val = c.key === 'signoff' ? (c.value ? '승인됨' : '승인 전') : `${c.value}${c.unit}`;
+    const tgt = c.key === 'signoff' ? '' : `기준 ${c.op} ${c.target}${c.unit}`;
+    const inner = `<span class="gb-g-top"><span class="gb-g-name">${c.label}</span><b class="num">${val}</b></span><span class="gb-g-bar"><i style="width:${pct}%"></i></span><span class="gb-g-tgt">${tgt}</span>`;
+    return filter && !c.ok
+      ? `<button type="button" class="gb-gauge is-bad" data-gb-filter="${filter}" title="해당 시나리오만 목록에서 보기">${inner}</button>`
+      : `<div class="gb-gauge${c.ok ? ' is-ok' : ' is-bad'}">${inner}</div>`;
+  };
+  const blocks = Object.keys(BLOCK_LABEL).map(k=>{ const list = s.blocked[k];
+    return `<li class="gb-block${list.length ? '' : ' is-zero'}"><span class="gb-b-name">${BLOCK_LABEL[k]}</span><b class="num">${list.length}</b>${list.slice(0, 5).map(id=>`<button type="button" class="gb-tc" data-gb-tc="${escapeHtml(id)}">${escapeHtml(id)}</button>`).join('')}${list.length > 5 ? `<span class="sub-txt">외 ${list.length - 5}</span>` : ''}</li>`; }).join('');
+  const maxN = Math.max(1, ...s.daily.map(d=>d.n));
+  box.innerHTML = `<div class="gb-head s-${s.stage.toLowerCase()}">
+      <span class="gb-stage">${s.stage}</span><span class="gb-round">${escapeHtml(s.round.name || '회차')}</span>
+      <span class="gb-verdict ${g.pass ? 'is-go' : 'is-nogo'}" role="status">${g.pass ? 'Go · 종료 기준 충족' : `No-Go · ${bad.length}개 미달`}</span>
+      <span class="legend">${(g.conf.scope.priority || []).length ? `범위 ${g.conf.scope.priority.join('·')}` : '범위 전체'} · 기준은 [테스트 계획]에서 바꿔요</span></div>
+    <div class="gb-gauges">${g.checks.map(gauge).join('')}</div>
+    <div class="gb-cols">
+      <section class="gb-col" aria-label="막힌 것"><h4 class="gb-title">막힌 것</h4><ul class="gb-blocks">${blocks}</ul></section>
+      <section class="gb-col" aria-label="일자별 결과 입력"><h4 class="gb-title">일자별 결과 입력 <span class="legend">최근 10일</span></h4>
+        ${s.daily.some(d=>d.n) ? '' : '<p class="sub-txt">최근 10일 안에 결과를 넣은 기록이 없어요.</p>'}<div class="gb-daily"${s.daily.some(d=>d.n) ? '' : ' hidden'} role="img" aria-label="최근 10일 결과 입력 ${s.daily.map(d=>`${shortDate(d.date)} ${d.n}건`).join(', ')}">${s.daily.map(d=>`<span class="gb-day" title="${shortDate(d.date)} ${d.n}건"><i style="height:${Math.round(d.n / maxN * 100)}%"></i><b class="num">${d.n || ''}</b><small>${d.date.slice(8)}</small></span>`).join('')}</div></section>
+      <section class="gb-col" aria-label="사람별 남은 일"><h4 class="gb-title">사람별 남은 일</h4>${s.people.length ? `<ul class="gb-people">${s.people.map(x=>`<li><span class="gb-p-name">${escapeHtml(x.name)}</span><span class="gb-p-bar"><i style="width:${x.total ? Math.round((x.total - x.left) / x.total * 100) : 0}%"></i></span><span class="num">남은 ${x.left}</span>${x.fail ? `<span class="gb-p-fail num">Fail ${x.fail}</span>` : ''}</li>`).join('')}</ul>` : '<p class="sub-txt">담당 테스터가 없어요.</p>'}</section>
+    </div>`;
+  box.querySelectorAll('[data-gb-filter]').forEach(b=>b.addEventListener('click', ()=>{ tcFilterResult = b.dataset.gbFilter === 'NT' ? '' : b.dataset.gbFilter; setDetailTab('list'); renderTable(); }));
+  box.querySelectorAll('[data-gb-tc]').forEach(b=>b.addEventListener('click', ()=>{
+    const row = tcData.find(r=>r.tcId === b.dataset.gbTc);
+    if(!row) return;
+    tcFilterResult = 'ALL'; expandedTcRows.add(row.tcId); setDetailTab('list'); renderTable();
+    const card = [...document.querySelectorAll('#tcCardList .tc-card')].find(c=>c.querySelector('.tc-id-badge') && c.querySelector('.tc-id-badge').textContent === row.tcId);
+    if(card) card.scrollIntoView({ block: 'center' });
+  }));
+}
+async function saveStage(idx, k, patch){
+  const entry = historyList[idx];
+  if(!entry) return;
+  entry.stages = { ...(entry.stages || {}), [k]: { ...((entry.stages || {})[k] || {}), ...patch } };
+  await saveHistory(); // 팀 동기화로도 전달된다(cvt_history의 data 안)
+  rerenderProjectMeta(entry);
+}
+// 다음 단계 시작: 기준을 채웠으면 바로, 못 채웠으면 사유를 남기고(로그인을 쓰면 관리자만) 다음 단계 첫 회차를 만든다
+async function startNextStage(idx, from, next){
+  const entry = historyList[idx];
+  if(!entry) return;
+  if(!stageGate(entry, from, tcData).pass){
+    if(authState && !isAdminUser()) return showGlobalError(`${from} 종료 기준을 채우지 못해 관리자만 ${next}로 넘길 수 있어요.`);
+    const reason = await openDialog({ title: `${next} 시작`, body: `${from} 종료 기준을 채우지 못했어요. 넘어가는 사유를 남겨 주세요(테스트 계획에 남아요).`, input: '', okLabel: '사유 남기고 시작', maxLength: 100 });
+    if(reason === null || !reason.trim()) return;
+    await saveStage(idx, from, { forced: { by: myName() || '알 수 없음', at: new Date().toISOString(), reason: reason.trim() } });
+  }
+  await addRound(idx, { stage: next, name: '1차' });
+}
+function bindStageRail(box, p){
+  const idx = historyList.indexOf(p);
+  box.querySelectorAll('.stage-card').forEach(card=>{
+    const k = card.dataset.stage;
+    card.querySelectorAll('.stage-input').forEach(inp=>inp.addEventListener('change', ()=>saveStage(idx, k, { [inp.dataset.sfield]: inp.value.trim() })));
+    card.querySelectorAll('[data-scope]').forEach(cb=>cb.addEventListener('change', ()=>saveStage(idx, k, { scope: { priority: [...card.querySelectorAll('[data-scope]:checked')].map(x=>x.dataset.scope) } })));
+    card.querySelectorAll('.gate-input').forEach(inp=>inp.addEventListener('change', ()=>{
+      const v = Math.max(0, Math.round(+inp.value || 0));
+      saveStage(idx, k, { exit: { ...stageConf(p, k).exit, [inp.dataset.exit]: v } });
+    }));
+    const sign = card.querySelector('[data-signoff]');
+    if(sign) sign.addEventListener('click', ()=>saveStage(idx, k, { signedBy: myName() || '담당자', signedAt: new Date().toISOString() }));
+    const nx = card.querySelector('[data-next-stage]');
+    if(nx) nx.addEventListener('click', ()=>startNextStage(idx, k, nx.dataset.nextStage));
+  });
+}
 async function addRound(idx, { stage, name, from, to, failOnly }){
   const entry = historyList[idx];
   if(!entry) return;
   const rid = 'r' + Date.now().toString(36), prev = currentRoundId;
   if(failOnly) tcData.forEach(row=>{
     if(FAIL_RESULTS.includes(withRound(prev, ()=>effectiveResult(row)))) return;
+    row[rk('result', rid)] = 'N/A';
+    row[rk('reviewStage', rid)] = '검수 제외';
+    assigneesOf(row).forEach(n=>{ row[rk('tr:' + n, rid)] = 'N/A'; });
+  });
+  const scope = stageConf(entry, ROUND_STAGES.includes(stage) ? stage : 'CVT').scope; // 단계 범위 밖은 이 회차에서 검수 제외
+  if((scope.priority || []).length) tcData.forEach(row=>{
+    if(inStageScope(row, scope)) return;
     row[rk('result', rid)] = 'N/A';
     row[rk('reviewStage', rid)] = '검수 제외';
     assigneesOf(row).forEach(n=>{ row[rk('tr:' + n, rid)] = 'N/A'; });
@@ -5011,9 +5448,10 @@ function renderHistory(){
   const card = h=>{
     const idx = historyList.indexOf(h);
     // 예전 버전에서 만들어진 UAT 이력도 TC 이력과 똑같이 보여 주고 불러오기·삭제할 수 있다(스냅샷 형식이 같다).
-    const total = h.count || 1;
+    const total = h.count || 1, cnt = {};
+    Object.entries(h.counts || {}).forEach(([k, n])=>{ const key = k ? normResult(k) : ''; cnt[key] = (cnt[key] || 0) + n; }); // 예전 이력의 MINOR·BLOCK 건수도 새 값으로 합친다
     const bar = RESULT_OPTIONS.map(o=>{
-      const pct = (h.counts[o]||0)/total*100;
+      const pct = (cnt[o]||0)/total*100;
       return pct>0 ? `<span style="width:${pct}%;background:${RESULT_COLOR[o]}"></span>` : '';
     }).join('');
     const progress = h.count ? Math.round((h.count - ((h.counts || {})[''] || 0)) / h.count * 100) : 0; // 결과를 넣은 시나리오 비율
@@ -5216,7 +5654,7 @@ function rowDataOf(row){
 // 서버 행(tc_no + data) → 화면 행
 function rowFromServer(id, tcNo, data){
   const { tcName, ...rest } = data || {};
-  return { ...rest, tcId: formatTcId(Math.abs(tcNo), tcName, rest.screenType), _id: id };
+  return normalizeRowResults({ ...rest, tcId: formatTcId(Math.abs(tcNo), tcName, rest.screenType), _id: id });
 }
 function historyDataOf(entry){
   const { _id, ...rest } = entry;
@@ -5301,6 +5739,7 @@ function loadSyncQueue(){
 // 화면의 현재 데이터를 기준과 비교해 바뀐 것을 대기열에 싣는다
 function syncChanges(){
   if(!SYNC_ENABLED || !syncLoaded || syncSchemaMissing) return;
+  if(projectReadOnly()) return; // 보기 권한 프로젝트는 고치지 않는다(서버도 막는다)
   const next = localSyncMaps();
   const op = diffSyncMaps(syncShadow, next);
   syncShadow = next;
@@ -5468,6 +5907,8 @@ async function loadFromServer(){
     testers: new Map(testers.map(t=>[t.name, t.sort_order]))
   };
   syncQueue.forEach(op=>applyOpToSyncMaps(S, op));
+  // 화면에서 볼 수 없는 프로젝트는 기준(syncShadow)에서도 뺀다. 목록에서만 빼면 다음 저장 때 '지운 것'으로 보여 서버에서 지워졌다
+  [...S.history.keys()].forEach(id=>{ if(!canSeeProject(id)) S.history.delete(id); });
 
   const localOnlyRows = tcData.filter(r=>!r._id);
   const serverHistory = Array.from(S.history.values());
@@ -5476,6 +5917,7 @@ async function loadFromServer(){
   if(localOnlyTesters.length) testersDirty = true;
 
   historyList = Array.from(S.history, ([id, d])=>({ ...d, _id: id }))
+    .filter(h=>canSeeProject(h._id)) // 권한 없는 프로젝트(서버 RLS가 이미 거르지만 화면도 같은 규칙)
     .concat(localOnlyHistory)
     .sort((a,b)=>String(b.date || '').localeCompare(String(a.date || '')));
   testerList = Array.from(S.testers).sort((a,b)=>a[1] - b[1]).map(([n])=>n).concat(localOnlyTesters);
@@ -5500,6 +5942,7 @@ async function resyncFromServer(){
   rtHold = true;
   syncConflictMsg = '';
   try{
+    syncChanges(); // 자동 저장 대기 중인 화면 변경(예: 테스터 삭제 되돌리기)을 먼저 싣는다 — 안 그러면 받아온 서버 값이 덮어써 사라졌다
     await flushSyncQueue();
     await loadFromServer();
     if(!syncQueue.length && !syncSchemaMissing) syncErrorMsg = '';
@@ -5515,7 +5958,7 @@ async function resyncFromServer(){
 function isEditingCell(){
   const el = document.activeElement;
   // 표의 셀렉트·입력칸(결과·상태·유형, ID·분류 고치기)을 쓰는 동안에도 받은 변경을 그리지 않는다(다시 그리면 열린 셀렉트가 닫히고 입력이 사라진다)
-  return !!(el && el.closest && (el.closest('.cell-edit') || el.id === 'projectShareInput' || (el.closest('#tcCardList') && /^(SELECT|INPUT)$/.test(el.tagName))));
+  return !!(el && el.closest && (el.closest('.cell-edit') || el.classList.contains('cm-input') || el.id === 'projectShareInput' || (el.closest('#tcCardList') && /^(SELECT|INPUT)$/.test(el.tagName))));
 }
 
 // 대기열에 아직 남아 있는 이 행의 내 변경 칸 (받아온 값으로 덮어쓰지 않는다)
@@ -5576,6 +6019,7 @@ function applyRemoteChange(table, p){
     const entry = { ...(row.data || {}), _id: row.id };
     // 아직 못 보낸 내 공유 내용은 받은 값으로 덮지 않는다(프로젝트 data는 통째로 저장되므로)
     if(idx > -1 && syncQueue.some(op=>op.histUp.some(h=>h.id === row.id))) entry.share = historyList[idx].share;
+    if(!canSeeProject(row.id)){ if(idx > -1) historyList.splice(idx, 1); syncShadow.history.delete(row.id); return; } // 기준에서도 빼야 '지운 것'으로 서버에 보내지 않는다
     if(idx > -1) historyList[idx] = entry; else historyList.push(entry);
     historyList.sort((a,b)=>String(b.date || '').localeCompare(String(a.date || '')));
     syncShadow.history.set(row.id, historyDataOf(entry));
@@ -5594,6 +6038,9 @@ function applyRemoteChange(table, p){
 }
 
 function onRealtime(table, payload){
+  if(table === 'cvt_profiles' || table === 'cvt_project_members') return onAuthTableChange(); // 권한이 바뀌면 다시 받는다
+  if(table === 'cvt_tc_comments') return onCommentChange(payload); // 댓글·알림은 시나리오 데이터와 따로(편집 중에도 바로)
+  if(table === 'cvt_notifications') return onNotifChange(payload);
   rtPending.push([table, payload]);
   drainRealtime();
 }
@@ -5627,7 +6074,7 @@ function subscribeRealtime(){
   // (presence 이벤트를 하나라도 구독해야 presence 상태를 받는다)
   rtChannel = sb.channel('cvt-db', { config: { presence: { key: SYNC_CLIENT_ID } } });
   rtChannel.on('presence', { event: 'sync' }, ()=>{});
-  ['cvt_tc_rows', 'cvt_history', 'cvt_testers'].forEach(table=>{
+  ['cvt_tc_rows', 'cvt_history', 'cvt_testers', 'cvt_profiles', 'cvt_project_members'].forEach(table=>{
     rtChannel.on('postgres_changes', { event: '*', schema: 'public', table }, p=>onRealtime(table, p));
   });
   rtChannel.subscribe(onRealtimeStatus);
@@ -5899,6 +6346,8 @@ async function openSharedProjectOnce(){
    테스트 시나리오 리스트는 여전히 하나(지금 작업 중인 리스트)이고, 화면 전환은 보이는 영역만 바꾼다. */
 // 주소의 해시 → 화면. 주소가 없거나 형식이 틀리면 {view:'main'}(기본 분류로 연다) (순수 함수)
 function parseRoute(hash){
+  const a = /^#\/admin\/(accounts|projects)$/.exec(hash || '');
+  if(a) return { view: 'admin', page: a[1] };
   const m = /^#\/(?:c\/([^/]+)(?:\/p\/([^/]+))?)?$/.exec(hash || '');
   if(!m || !m[1]) return { view: 'main' };
   let cat, id;
@@ -5908,6 +6357,7 @@ function parseRoute(hash){
 }
 // 화면 → 주소의 해시 (순수 함수)
 function routeHash(r){
+  if(r && r.view === 'admin') return '#/admin/' + (r.page === 'projects' ? 'projects' : 'accounts');
   if(!r || r.view === 'main' || !r.cat) return '#/';
   const c = '#/c/' + encodeURIComponent(r.cat);
   return r.view === 'proj' ? `${c}/p/${encodeURIComponent(r.id || 'new')}` : c;
@@ -5935,9 +6385,12 @@ function applyRoute(r){
   currentRoute = r;
   if(r.view !== 'proj') closeQcGen();
   document.body.dataset.view = r.view;
-  projectCategory = r.cat;
+  if(r.view !== 'admin') projectCategory = r.cat;
   document.getElementById('panel-gen').classList.toggle('active', r.view === 'proj');
   document.getElementById('panel-hist').classList.toggle('active', r.view === 'cat');
+  document.getElementById('panel-admin').classList.toggle('active', r.view === 'admin');
+  document.querySelectorAll('[data-admin-page]').forEach(b=>b.setAttribute('aria-current', String(r.view === 'admin' && b.dataset.adminPage === r.page)));
+  if(r.view === 'admin'){ renderAdmin(); renderViewTitle(); if(prevView !== r.view) window.scrollTo(0, 0); return; }
   if(r.view === 'proj' && r.id !== 'new' && r.id !== loadedHistoryId && !pendingSharedProject){
     let openHere = null, draft = [];
     try{ openHere = sessionStorage.getItem(OPEN_PROJECT_KEY); draft = JSON.parse(localStorage.getItem('cvt_tc_draft') || '[]'); }catch(e){ /* 저장소를 못 쓰면 링크로 연 것처럼 */ }
@@ -5973,6 +6426,7 @@ function renderViewTitle(){
     try{ sessionStorage.setItem(OPEN_PROJECT_KEY, next.id); }catch(e){ /* ignore */ }
   }
   const { view, cat } = currentRoute;
+  if(view === 'admin'){ title.textContent = `관리자 · ${ADMIN_PAGES[currentRoute.page] || '계정 관리'}`; return; }
   if(view === 'cat'){ title.textContent = `${cat} 프로젝트`; return; }
   const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
   const name = entry ? (entry.title || entry.fileName) : (currentRoute.id === 'new' ? '새 프로젝트' : '프로젝트 불러오는 중');
@@ -6057,6 +6511,668 @@ document.addEventListener('keydown', e=>{ if(e.key === 'Escape') setGnbDrawer(fa
 window.addEventListener('popstate', ()=>applyRoute(parseRoute(location.hash))); // 뒤로·앞으로 가기, 주소 직접 고치기
 document.body.dataset.view = 'cat';
 
+
+/* ---------- 로그인·권한 (팀 동기화 서버를 쓸 때만) ----------
+   워크보드와 같은 방식: 회사 메일 + 비밀번호(Supabase Auth). 가입 확인·비밀번호 찾기는 메일로 받은 6자리 코드(링크 대신).
+   관리자 승인 단계는 없고, 프로젝트 멤버(cvt_project_members)로 볼 수 있는 프로젝트를 정한다. 서버 RLS(supabase_auth_schema.sql)가 막고, 화면도 같은 규칙(projectPerm)으로 숨기고 잠근다 */
+const STAFF_DOMAINS = ['medialog.co.kr', 'medialogpartners.co.kr'];
+const STAFF_DOMAIN_TEXT = STAFF_DOMAINS.map(d=>'@' + d).join(' · ');
+const isStaffEmail = e => STAFF_DOMAINS.some(d=>String(e || '').trim().toLowerCase().endsWith('@' + d));
+const PW_MIN = 8;
+let authState = null; // { userId, email, me, profiles, members } — 로그인을 쓰지 않으면 null
+const isAdminUser = ()=>!!(authState && authState.me && authState.me.role === 'admin');
+// 프로젝트 권한: 'admin' | 'edit' | 'view' | 'none'. 로그인을 쓰지 않으면 늘 편집, 멤버가 한 명도 없는 프로젝트는 직원 모두 편집 (순수 함수)
+function projectPerm(project, st = authState){
+  if(!st) return 'edit';
+  if(!st.me || !st.me.active) return 'none';
+  if(st.me.role === 'admin') return 'admin';
+  const ms = (st.members || []).filter(m=>m.project === project);
+  if(!ms.length) return 'edit';
+  const mine = ms.find(m=>m.user_id === st.userId);
+  return mine ? (mine.perm === 'view' ? 'view' : 'edit') : 'none';
+}
+const canSeeProject = id => projectPerm(id) !== 'none';
+const projectReadOnly = ()=>!!authState && projectPerm(currentProjectKey()) === 'view';
+function authErrMsg(e){
+  const m = String((e && e.message) || '');
+  if((e && e.status === 429) || /rate|security purposes/i.test(m)) return '잠시 후 다시 시도해 주세요. 메일은 1분에 한 번 보낼 수 있어요.';
+  if(/invalid login credentials/i.test(m)) return '메일 또는 비밀번호가 맞지 않아요.';
+  if(/email not confirmed/i.test(m)) return '메일 확인이 아직 끝나지 않았어요. 회원가입에서 받은 코드를 넣어 주세요.';
+  if(/already registered|already been registered/i.test(m)) return '이미 가입된 메일이에요. 로그인하거나 비밀번호 찾기를 써 주세요.';
+  if(/token has expired|invalid.*(otp|token)|otp.*(invalid|expired)/i.test(m)) return '코드가 맞지 않거나 시간이 지났어요. 코드를 다시 받아 주세요.';
+  if(/password/i.test(m) && /weak|at least|should/i.test(m)) return `비밀번호가 너무 쉬워요. ${PW_MIN}자 이상으로 영문·숫자를 섞어 주세요.`;
+  if(/signups? not allowed|signup.*disabled/i.test(m)) return '지금은 회원가입을 받지 않아요. 관리자에게 문의해 주세요.';
+  return m || '잠시 후 다시 시도해 주세요.';
+}
+const authGate = document.createElement('div');
+authGate.id = 'authGate';
+authGate.hidden = true;
+document.body.appendChild(authGate);
+const $gate = s=>authGate.querySelector(s);
+function gateCard(html){
+  authGate.innerHTML = `<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><h1 id="gateTitle">테스트 시나리오 생성</h1>${html}</div>`;
+  authGate.hidden = false;
+  document.body.classList.add('is-gated');
+}
+const gateTabs = t=>`<div class="gate-tabs" role="tablist" aria-label="로그인 또는 회원가입"><button type="button" role="tab" data-gt="login" aria-selected="${t === 'login'}">로그인</button><button type="button" role="tab" data-gt="signup" aria-selected="${t === 'signup'}">회원가입</button></div>`;
+function bindGateTabs(){ authGate.querySelectorAll('[data-gt]').forEach(b=>b.addEventListener('click', ()=>b.dataset.gt === 'login' ? gateLogin() : gateSignup())); }
+const savedLoginEmail = ()=>{ try{ return localStorage.getItem('cvt_login_email') || ''; }catch(e){ return ''; } };
+const gateErr = msg=>{ const el = $gate('#gErr'); if(el) el.textContent = msg; };
+async function gateSubmit(btn, fn){ btn.disabled = true; try{ await fn(); }finally{ if(btn.isConnected) btn.disabled = false; } }
+function gateLogin(msg = ''){
+  gateCard(`${gateTabs('login')}<form class="gate-form" id="gateForm" novalidate>
+    <label for="gEmail">회사 메일</label><input id="gEmail" type="email" autocomplete="username" placeholder="name@${STAFF_DOMAINS[0]}" value="${escapeHtml(savedLoginEmail())}">
+    <label for="gPw">비밀번호</label><input id="gPw" type="password" autocomplete="current-password">
+    <button class="ad-btn ad-btn--primary" type="submit" id="gGo">로그인</button>
+    <p class="gate-err" id="gErr" role="alert">${escapeHtml(msg)}</p></form>
+    <div class="gate-links"><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="gForgot">비밀번호 찾기</button></div>`);
+  bindGateTabs();
+  $gate('#gForgot').addEventListener('click', ()=>gateForgot($gate('#gEmail').value.trim()));
+  $gate('#gateForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const email = $gate('#gEmail').value.trim().toLowerCase(), password = $gate('#gPw').value;
+    if(!isStaffEmail(email)) return gateErr(`${STAFF_DOMAIN_TEXT} 메일만 쓸 수 있어요.`);
+    if(!password) return gateErr('비밀번호를 넣어 주세요.');
+    gateSubmit($gate('#gGo'), async ()=>{
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){ if(/email not confirmed/i.test(error.message || '')) return gateVerify(email, 'signup', authErrMsg(error)); return gateErr(authErrMsg(error)); }
+      try{ localStorage.setItem('cvt_login_email', email); }catch(x){ /* 다음에 메일을 다시 적는다 */ }
+      enterSession(data.session);
+    });
+  });
+  $gate(savedLoginEmail() ? '#gPw' : '#gEmail').focus();
+}
+function gateSignup(){
+  gateCard(`${gateTabs('signup')}<form class="gate-form" id="gateForm" novalidate>
+    <label for="gName">이름</label><input id="gName" maxlength="20" autocomplete="name" placeholder="예: 홍길동">
+    <label for="gEmail">회사 메일</label><input id="gEmail" type="email" autocomplete="username" placeholder="name@${STAFF_DOMAINS[0]}">
+    <label for="gPw">비밀번호 (${PW_MIN}자 이상)</label><input id="gPw" type="password" autocomplete="new-password">
+    <label for="gPw2">비밀번호 확인</label><input id="gPw2" type="password" autocomplete="new-password">
+    <button class="ad-btn ad-btn--primary" type="submit" id="gGo">회원가입</button>
+    <p class="gate-err" id="gErr" role="alert"></p></form>`);
+  bindGateTabs();
+  $gate('#gateForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const name = $gate('#gName').value.trim(), email = $gate('#gEmail').value.trim().toLowerCase(), password = $gate('#gPw').value;
+    if(!name) return gateErr('이름을 넣어 주세요.');
+    if(!isStaffEmail(email)) return gateErr(`${STAFF_DOMAIN_TEXT} 메일만 쓸 수 있어요.`);
+    if(password.length < PW_MIN) return gateErr(`비밀번호는 ${PW_MIN}자 이상이어야 해요.`);
+    if(password !== $gate('#gPw2').value) return gateErr('비밀번호 확인이 달라요.');
+    gateSubmit($gate('#gGo'), async ()=>{
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+      if(error) return gateErr(authErrMsg(error));
+      try{ localStorage.setItem('cvt_login_email', email); }catch(x){ /* ignore */ }
+      if(data && data.session) return enterSession(data.session); // 서버에서 메일 확인을 끈 경우
+      gateVerify(email, 'signup');
+    });
+  });
+  $gate('#gName').focus();
+}
+// 메일로 받은 6자리 코드 확인. recovery(비밀번호 찾기)면 새 비밀번호도 받는다
+function gateVerify(email, type, msg = ''){
+  const rec = type === 'recovery';
+  gateCard(`<p class="gate-lead"><b>${escapeHtml(email)}</b>(으)로 보낸 6자리 코드를 넣어 주세요.${rec ? ' 새 비밀번호도 함께 정해요.' : ''}</p>
+    <form class="gate-form" id="gateForm" novalidate>
+      <label for="gCode">확인 코드</label><input id="gCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456">
+      ${rec ? `<label for="gPw">새 비밀번호 (${PW_MIN}자 이상)</label><input id="gPw" type="password" autocomplete="new-password">` : ''}
+      <button class="ad-btn ad-btn--primary" type="submit" id="gGo">${rec ? '비밀번호 바꾸고 시작' : '확인하고 시작'}</button>
+      <p class="gate-err" id="gErr" role="alert">${escapeHtml(msg)}</p></form>
+    <div class="gate-links"><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="gResend">코드 다시 받기</button><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="gBack">로그인으로</button></div>`);
+  $gate('#gBack').addEventListener('click', ()=>gateLogin());
+  $gate('#gResend').addEventListener('click', async ()=>{
+    const { error } = rec ? await sb.auth.resetPasswordForEmail(email) : await sb.auth.resend({ type: 'signup', email });
+    gateErr(error ? authErrMsg(error) : '코드를 다시 보냈어요. 메일함을 확인해 주세요.');
+  });
+  $gate('#gateForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const token = $gate('#gCode').value.trim();
+    if(!/^\d{6}$/.test(token)) return gateErr('메일로 받은 6자리 숫자를 넣어 주세요.');
+    if(rec && $gate('#gPw').value.length < PW_MIN) return gateErr(`비밀번호는 ${PW_MIN}자 이상이어야 해요.`);
+    gateSubmit($gate('#gGo'), async ()=>{
+      const { data, error } = await sb.auth.verifyOtp({ email, token, type: rec ? 'recovery' : 'signup' });
+      if(error) return gateErr(authErrMsg(error));
+      if(rec){ const r = await sb.auth.updateUser({ password: $gate('#gPw').value }); if(r.error) return gateErr(authErrMsg(r.error)); }
+      enterSession(data.session);
+    });
+  });
+  $gate('#gCode').focus();
+}
+function gateForgot(email = ''){
+  gateCard(`<p class="gate-lead">가입한 회사 메일로 6자리 코드를 보내요. 코드를 넣고 새 비밀번호를 정해요.</p>
+    <form class="gate-form" id="gateForm" novalidate>
+      <label for="gEmail">회사 메일</label><input id="gEmail" type="email" autocomplete="username" value="${escapeHtml(email)}">
+      <button class="ad-btn ad-btn--primary" type="submit" id="gGo">코드 받기</button>
+      <p class="gate-err" id="gErr" role="alert"></p></form>
+    <div class="gate-links"><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="gBack">로그인으로</button></div>`);
+  $gate('#gBack').addEventListener('click', ()=>gateLogin());
+  $gate('#gateForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const em = $gate('#gEmail').value.trim().toLowerCase();
+    if(!isStaffEmail(em)) return gateErr(`${STAFF_DOMAIN_TEXT} 메일만 쓸 수 있어요.`);
+    gateSubmit($gate('#gGo'), async ()=>{
+      const { error } = await sb.auth.resetPasswordForEmail(em);
+      if(error) return gateErr(authErrMsg(error));
+      gateVerify(em, 'recovery');
+    });
+  });
+  $gate('#gEmail').focus();
+}
+let authReady = null;
+const authDone = new Promise(r=>{ authReady = r; });
+async function loadAuthMaps(){
+  const [p, m] = await Promise.all([sb.from('cvt_profiles').select('*'), sb.from('cvt_project_members').select('*')]);
+  if(p.error) throw p.error;
+  if(m.error) throw m.error;
+  authState.profiles = p.data || [];
+  authState.members = m.data || [];
+  authState.me = authState.profiles.find(x=>x.user_id === authState.userId) || null;
+}
+function signOutNow(){ Promise.resolve(sb && sb.auth.signOut()).catch(()=>{}).finally(()=>location.reload()); }
+async function enterSession(session){
+  authState = { userId: session.user.id, email: String(session.user.email || '').toLowerCase(), me: null, profiles: [], members: [] };
+  try{
+    await loadAuthMaps();
+    if(!authState.me){ await new Promise(r=>setTimeout(r, 800)); await loadAuthMaps(); } // 가입 직후 프로필이 막 만들어지는 중일 수 있다
+  }catch(e){
+    gateCard(`<p>계정 정보를 불러오지 못했어요. 서버에 로그인 설정(supabase_auth_schema.sql)이 되어 있는지 관리자에게 확인해 주세요.</p><p class="gate-err">${escapeHtml(e.message || '')}</p><button class="ad-btn" type="button" id="gOut">로그아웃</button>`);
+    $gate('#gOut').addEventListener('click', signOutNow);
+    return;
+  }
+  if(!authState.me || !authState.me.active){
+    gateCard(`<p>${escapeHtml(authState.email)} 계정은 ${authState.me ? '비활성화되어' : '아직 준비되지 않아'} 들어갈 수 없어요. 관리자에게 문의해 주세요.</p><button class="ad-btn" type="button" id="gOut">로그아웃</button>`);
+    $gate('#gOut').addEventListener('click', signOutNow);
+    return;
+  }
+  try{ localStorage.setItem(DISPLAY_NAME_KEY, authState.me.name || authState.email.split('@')[0]); }catch(e){ /* 접속자 이름은 메일 앞부분 */ }
+  authGate.hidden = true;
+  authGate.innerHTML = '';
+  document.body.classList.remove('is-gated');
+  renderAuthUi();
+  loadNotifs().catch(()=>{}); // 알림함·댓글 (서버에 알림 SQL이 없으면 감춘 채로 둔다)
+  authReady();
+}
+async function initAuth(){
+  const { data } = await sb.auth.getSession();
+  if(data && data.session) enterSession(data.session); else gateLogin();
+  sb.auth.onAuthStateChange(ev=>{ if(ev === 'SIGNED_OUT' && authState) location.reload(); });
+  return authDone;
+}
+// 프로필·멤버가 바뀌면(관리자 지정) 다시 받고, 볼 수 있는 프로젝트가 달라졌을 수 있어 서버 기준으로 다시 맞춘다
+let authRefreshTimer = null;
+function onAuthTableChange(){
+  clearTimeout(authRefreshTimer);
+  authRefreshTimer = setTimeout(async ()=>{
+    if(!authState) return;
+    // 볼 수 있는 프로젝트가 실제로 달라질 때만 서버에서 다시 받는다(새 프로젝트마다 만든 사람이 멤버로 붙으므로 매번 받지 않게)
+    const wasAdmin = isAdminUser(), permKey = ()=>JSON.stringify(historyList.map(h=>[h._id, projectPerm(h._id)]));
+    const before = permKey(), oldProj = new Set(authState.members.map(m=>m.project));
+    try{ await loadAuthMaps(); }catch(e){ return; }
+    if(!authState.me || !authState.me.active){ location.reload(); return; }
+    renderAuthUi();
+    if(wasAdmin && isAdminUser()) return; // 관리자는 늘 전부 본다
+    const inList = id=>historyList.some(h=>h._id === id), newProj = new Set(authState.members.map(m=>m.project));
+    const gained = authState.members.some(m=>m.user_id === authState.userId && !inList(m.project)) || [...oldProj].some(p=>!newProj.has(p) && !inList(p));
+    if(before !== permKey() || gained || wasAdmin !== isAdminUser()) resyncFromServer();
+  }, 150);
+}
+function renderAuthUi(){
+  const box = document.getElementById('hdrUser');
+  if(!authState || !authState.me){ box.hidden = true; return; }
+  const me = authState.me, name = me.name || authState.email.split('@')[0], admin = isAdminUser();
+  box.hidden = false;
+  document.getElementById('profileAvatar').textContent = name.slice(0, 1);
+  document.getElementById('profileBtnName').textContent = name;
+  document.getElementById('profileBtn').setAttribute('aria-label', `${name} 계정 메뉴`);
+  const menu = document.getElementById('profileMenu');
+  menu.innerHTML = `<div class="pm-head"><span class="gnb-avatar" aria-hidden="true">${escapeHtml(name.slice(0, 1))}</span>
+    <span class="gnb-profile-txt"><span class="gnb-profile-name">${escapeHtml(name)}<span class="role-badge${admin ? ' is-admin' : ''}">${admin ? '관리자' : '멤버'}</span></span><small title="${escapeHtml(authState.email)}">${escapeHtml(authState.email)}</small></span></div>
+    <button type="button" class="pm-item" id="profileNameBtn">이름 바꾸기</button>
+    ${admin ? `<div class="pm-sep">관리자</div><button type="button" class="pm-item" data-admin-page="accounts">계정 관리</button><button type="button" class="pm-item" data-admin-page="projects">프로젝트 관리</button>` : ''}
+    <div class="pm-sep" role="separator"></div><button type="button" class="pm-item" id="logoutBtn">로그아웃</button>`;
+  const closeMenu = ()=>toggleHdrPop(document.getElementById('profileBtn'), menu, false);
+  document.getElementById('logoutBtn').addEventListener('click', signOutNow);
+  document.getElementById('profileNameBtn').addEventListener('click', async ()=>{
+    closeMenu();
+    const next = await openDialog({ title: '이름 바꾸기', body: '담당자·접속자·댓글에 쓰는 이름이에요.', input: name, okLabel: '바꾸기' });
+    if(next === null || !next.trim() || next.trim() === name) return;
+    const { error } = await sb.rpc('cvt_set_my_name', { p_name: next.trim() });
+    if(error) return showGlobalError(`이름을 바꾸지 못했어요(${error.message}).`);
+    await loadAuthMaps();
+    try{ localStorage.setItem(DISPLAY_NAME_KEY, authState.me.name); }catch(e){ /* ignore */ }
+    renderAuthUi();
+  });
+  menu.querySelectorAll('[data-admin-page]').forEach(b=>{
+    b.setAttribute('aria-current', String(currentRoute.view === 'admin' && b.dataset.adminPage === currentRoute.page));
+    b.addEventListener('click', ()=>{ closeMenu(); goRoute({ view: 'admin', page: b.dataset.adminPage }); });
+  });
+  applyReadOnly();
+  if(currentRoute.view === 'admin') renderAdmin();
+}
+// 보기 권한 프로젝트: 입력·버튼을 잠그고 안내를 띄운다(서버도 쓰기를 막는다)
+function applyReadOnly(){
+  const ro = currentRoute.view === 'proj' && projectReadOnly();
+  document.body.classList.toggle('is-readonly', ro);
+  const b = document.getElementById('readonlyBanner');
+  if(b) b.hidden = !ro;
+}
+/* 관리자 메뉴: 계정 관리 / 프로젝트 관리 (관리자만. 서버도 관리자만 고치게 막는다) */
+const ADMIN_PAGES = { accounts: '계정 관리', projects: '프로젝트 관리' };
+const profileName = uid=>{ const p = authState && authState.profiles.find(x=>x.user_id === uid); return p ? (p.name || p.email) : '(알 수 없음)'; };
+async function adminWrite(promise, okMsg){
+  const { error } = await promise;
+  if(error){ showGlobalError(`저장하지 못했어요(${error.message}).`); }
+  else{ showGlobalError(''); if(okMsg) showInfoToast(okMsg); }
+  try{ await loadAuthMaps(); }catch(e){ /* 다음 변경 때 다시 받는다 */ }
+  renderAuthUi();
+  renderAdmin();
+  return !error;
+}
+function renderAdmin(){
+  const box = document.getElementById('panel-admin'), page = currentRoute.page;
+  if(!isAdminUser()){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">관리자만 볼 수 있어요.</div></div>'; return; }
+  if(page === 'projects'){
+    const opts = (authState.profiles || []).filter(p=>p.active);
+    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">멤버가 한 명도 없는 프로젝트는 로그인한 직원 모두 편집할 수 있어요. 멤버를 지정하면 멤버만 봐요.</span></div>
+      <div class="plan-table-wrap"><table class="plan-table admin-table"><thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th><th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th></tr></thead><tbody>
+      ${historyList.map(h=>{
+        const ms = authState.members.filter(m=>m.project === h._id), have = new Set(ms.map(m=>m.user_id));
+        return `<tr data-admin-proj="${escapeHtml(h._id)}"><th scope="row">${escapeHtml(h.title || h.fileName || '(이름 없음)')}</th><td>${escapeHtml(categoryOf(h))}</td>
+          <td><div class="member-chips">${ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>'}</div></td>
+          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td></tr>`;
+      }).join('') || '<tr><td colspan="4"><div class="ad-empty">프로젝트가 없어요.</div></td></tr>'}</tbody></table></div></div>`;
+    box.querySelectorAll('[data-admin-proj]').forEach(tr=>{
+      const project = tr.dataset.adminProj;
+      tr.querySelectorAll('.member-perm').forEach(sel=>sel.addEventListener('change', ()=>adminWrite(sb.from('cvt_project_members').update({ perm: sel.value }).eq('project', project).eq('user_id', sel.dataset.memUser))));
+      tr.querySelectorAll('[data-mem-del]').forEach(b=>b.addEventListener('click', ()=>adminWrite(sb.from('cvt_project_members').delete().eq('project', project).eq('user_id', b.dataset.memDel), '멤버를 뺐어요.')));
+      tr.querySelector('.member-add-btn').addEventListener('click', ()=>{
+        const uid = tr.querySelector('.member-add-user').value;
+        if(!uid) return showGlobalError('추가할 계정을 골라 주세요.');
+        adminWrite(sb.from('cvt_project_members').insert({ project, user_id: uid, perm: tr.querySelector('.member-add-perm').value }), '멤버를 추가했어요.');
+      });
+    });
+    return;
+  }
+  const mailCfg = notifConfig || { mail_on: false, mail_types: Object.keys(NOTIF_LABEL) };
+  const mailHtml = notifMissing ? '' : `<div class="card ad-card ad-panel admin-card notify-admin"><div class="plan-head"><h3 class="plan-title">메일 알림</h3><span class="legend">새 알림이 생기면 받는 사람 메일로도 보내요(Brevo). 서버에 메일 함수·웹훅이 연결되어 있어야 실제로 보내져요(supabase_notify_schema.sql 맨 위 설명).</span></div>
+    <label class="acc-active"><input type="checkbox" id="mailOnInput"${mailCfg.mail_on ? ' checked' : ''}> 메일 알림 보내기</label>
+    <div class="np-mail-types" id="mailTypeInputs">${Object.keys(NOTIF_LABEL).map(t=>`<label><input type="checkbox" value="${t}"${(mailCfg.mail_types || []).includes(t) ? ' checked' : ''}> ${NOTIF_LABEL[t]}</label>`).join('')}</div>
+    <button type="button" class="ad-btn ad-btn--sm" id="mailCfgSave">저장</button></div>`;
+  const rows = (authState.profiles || []).slice().sort((a, b)=>(b.role === 'admin') - (a.role === 'admin') || String(a.name || a.email).localeCompare(String(b.name || b.email), 'ko'));
+  box.innerHTML = mailHtml + `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">계정 관리</h3><span class="legend">회사 메일로 가입하면 바로 들어올 수 있어요. 프로젝트는 '프로젝트 관리'에서 멤버로 지정해요.</span></div>
+    <div class="plan-table-wrap"><table class="plan-table admin-table"><thead><tr><th scope="col">이름</th><th scope="col">메일</th><th scope="col">역할</th><th scope="col">상태</th><th scope="col">프로젝트</th><th scope="col">가입일</th></tr></thead><tbody>
+    ${rows.map(p=>`<tr data-acc="${escapeHtml(p.user_id)}"><th scope="row">${escapeHtml(p.name || '(이름 없음)')}${p.user_id === authState.userId ? ' <span class="ad-badge ad-badge--neutral">나</span>' : ''}</th><td>${escapeHtml(p.email)}</td>
+      <td><select class="ad-select acc-role" aria-label="${escapeHtml(p.name || p.email)} 역할"><option value="member"${p.role !== 'admin' ? ' selected' : ''}>멤버</option><option value="admin"${p.role === 'admin' ? ' selected' : ''}>관리자</option></select></td>
+      <td><label class="acc-active"><input type="checkbox" class="acc-active-input"${p.active ? ' checked' : ''}> ${p.active ? '활성' : '비활성'}</label></td>
+      <td>${authState.members.filter(m=>m.user_id === p.user_id).length}개</td><td>${escapeHtml(String(p.created_at || '').slice(0, 10))}</td></tr>`).join('')}</tbody></table></div></div>`;
+  box.querySelectorAll('[data-acc]').forEach(tr=>{
+    const uid = tr.dataset.acc;
+    tr.querySelector('.acc-role').addEventListener('change', e=>adminWrite(sb.from('cvt_profiles').update({ role: e.target.value }).eq('user_id', uid), '역할을 바꿨어요.'));
+    tr.querySelector('.acc-active-input').addEventListener('change', e=>adminWrite(sb.from('cvt_profiles').update({ active: e.target.checked }).eq('user_id', uid), e.target.checked ? '활성화했어요.' : '비활성화했어요.'));
+  });
+  const saveBtn = document.getElementById('mailCfgSave');
+  if(saveBtn) saveBtn.addEventListener('click', async ()=>{
+    const v = { mail_on: document.getElementById('mailOnInput').checked, mail_types: [...document.querySelectorAll('#mailTypeInputs input:checked')].map(x=>x.value), updated_at: new Date().toISOString() };
+    if(v.mail_on && !v.mail_types.length) return showGlobalError('보낼 알림 종류를 1개 이상 골라 주세요.');
+    const { error } = await sb.from('cvt_notify_config').update(v).eq('id', 1);
+    if(error) return showGlobalError(`메일 알림 설정을 저장하지 못했어요(${error.message}).`);
+    notifConfig = { ...(notifConfig || {}), ...v };
+    showGlobalError('');
+    showInfoToast(v.mail_on ? '메일 알림을 켰어요.' : '메일 알림을 껐어요.');
+  });
+}
+/* ---------- 헤더 팝업 · 알림함 · 시나리오 댓글(@멘션) (supabase_notify_schema.sql) ----------
+   알림은 서버 트리거가 만들고, 화면은 읽고·읽음 표시만 한다. 서버에 알림 SQL이 없으면(notifMissing) 알림함·댓글을 감춘다 */
+const NOTIF_LABEL = { mention: '멘션', comment: '댓글', assign: '담당 배정', defect: '결함 등록', review: '검수 단계', handoff: '공 넘김' };
+let notifList = [], notifMissing = true, notifConfig = null, notifPrefs = { mail_off: [] }, notifChannel = null;
+const commentsByRow = new Map();
+let commentsProject = null;
+// 헤더 팝업(알림함·프로필 메뉴): 하나만 열고, 바깥을 누르거나 Esc면 닫는다
+function toggleHdrPop(btn, pop, open = pop.hidden){
+  document.querySelectorAll('.hdr-pop').forEach(p=>{ if(p !== pop && !p.hidden){ p.hidden = true; const b = document.querySelector(`[aria-controls="${p.id}"]`); if(b) b.setAttribute('aria-expanded', 'false'); } });
+  pop.hidden = !open;
+  if(btn) btn.setAttribute('aria-expanded', String(open));
+}
+document.addEventListener('click', e=>{
+  if(!e.target.isConnected || e.target.closest('.hdr-pop-wrap')) return; // 팝업 안에서 다시 그려진 요소를 누른 경우도 닫지 않는다
+  document.querySelectorAll('.hdr-pop').forEach(p=>{ if(!p.hidden) toggleHdrPop(document.querySelector(`[aria-controls="${p.id}"]`), p, false); });
+});
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  const p = [...document.querySelectorAll('.hdr-pop')].find(x=>!x.hidden);
+  if(!p) return;
+  const b = document.querySelector(`[aria-controls="${p.id}"]`);
+  toggleHdrPop(b, p, false);
+  if(b) b.focus();
+});
+document.getElementById('notifBtn').addEventListener('click', ()=>{
+  const p = document.getElementById('notifPanel');
+  toggleHdrPop(document.getElementById('notifBtn'), p);
+  if(!p.hidden) renderNotifPanel();
+});
+document.getElementById('profileBtn').addEventListener('click', ()=>toggleHdrPop(document.getElementById('profileBtn'), document.getElementById('profileMenu')));
+
+function timeAgo(iso){
+  const s = (Date.now() - Date.parse(iso)) / 1000;
+  if(!(s >= -60)) return '';
+  if(s < 60) return '방금';
+  if(s < 3600) return `${Math.floor(s / 60)}분 전`;
+  if(s < 86400) return `${Math.floor(s / 3600)}시간 전`;
+  const d = new Date(iso);
+  return s < 7 * 86400 ? `${Math.floor(s / 86400)}일 전` : `${d.getMonth() + 1}/${d.getDate()}`;
+}
+async function loadNotifs(){
+  const [n, c, p] = await Promise.all([
+    sb.from('cvt_notifications').select('*').order('created_at', { ascending: false }).limit(50),
+    sb.from('cvt_notify_config').select('*').eq('id', 1),
+    sb.from('cvt_notify_prefs').select('*').eq('user_id', authState.userId)
+  ]);
+  notifMissing = !!n.error; // 서버에 알림 SQL을 아직 실행하지 않았다
+  if(!notifMissing){
+    notifList = n.data || [];
+    notifConfig = (c.data || [])[0] || null;
+    notifPrefs = (p.data || [])[0] || { mail_off: [] };
+    if(!notifChannel){ // 알림 SQL이 있을 때만 구독한다(없는 테이블을 구독하면 채널 전체가 실패할 수 있다)
+      notifChannel = sb.channel('cvt-notify');
+      ['cvt_tc_comments', 'cvt_notifications'].forEach(table=>notifChannel.on('postgres_changes', { event: '*', schema: 'public', table }, x=>onRealtime(table, x)));
+      notifChannel.subscribe();
+    }
+  }
+  renderBell();
+  renderTable(); // 댓글 칸을 보이거나 감춘다
+}
+function renderBell(){
+  const btn = document.getElementById('notifBtn'), cnt = document.getElementById('notifCount');
+  btn.hidden = notifMissing;
+  const n = notifList.filter(x=>!x.read_at).length;
+  cnt.hidden = !n;
+  cnt.textContent = n > 99 ? '99+' : String(n);
+  btn.setAttribute('aria-label', n ? `알림함, 안 읽은 알림 ${n}건` : '알림함');
+}
+function renderNotifPanel(){
+  const panel = document.getElementById('notifPanel'), off = notifPrefs.mail_off || [];
+  const mailTypes = notifConfig && notifConfig.mail_on ? (notifConfig.mail_types || []) : [];
+  panel.innerHTML = `<div class="np-head"><b>알림</b><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="notifAllRead"${notifList.some(x=>!x.read_at) ? '' : ' disabled'}>모두 읽음</button></div>
+    ${notifList.length ? `<ul class="np-list">${notifList.map(n=>`<li><button type="button" class="np-item${n.read_at ? '' : ' is-unread'}" data-notif="${escapeHtml(String(n.id))}">
+      <span class="np-type t-${escapeHtml(n.type)}">${escapeHtml(NOTIF_LABEL[n.type] || n.type)}</span>
+      <span class="np-main"><span class="np-line"><b>${escapeHtml(n.actor_name || '팀원')}</b>${n.tc_id ? ` · ${escapeHtml(n.tc_id)}` : ''}</span><span class="np-body">${escapeHtml(n.body)}</span></span>
+      <time class="np-time" datetime="${escapeHtml(n.created_at)}">${escapeHtml(timeAgo(n.created_at))}</time></button></li>`).join('')}</ul>` : '<div class="ad-empty np-empty">알림이 없어요.</div>'}
+    <details class="np-mail"><summary>메일로 받을 알림</summary>${mailTypes.length
+      ? `<div class="np-mail-types">${mailTypes.map(t=>`<label><input type="checkbox" data-mail-type="${escapeHtml(t)}"${off.includes(t) ? '' : ' checked'}> ${escapeHtml(NOTIF_LABEL[t] || t)}</label>`).join('')}</div><p class="sub-txt">${escapeHtml(authState.email)}(으)로 보내요.</p>`
+      : '<p class="sub-txt">관리자가 메일 알림을 켜면 여기서 고를 수 있어요.</p>'}</details>`;
+  document.getElementById('notifAllRead').addEventListener('click', ()=>markNotifsRead(notifList.filter(x=>!x.read_at).map(x=>x.id)));
+  panel.querySelectorAll('[data-notif]').forEach(b=>b.addEventListener('click', ()=>openNotif(b.dataset.notif)));
+  panel.querySelectorAll('[data-mail-type]').forEach(cb=>cb.addEventListener('change', async ()=>{
+    const mail_off = [...panel.querySelectorAll('[data-mail-type]')].filter(x=>!x.checked).map(x=>x.dataset.mailType);
+    const { error } = await sb.from('cvt_notify_prefs').upsert({ user_id: authState.userId, mail_off });
+    if(error){ cb.checked = !cb.checked; return showGlobalError(`메일 알림 설정을 저장하지 못했어요(${error.message}).`); }
+    notifPrefs = { ...notifPrefs, mail_off };
+  }));
+}
+async function markNotifsRead(ids){
+  if(!ids.length) return;
+  const at = new Date().toISOString();
+  notifList.forEach(n=>{ if(ids.includes(n.id) && !n.read_at) n.read_at = at; });
+  renderBell();
+  if(!document.getElementById('notifPanel').hidden) renderNotifPanel();
+  const { error } = await sb.from('cvt_notifications').update({ read_at: at }).in('id', ids);
+  if(error) showGlobalError(`읽음 표시를 저장하지 못했어요(${error.message}).`);
+}
+// 알림을 누르면: 읽음 → 그 프로젝트를 열고 그 시나리오를 펼쳐 보여 준다
+function openNotif(id){
+  const n = notifList.find(x=>String(x.id) === String(id));
+  if(!n) return;
+  if(!n.read_at) markNotifsRead([n.id]);
+  toggleHdrPop(document.getElementById('notifBtn'), document.getElementById('notifPanel'), false);
+  const idx = historyList.findIndex(h=>h._id === n.project);
+  if(idx < 0) return showGlobalError('알림의 프로젝트를 찾지 못했어요. 삭제되었거나 볼 권한이 없어요.');
+  if(loadedHistoryId !== n.project || currentRoute.view !== 'proj') loadHistoryEntry(idx);
+  const row = tcData.find(r=>r._id === n.row_id);
+  if(!row) return;
+  expandedTcRows.add(row.tcId);
+  renderTable();
+  const box = document.querySelector(`#tcCardList [data-cm-row="${CSS.escape(row._id)}"]`);
+  const card = box ? box.closest('.tc-card') : null;
+  if(card) card.scrollIntoView({ block: 'center' });
+}
+
+/* ---------- 바통(공) 넘기기: 결함 하나를 지금 누가 움직여야 하는지 ----------
+   회차 칸 ball = 'dev'(개발이 고칠 차례) | 'qa'(담당 테스터가 재검수할 차례) | 'closed'(끝), ballAt = 넘긴 시각. 행 칸 devOwner = 개발 담당 계정 id, jira = 티켓 키.
+   넘길 때 사유가 필수이고, 사유는 댓글에 '전달 기록'(kind='handoff')으로 남아 받는 사람에게 알림이 간다(supabase_notify_schema.sql). */
+function devCandidates(project, st = authState){ // 개발 담당 후보: 그 프로젝트를 볼 수 있는 활성 계정
+  const ps = ((st && st.profiles) || []).filter(p=>p.active);
+  const ms = ((st && st.members) || []).filter(m=>m.project === project);
+  return ms.length ? ps.filter(p=>p.role === 'admin' || ms.some(m=>m.user_id === p.user_id)) : ps;
+}
+// 지금 공을 쥔 사람(계정 id 목록): 개발이면 개발 담당, QA면 계정으로 이어진 담당 테스터 (순수 함수)
+function ballHolders(row, p, st){
+  const b = ballOf(row);
+  if(b === 'dev') return row.devOwner ? [row.devOwner] : [];
+  if(b === 'qa') return assigneesOf(row).map(n=>testerAccountOf(n, p, st)).filter(Boolean);
+  return [];
+}
+const isMyTurn = (row, p, st)=>!!st && ballHolders(row, p, st).includes(st.userId);
+function ballBadge(row){
+  const b = ballOf(row);
+  if(!b) return '';
+  const who = b === 'dev' ? (row.devOwner ? profileName(row.devOwner) : '담당 미정') : b === 'qa' ? (assigneesOf(row).join(', ') || '담당 미정') : '';
+  const d = b === 'closed' ? 0 : ballDays(row);
+  return `<span class="ball-badge b-${b}${d >= 3 ? ' is-stale' : ''}" title="${b === 'closed' ? '처리가 끝났어요' : `공을 쥔 지 ${d}일`}">${BALL_LABEL[b]}${who ? ` · ${escapeHtml(who)}` : ''}${b !== 'closed' && d ? ` · ${d}일` : ''}</span>`;
+}
+// 펼친 상세의 '공 넘기기' 칸 (로그인을 쓸 때만: 받을 사람이 계정이어야 한다)
+function batonHtml(row, idx){
+  if(typeof authState === 'undefined' || !authState || !row._id) return '';
+  const p = editingProject(), b = ballOf(row), res = effectiveResult(row), ro = projectReadOnly();
+  const devs = devCandidates(currentProjectKey());
+  const mineDev = b === 'dev' && (row.devOwner === authState.userId || isAdminUser());
+  const canSend = !ro && res === 'Fail' && (b === '' || b === 'closed');
+  const mineQa = !ro && b === 'qa' && (ballHolders(row, p, authState).includes(authState.userId) || isAdminUser());
+  const status = b === 'dev' ? `개발 차례 · ${escapeHtml(row.devOwner ? profileName(row.devOwner) : '담당 미정')} · ${ballDays(row)}일째`
+    : b === 'qa' ? `재검수 차례 · ${escapeHtml(assigneesOf(row).join(', ') || '담당 미정')} · ${ballDays(row)}일째` : b === 'closed' ? '처리 끝' : res === 'Fail' ? '아직 개발에게 넘기지 않았어요' : 'Fail일 때 개발에게 넘길 수 있어요';
+  return `<div class="baton" data-baton="${idx}"><div class="baton-top"><span class="cm-title">공 넘기기</span><span class="baton-status b-${b || 'none'}">${status}</span></div>
+    <div class="baton-fields">
+      <label>개발 담당 <select class="ad-select baton-dev" data-idx="${idx}"${ro ? ' disabled' : ''} aria-label="${escapeHtml(row.tcId)} 개발 담당"><option value="">고르기</option>${devs.map(d=>`<option value="${escapeHtml(d.user_id)}"${d.user_id === row.devOwner ? ' selected' : ''}>${escapeHtml(d.name || d.email)}</option>`).join('')}</select></label>
+      <label>Jira <input type="text" class="ad-input baton-jira cell-edit" data-idx="${idx}" maxlength="40" value="${escapeHtml(row.jira || '')}" placeholder="예: PROJ-123"${ro ? ' disabled' : ''} aria-label="${escapeHtml(row.tcId)} Jira 티켓"></label>
+    </div>
+    ${canSend || mineDev || mineQa ? `<div class="baton-send"><textarea class="ad-input baton-reason" rows="2" maxlength="300" placeholder="${canSend ? '넘기는 사유(재현 조건·확인할 점)' : mineQa ? '재검수 Fail이면 다시 확인할 점(PASS면 비워도 돼요)' : '처리 내용(수정한 점 또는 버그가 아닌 이유)'}" aria-label="${escapeHtml(row.tcId)} 넘기는 사유"></textarea>
+      <div class="baton-btns">${canSend ? `<button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-ball-to="dev">개발에게 넘기기</button>` : ''}
+      ${mineDev ? `<button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-ball-to="qa" data-fix="수정 완료">수정 완료 → 재검수</button><button type="button" class="ad-btn ad-btn--sm" data-ball-to="qa" data-fix="버그 아님">버그 아님 → 재검수</button>` : ''}
+      ${mineQa ? `<button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-retest-pass>재검수 PASS → 닫기</button><button type="button" class="ad-btn ad-btn--sm" data-ball-to="dev">재검수 Fail → 개발에게</button>` : ''}</div></div>` : ''}
+  </div>`;
+}
+// 공 넘기기: 사유 필수. 검수 단계·개발 수정을 맞추고, 전달 기록 댓글로 받는 사람에게 알린다
+async function passBall(row, to, reason, fix, auto = false){
+  reason = String(reason || '').trim();
+  if(!reason) return showGlobalError('넘기는 사유를 적어 주세요. 받는 사람이 무엇을 하면 되는지 알 수 있어요.');
+  if(to === 'dev' && !row.devOwner) return showGlobalError('개발 담당을 먼저 골라 주세요.');
+  showGlobalError('');
+  moveBall(row, to);
+  if(to === 'qa' && fix) row[rk('devFix')] = fix;
+  scheduleAutoSave();
+  renderTable();
+  renderDistribution();
+  if(notifMissing) return;
+  const p = editingProject(), targets = ballHolders(row, p, authState).filter(u=>u !== authState.userId);
+  const body = `${auto ? '[자동] ' : ''}→ ${to === 'dev' ? '개발' : '재검수'} ${to === 'dev' ? profileName(row.devOwner) : (assigneesOf(row).join(', ') || '')}${fix ? ` (${fix})` : ''}: ${reason}`;
+  const project = currentProjectKey(), base = { project, row_id: row._id, body: body.slice(0, 2000), mentions: targets };
+  let r = await sb.from('cvt_tc_comments').insert({ ...base, kind: 'handoff' }).select();
+  if(r.error && /kind/.test(r.error.message || '')) r = await sb.from('cvt_tc_comments').insert(base).select(); // 서버 SQL이 예전이면 멘션 댓글로
+  if(r.error) return showGlobalError(`전달 기록을 남기지 못했어요(${r.error.message}). 공은 넘겼어요.`);
+  addComment(r.data && r.data[0]);
+}
+function bindBaton(list){
+  list.querySelectorAll('.baton').forEach(box=>{
+    const row = tcData[+box.dataset.baton];
+    if(!row) return;
+    const dev = box.querySelector('.baton-dev');
+    if(dev) dev.addEventListener('change', ()=>{ if(dev.value) row.devOwner = dev.value; else delete row.devOwner; scheduleAutoSave(); renderTable(); });
+    const jira = box.querySelector('.baton-jira');
+    if(jira) jira.addEventListener('change', ()=>{ const v = jira.value.trim(); if(v) row.jira = v; else delete row.jira; scheduleAutoSave(); });
+    box.querySelectorAll('[data-ball-to]').forEach(b=>b.addEventListener('click', ()=>passBall(row, b.dataset.ballTo, box.querySelector('.baton-reason').value, b.dataset.fix || '')));
+    const pass = box.querySelector('[data-retest-pass]');
+    if(pass) pass.addEventListener('click', ()=>{ // 재검수 PASS: 내 테스터 칸(관리자면 담당 모두)을 PASS로 → 공이 닫힌다(applyResultMeta)
+      const p = editingProject(), ns = assigneesOf(row), mine = ns.filter(n=>testerAccountOf(n, p, authState) === authState.userId);
+      const names = mine.length ? mine : ns;
+      names.forEach(n=>{ row[rk('tr:' + n)] = 'PASS'; });
+      if(!ns.length) row[rk('result')] = 'PASS';
+      row[rk('result')] = effectiveResult(row);
+      applyResultMeta(row, names[0] || '');
+      scheduleAutoSave();
+      renderTable();
+      renderDistribution();
+    });
+  });
+}
+let tcMyTurn = false; // [테스트 목록] '내 차례'만 보기
+// 댓글: 지금 프로젝트의 댓글을 한 번에 받아 행마다 나눠 둔다
+async function loadComments(project){
+  commentsProject = project;
+  commentsByRow.clear();
+  if(!project || notifMissing) return;
+  const { data, error } = await sb.from('cvt_tc_comments').select('*').eq('project', project).order('created_at');
+  if(error || commentsProject !== project) return;
+  (data || []).forEach(c=>{ if(!commentsByRow.has(c.row_id)) commentsByRow.set(c.row_id, []); commentsByRow.get(c.row_id).push(c); });
+  refreshCommentBoxes();
+}
+// 그 프로젝트를 볼 수 있는 활성 계정(나 제외): 멤버가 있으면 멤버 + 관리자, 없으면 직원 모두 (순수 함수)
+function mentionCandidates(project, st = authState){
+  const ps = ((st && st.profiles) || []).filter(p=>p.active && p.name && p.user_id !== st.userId);
+  const ms = ((st && st.members) || []).filter(m=>m.project === project);
+  return ms.length ? ps.filter(p=>p.role === 'admin' || ms.some(m=>m.user_id === p.user_id)) : ps;
+}
+// 본문의 '@이름'(바로 뒤에 글자·숫자가 이어지지 않음)을 계정 id로 (긴 이름부터 본다) (순수 함수)
+const reEscape = t=>String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function parseMentions(text, people){
+  const ids = [];
+  (people || []).filter(p=>p.name).slice().sort((a, b)=>b.name.length - a.name.length).forEach(p=>{
+    if(new RegExp('@' + reEscape(p.name) + '(?![가-힣A-Za-z0-9_])').test(text) && !ids.includes(p.user_id)) ids.push(p.user_id);
+  });
+  return ids;
+}
+function mentionHtml(text){
+  const names = ((authState && authState.profiles) || []).map(p=>p.name).filter(Boolean).sort((a, b)=>b.length - a.length);
+  const safe = escapeHtml(text);
+  if(!names.length) return safe;
+  const re = new RegExp('@(' + names.map(n=>reEscape(escapeHtml(n))).join('|') + ')(?![가-힣A-Za-z0-9_])', 'g');
+  const mine = escapeHtml((authState.me && authState.me.name) || '');
+  return safe.replace(re, (m, n)=>`<span class="mention${n === mine ? ' is-me' : ''}">${m}</span>`);
+}
+function commentListHtml(rowId){
+  return (commentsByRow.get(rowId) || []).map(c=>`<li class="cm-item${c.kind === 'handoff' ? ' is-handoff' : ''}"><div class="cm-meta"><b>${escapeHtml(profileName(c.author))}</b><time datetime="${escapeHtml(c.created_at)}">${escapeHtml(timeAgo(c.created_at))}</time>${c.author === authState.userId || isAdminUser() ? `<button type="button" class="cm-del" data-cm-del="${escapeHtml(c.id)}" aria-label="댓글 지우기" title="지우기">✕</button>` : ''}</div><div class="cm-body">${mentionHtml(c.body)}</div></li>`).join('');
+}
+// 펼친 상세 맨 아래 댓글 칸 (서버에 댓글 SQL이 없거나 로그인 전이면 비움)
+function commentsHtml(row){
+  if(!authState || notifMissing || !row._id) return '';
+  if(commentsProject !== currentProjectKey()) loadComments(currentProjectKey());
+  const n = (commentsByRow.get(row._id) || []).length;
+  return `<div class="tc-comments" data-cm-row="${escapeHtml(row._id)}"><span class="cm-title">댓글 <span class="cm-count">${n || ''}</span></span>
+    <ul class="cm-list">${commentListHtml(row._id)}</ul>
+    ${projectReadOnly() ? '' : `<div class="cm-form"><textarea class="ad-input cm-input" rows="2" maxlength="2000" placeholder="댓글을 입력하세요. @이름으로 멘션하면 알림이 가요 (Ctrl+Enter 등록)" aria-label="${escapeHtml(row.tcId)} 댓글"></textarea><button type="button" class="ad-btn ad-btn--sm cm-send">등록</button></div>`}</div>`;
+}
+// 댓글 목록만 다시 그린다(입력 중인 글은 그대로)
+function refreshCommentBoxes(rowId){
+  document.querySelectorAll(rowId ? `#tcCardList [data-cm-row="${CSS.escape(rowId)}"]` : '#tcCardList [data-cm-row]').forEach(box=>{
+    box.querySelector('.cm-list').innerHTML = commentListHtml(box.dataset.cmRow);
+    box.querySelector('.cm-count').textContent = (commentsByRow.get(box.dataset.cmRow) || []).length || '';
+  });
+}
+function addComment(c){
+  if(!c || c.project !== commentsProject) return;
+  const list = commentsByRow.get(c.row_id) || [];
+  if(list.some(x=>x.id === c.id)) return;
+  list.push(c);
+  commentsByRow.set(c.row_id, list);
+  refreshCommentBoxes(c.row_id);
+}
+async function submitComment(box){
+  const ta = box.querySelector('.cm-input'), body = ta.value.trim(), btn = box.querySelector('.cm-send');
+  if(!body || btn.disabled) return;
+  const project = currentProjectKey();
+  btn.disabled = true;
+  const { data, error } = await sb.from('cvt_tc_comments').insert({ project, row_id: box.dataset.cmRow, body, mentions: parseMentions(body, mentionCandidates(project)) }).select();
+  btn.disabled = false;
+  if(error) return showGlobalError(`댓글을 등록하지 못했어요(${error.message}).`);
+  showGlobalError('');
+  ta.value = '';
+  addComment(data && data[0]);
+}
+function onCommentChange(p){
+  if(p.eventType === 'DELETE'){
+    for(const [rid, list] of commentsByRow){
+      const i = list.findIndex(x=>x.id === p.old.id);
+      if(i > -1){ list.splice(i, 1); refreshCommentBoxes(rid); }
+    }
+    return;
+  }
+  addComment(p.new);
+}
+function onNotifChange(p){
+  const r = p.eventType === 'DELETE' ? p.old : p.new;
+  if(!r || !authState || (r.user_id && r.user_id !== authState.userId)) return; // RLS가 거르지만 화면도 한 번 더
+  const i = notifList.findIndex(x=>x.id === r.id);
+  if(p.eventType === 'INSERT' && i < 0) notifList = [r].concat(notifList).slice(0, 50);
+  else if(p.eventType === 'UPDATE' && i > -1) notifList[i] = { ...notifList[i], ...r };
+  else if(p.eventType === 'DELETE' && i > -1) notifList.splice(i, 1);
+  renderBell();
+  if(!document.getElementById('notifPanel').hidden) renderNotifPanel();
+}
+// @ 자동완성: '@'를 치면 그 프로젝트를 볼 수 있는 사람 목록. ↑↓ 고르기, Enter·Tab 넣기, Esc 닫기
+let mentionBox = null;
+function closeMentionBox(){ if(mentionBox){ mentionBox.remove(); mentionBox = null; } }
+function paintMentionBox(){
+  const mb = mentionBox;
+  mb.innerHTML = mb._items.map((p, i)=>`<div class="mention-opt${i === mb._act ? ' is-act' : ''}" role="option" aria-selected="${i === mb._act}" data-i="${i}">${escapeHtml(p.name)}<small>${escapeHtml(p.email)}</small></div>`).join('');
+}
+function pickMention(i){
+  const mb = mentionBox, ta = mb._ta, p = mb._items[i];
+  const ins = '@' + p.name + ' ', end = ta.selectionStart;
+  ta.value = ta.value.slice(0, mb._start) + ins + ta.value.slice(end);
+  ta.setSelectionRange(mb._start + ins.length, mb._start + ins.length);
+  closeMentionBox();
+  ta.focus();
+}
+function onMentionInput(ta){
+  const m = ta.value.slice(0, ta.selectionStart).match(/(^|[\s(\[,.])@([^\s@]{0,20})$/);
+  const q = m ? m[2].toLowerCase() : '';
+  const items = m ? mentionCandidates(currentProjectKey()).filter(p=>!q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().startsWith(q)).slice(0, 8) : [];
+  if(!items.length) return closeMentionBox();
+  if(!mentionBox){
+    mentionBox = document.createElement('div');
+    mentionBox.className = 'mention-box';
+    mentionBox.setAttribute('role', 'listbox');
+    mentionBox.addEventListener('mousedown', e=>{ const o = e.target.closest('[data-i]'); if(o){ e.preventDefault(); pickMention(+o.dataset.i); } });
+    document.body.append(mentionBox);
+  }
+  Object.assign(mentionBox, { _ta: ta, _items: items, _start: ta.selectionStart - m[2].length - 1, _act: 0 });
+  const r = ta.getBoundingClientRect();
+  mentionBox.style.left = Math.max(8, Math.min(r.left, innerWidth - 248)) + 'px';
+  if(innerHeight - r.bottom < 220){ mentionBox.style.top = ''; mentionBox.style.bottom = (innerHeight - r.top + 4) + 'px'; }
+  else{ mentionBox.style.bottom = ''; mentionBox.style.top = (r.bottom + 4) + 'px'; }
+  paintMentionBox();
+}
+const tcListEl = document.getElementById('tcCardList');
+tcListEl.addEventListener('input', e=>{ if(e.target.classList.contains('cm-input')) onMentionInput(e.target); });
+tcListEl.addEventListener('keydown', e=>{
+  if(!e.target.classList.contains('cm-input')) return;
+  const mb = mentionBox && mentionBox._ta === e.target ? mentionBox : null;
+  if(mb && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){ e.preventDefault(); mb._act = (mb._act + (e.key === 'ArrowDown' ? 1 : mb._items.length - 1)) % mb._items.length; paintMentionBox(); return; }
+  if(mb && (e.key === 'Enter' || e.key === 'Tab') && !e.ctrlKey && !e.metaKey){ e.preventDefault(); pickMention(mb._act); return; }
+  if(mb && e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeMentionBox(); return; }
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); submitComment(e.target.closest('.tc-comments')); }
+});
+tcListEl.addEventListener('focusout', e=>{ if(e.target.classList.contains('cm-input')) setTimeout(()=>{ if(mentionBox && document.activeElement !== mentionBox._ta) closeMentionBox(); }, 0); });
+tcListEl.addEventListener('click', async e=>{
+  const send = e.target.closest('.cm-send');
+  if(send) return submitComment(send.closest('.tc-comments'));
+  const del = e.target.closest('[data-cm-del]');
+  if(!del) return;
+  const ok = await openDialog({ title: '댓글 지우기', body: '이 댓글을 지울까요? 되돌릴 수 없어요.', okLabel: '지우기' });
+  if(ok === null) return;
+  const id = del.dataset.cmDel;
+  const { error } = await sb.from('cvt_tc_comments').delete().eq('id', id);
+  if(error) return showGlobalError(`댓글을 지우지 못했어요(${error.message}).`);
+  onCommentChange({ eventType: 'DELETE', old: { id } });
+});
+
 /* ---------- Init ---------- */
 (async function init(){
   initClaudeSample();
@@ -6081,10 +7197,11 @@ document.body.dataset.view = 'cat';
   appInitialized = true;
   if(SYNC_ENABLED){
     loadSyncQueue();
-    // 로그인을 쓰지 않으니 세션 저장·URL 토큰 감지를 끈다(이벤트 운영 관리대장과 같은 설정)
+    // 로그인(회사 메일): 세션은 이 브라우저에 두고 자동으로 늘린다. 메일 코드 방식이라 URL 토큰 감지는 쓰지 않는다
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
     });
+    await initAuth(); // 로그인할 때까지 기다린다(그 전에는 로그인 화면만)
     subscribeRealtime(); // 먼저 구독해 두고, 전체를 받는 동안 온 이벤트는 모아 두었다가 적용한다
     resyncFromServer();
   }
