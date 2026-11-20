@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>테스트 시나리오 생성</title>
+<script>try{if(localStorage.getItem('cvt_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -1397,6 +1398,126 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   /* 담당자별 통계: 기본 접힘 */
   .ad-main-body .panel #tcStatsCard.is-collapsed{display:none;}
   .stats-toggle[aria-expanded="true"]{border-color:var(--primary);color:var(--primary-dark);}
+
+  /* ════════ UI 개선(2026-11): 기본 테두리 · 목록 밀도 · 현황판 · 우측 슬라이드 상세 · 헤더 · 알림 · 어두운 모드 ════════ */
+
+  /* 1) 기본 상태 테두리: 행 안 셀렉트·입력칸이 화살표만 보여 휑하던 것을 연한 회색 1px로 */
+  #tcCardList .tc-card-head select, #tcCardList .tc-note-cell, #tcCardList .tc-note-multi, #tcCardList .tester-pick,
+  #tcCardList .c-env .ad-input, #tcCardList .c-date .ad-input, .plan-table .plan-input.ad-input{border:1px solid var(--line) !important;}
+  #tcCardList .tc-card-head select:hover:not(:disabled), #tcCardList .tc-card-head select:focus-visible,
+  #tcCardList .tc-note-cell:focus, #tcCardList .tester-pick:hover{border-color:var(--primary) !important;}
+  #tcCardList .tc-card{border-bottom-color:var(--line);}
+  .cm-item, .plan-table th, .plan-table td{border-color:var(--line);}
+
+  /* 2) 테스트 목록 밀도: 행 56px → 40px 안팎, 행 안 칸 28px, 제목 14px · 보조 13px */
+  .tc-table-head{min-height:36px;}
+  #tcCardList .tc-card-head{min-height:40px;padding-top:4px;padding-bottom:4px;font-size:14px;line-height:1.4;}
+  #tcCardList .c-id{flex-wrap:nowrap;}
+  #tcCardList .tc-card-head select, #tcCardList .tc-card-head .tc-inline-input, #tcCardList .tc-card-head .tc-id-input,
+  #tcCardList .c-env .ad-input, #tcCardList .c-date .ad-input, #tcCardList .tester-pick{height:28px !important;min-height:28px;font-size:13px;}
+  #tcCardList .tc-card-head .tc-note-cell, #tcCardList .tc-card-head .tc-note-multi{min-height:28px;max-height:28px;padding:3px 8px;font-size:13px;}
+  #tcCardList .tc-ro-text, #tcCardList .tc-item, #tcCardList .tc-note-text{font-size:13.5px;}
+  #tcCardList .tc-card-head .result-badge, #tcCardList .tc-card-head .status-badge{line-height:20px;}
+
+  /* 3) 현황판: 위계(단계 → 관문 → 통계), 간격 12px, 관문 카드는 통과·미달 표시, 건수 관문에는 막대를 쓰지 않는다 */
+  .tc-board-card{padding:16px;}
+  .gate-board{gap:12px;}
+  .gb-gauges{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+  .gb-gauge{gap:4px;padding:12px 14px;border-radius:12px;}
+  .gb-gauge.is-bad{border-color:var(--fatal-border);}
+  .gb-g-top{align-items:center;font-size:13px;color:var(--muted);}
+  .gb-g-val{font-size:22px;font-weight:800;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .gb-gauge.is-bad .gb-g-val{color:var(--fatal-text);}
+  .gb-g-st{flex:none;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--grey-100);color:var(--muted);}
+  .gb-gauge.is-ok .gb-g-st{background:var(--pass-soft);color:var(--pass-text);}
+  .gb-gauge.is-bad .gb-g-st{background:var(--fatal-soft);color:var(--fatal-text);}
+  .gb-g-bar{margin-top:2px;}
+  .gb-g-bar i{background:var(--primary);}
+  .gb-gauge.is-ok .gb-g-bar i{background:var(--pass);}
+  .gb-gauge.is-bad .gb-g-bar i{background:var(--primary);} /* 진행률은 '나쁨'이 아니라 '아직'이라 빨강 대신 파랑 */
+  .gb-g-tgt{font-size:12px;}
+  .gb-cols{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr);gap:12px;}
+  .gb-col{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);}
+  .gb-title{font-size:14px;}
+  .gb-block{min-height:24px;}
+  .gb-block.is-zero{color:var(--grey-400);}
+  .gb-block.is-zero b{font-weight:500;}
+  .gb-daily{height:80px;}
+  .gb-col .sub-txt{margin:0;font-size:13px;color:var(--muted);}
+  #tcStatsCard{margin-top:12px;}
+  @media (max-width:900px){ .gb-cols{grid-template-columns:1fr;} }
+
+  /* 4) 상세: 업무 관리처럼 오른쪽에서 밀려 나오는 패널 */
+  dialog.tc-pop{position:fixed;inset:0 0 0 auto;margin:0;width:max(60vw, 720px);max-width:100vw;height:100dvh;max-height:100dvh;
+    border:0;border-left:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:var(--shadow-3);animation:tcPopIn .2s ease-out;}
+  dialog.tc-pop.no-anim{animation:none;}
+  dialog.tc-pop::backdrop{background:rgba(15,23,42,.16);}
+  @keyframes tcPopIn{from{transform:translateX(100%);}to{transform:none;}}
+  @media (prefers-reduced-motion: reduce){ dialog.tc-pop{animation:none;} }
+  @media (max-width:760px){ dialog.tc-pop{width:100vw;border-left:0;} }
+  .tc-pop-head{gap:8px;padding:12px 16px;}
+  .tc-pop-actions{display:flex;align-items:center;gap:6px;flex:none;}
+  .tc-pop-actions .ad-btn{height:32px;font-size:13px;}
+  .tc-pop-editing-note{flex:none;font-size:12px;font-weight:700;color:var(--primary-dark);}
+  /* 보기 모드의 시나리오 칸: 입력칸 테두리 없이 읽기 좋은 글 */
+  dialog.tc-pop .tc-scn[contenteditable="false"]{border-color:transparent;background:var(--bg);cursor:default;}
+  dialog.tc-pop .tc-scn[contenteditable="true"]{border-color:var(--primary);background:var(--panel);}
+
+  /* 5) 헤더 오른쪽 끝: 화면 모드 · 알림 · 프로필(업무 관리와 같은 38px 둥근 버튼 · 알약 프로필) */
+  .hdr-end{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none;}
+  .hdr-ico{width:38px;height:38px;padding:0;display:inline-grid;place-items:center;flex:none;border-radius:50% !important;border:1px solid var(--line) !important;background:var(--panel);color:var(--ink-soft);}
+  .hdr-ico:hover{background:var(--grey-100);color:var(--ink);}
+  .hdr-ico svg{width:19px;height:19px;flex:none;}
+  .hdr-user{margin-left:0;gap:8px;}
+  .notif-count{top:-2px;right:-4px;min-width:18px;height:18px;padding:0 5px;background:var(--fatal);color:#fff;font-size:11px;font-weight:700;line-height:18px;border-radius:999px;font-variant-numeric:tabular-nums;}
+  .hdr-profile-btn{gap:6px;height:38px;max-width:240px;padding:0 12px 0 4px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:14px;font-weight:600;}
+  .hdr-profile-btn:hover, .hdr-profile-btn[aria-expanded="true"]{border-color:var(--primary);background:var(--grey-100);}
+  .hdr-profile-btn .gnb-avatar{width:28px;height:28px;font-size:13px;}
+  .hdr-profile-btn .hdr-chev{width:14px;height:14px;flex:none;color:var(--muted);transition:transform .15s;}
+  .hdr-profile-btn[aria-expanded="true"] .hdr-chev{transform:rotate(180deg);}
+  .hdr-name{font-size:14px;font-weight:600;}
+  @media (max-width:900px){ .hdr-profile-btn{padding:0 8px 0 4px;} }
+  @media (max-width:600px){ .hdr-profile-btn .hdr-chev{display:none;} .hdr-profile-btn{padding:0 4px;} }
+
+  /* 6) 알림 패널: 업무 관리 알림과 같은 구조(전체·안 읽음 탭, 모두 읽음, 안 읽음은 파란 점 + 옅은 파랑 바탕 + 굵은 제목) */
+  .notif-panel{width:min(380px, calc(100vw - 32px));max-height:min(520px, 70vh);border-radius:16px;overflow:hidden;}
+  .np-head{position:sticky;top:0;z-index:1;justify-content:flex-start;gap:2px;padding:10px 10px 10px 16px;background:var(--panel);}
+  .np-head h3{margin:0 auto 0 0;font-size:15px;font-weight:700;}
+  .np-tab, .np-link{border:0;background:none;font:inherit;font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer;color:var(--muted);}
+  .np-tab[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary-dark);}
+  .np-link{color:var(--primary-dark);} .np-link:disabled{color:var(--muted);opacity:.6;cursor:default;}
+  .np-tab:hover, .np-link:not(:disabled):hover{background:var(--grey-100);} .np-tab[aria-pressed="true"]:hover{background:var(--primary-soft);}
+  .np-list{padding:0;}
+  .np-list li{border-bottom:1px solid var(--line);} .np-list li:last-child{border-bottom:0;}
+  .np-item{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:12px 16px;border-radius:0;color:var(--ink);}
+  .np-item.is-unread{background:color-mix(in srgb, var(--primary-soft) 45%, transparent);}
+  .np-item:hover, .np-item:focus-visible{background:var(--grey-100);}
+  .np-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:500;}
+  .np-item.is-unread .np-t{font-weight:700;}
+  .np-item.is-unread .np-t::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--primary);margin-right:6px;vertical-align:2px;}
+  .np-type{display:inline;padding:0;background:none !important;color:inherit !important;font-size:inherit;font-weight:inherit;}
+  .np-time{align-self:center;font-size:12px;}
+  .np-p{grid-column:1 / -1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--muted);}
+  .np-item:not(.is-unread) .np-t{color:var(--ink-soft);}
+  .np-empty{padding:32px 10px;text-align:center;color:var(--muted);font-size:14px;}
+
+  /* 7) 어두운 모드: 헤더의 해/달 버튼으로 바꾸고 이 브라우저에 기억한다(cvt_theme). 업무 관리 어두운 모드 값 기준 */
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0f1419; --panel:#171d24; --line:#2e3946; --grey-100:#1f2731; --grey-400:#5d6875;
+    --ink:#e6eaef; --ink-soft:#b6bfc9; --muted:#9ba5b1;
+    --primary:#3182f6; --primary-dark:#64a8ff; --primary-soft:#16243a; --on-primary:#ffffff;
+    --pass:#4cc47a; --pass-text:#86e3a6; --pass-soft:#163626; --pass-border:#2f6b45;
+    --minor:#ff9a2e; --minor-text:#ffb877; --minor-soft:#3b2915; --minor-border:#7a4f20;
+    --fatal:#ff5f6b; --fatal-text:#ff9499; --fatal-soft:#3d1d22; --fatal-border:#7a3038;
+    --na:#8d97a3; --na-soft:#1f2731; --overlay:rgba(0,0,0,.6);
+    --shadow-2:0 4px 12px rgba(0,0,0,.35); --shadow-3:0 12px 32px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3); --shadow-toast:0 8px 24px rgba(0,0,0,.5);
+  }
+  :root[data-theme="dark"] body{background:var(--bg);color:var(--ink);}
+  :root[data-theme="dark"] dialog.tc-pop::backdrop{background:rgba(0,0,0,.45);}
+  :root[data-theme="dark"] :is(select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select, select.tester-status-select, #tcCardList select, dialog.tc-pop select, .baton select, .tc-pop-meta select){
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23b6bfc9' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  }
 </style>
 </head>
 <body class="ad-root">
@@ -1456,15 +1577,18 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
       <button type="button" class="ad-btn ad-btn--primary tool-proj" id="qcGenOpenBtn" aria-haspopup="dialog" aria-controls="qcGenModal">+ 테스트 시나리오 생성</button>
     </div>
     <!-- 로그인했을 때만: 알림함(🔔) + 프로필 메뉴(이름 바꾸기·관리자 메뉴·로그아웃) -->
+    <div class="hdr-end">
+    <button type="button" class="ad-btn ad-btn--ghost hdr-ico" id="themeBtn" aria-label="어두운 모드로 바꾸기"></button>
     <div class="hdr-user" id="hdrUser" hidden>
       <div class="hdr-pop-wrap">
-        <button type="button" class="ad-btn ad-btn--ghost ad-btn--icon hdr-bell" id="notifBtn" aria-haspopup="true" aria-expanded="false" aria-controls="notifPanel" aria-label="알림함"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="notif-count" id="notifCount" hidden></span></button>
+        <button type="button" class="ad-btn ad-btn--ghost hdr-ico hdr-bell" id="notifBtn" aria-haspopup="true" aria-expanded="false" aria-controls="notifPanel" aria-label="알림함"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="notif-count" id="notifCount" hidden></span></button>
         <div class="hdr-pop notif-panel" id="notifPanel" role="dialog" aria-label="알림함" hidden></div>
       </div>
       <div class="hdr-pop-wrap">
-        <button type="button" class="hdr-profile-btn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span class="gnb-avatar" id="profileAvatar" aria-hidden="true"></span><span class="hdr-name" id="profileBtnName"></span></button>
+        <button type="button" class="hdr-profile-btn" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-controls="profileMenu"><span class="gnb-avatar" id="profileAvatar" aria-hidden="true"></span><span class="hdr-name" id="profileBtnName"></span><svg class="hdr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="hdr-pop profile-menu" id="profileMenu" hidden></div>
       </div>
+    </div>
     </div>
     <p class="sub-txt header-sync-msg" id="syncStatus" hidden></p>
   </header>
@@ -1636,8 +1760,8 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
           <button class="ad-btn ad-btn--primary" id="addTesterBtn" type="button">+ 추가</button>
         </div>
         <span class="hint">추가한 테스터는 담당자 탭과 담당자 고르기에 역할과 함께 보여요. 칩의 역할은 언제든 바꿀 수 있고, ✕를 누르면 삭제돼요.</span>
-        <div class="tester-chips" id="testerChips"></div>
         <div class="tester-member-chips" id="testerMemberChips" hidden></div>
+        <div class="tester-chips" id="testerChips"></div>
       </div>
     </div>
     <footer><div class="r"><button type="button" class="ad-btn" id="testerModalDone">완료</button></div></footer>
@@ -2593,6 +2717,17 @@ function testerAccountOf(name, p, st){
   const same = (st.profiles || []).filter(x=>x.active && x.name === name);
   return same.length === 1 ? same[0].user_id : '';
 }
+// 회원 체계(로그인)에서는 등록된 회원(계정으로 이어진 사람)만 테스터가 된다. 로그인 없이 쓰는 로컬·아티팩트 화면은 예전처럼 이름으로 추가
+const memberTesterMode = ()=>typeof authState !== 'undefined' && !!authState;
+const isMemberTester = (name, p = editingProject())=>!memberTesterMode() || !!testerAccountOf(name, p, authState);
+// 가져온 행의 담당자·테스터 목록에서 회원이 아닌 이름을 뺀다(회원 체계일 때만). { names: 남긴 테스터, dropped: 뺀 이름 }
+function dropNonMemberTesters(rows, names, p){
+  if(!memberTesterMode()) return { names, dropped: [] };
+  const dropped = new Set(), ok = n=>{ if(testerAccountOf(n, p, authState)) return true; dropped.add(n); return false; };
+  rows.forEach(r=>{ const ts = testersOf(r); if(!ts.every(ok)) r.tester = joinTesters(ts.filter(n=>testerAccountOf(n, p, authState))); });
+  return { names: names.filter(ok), dropped: [...dropped] };
+}
+const nonMemberNote = dropped=>dropped.length ? ` 회원이 아닌 테스터 ${dropped.length}명(${dropped.slice(0, 3).join(', ')}${dropped.length > 3 ? ' 외' : ''})은 뺐어요. 관리자 > 계정 관리에서 회원으로 등록한 뒤 다시 지정해 주세요.` : '';
 // 계정을 테스터로 넣을 이름: 계정 이름, 같은 이름의 다른 테스터가 이미 있으면 메일 앞부분을 붙인다 (순수 함수)
 function testerNameForAccount(prof, names, p, st){
   const base = prof.name || String(prof.email || '').split('@')[0];
@@ -2603,6 +2738,9 @@ async function addAccountTester(prof){
   const p = editingProject(), name = testerNameForAccount(prof, activeTesters(), p, authState);
   if(p){ p.testerAccounts = { ...(p.testerAccounts || {}), [name]: prof.user_id }; }
   await changeTesters(list=>list.includes(name) ? list : list.concat(name)); // 프로젝트면 saveHistory로 연결표도 함께 저장된다
+  const role = document.getElementById('testerRoleInput').value; // 역할을 먼저 고르고 회원을 누르면 함께 지정
+  if(role) setTesterRole(name, role);
+  return name;
 }
 // 로그인을 쓰면 프로젝트 멤버(멤버가 없으면 직원 모두)를 테스터 후보로 보여 준다. 누르면 계정으로 이어진 테스터가 된다
 function renderTesterMembers(){
@@ -2610,21 +2748,30 @@ function renderTesterMembers(){
   if(!box) return;
   const st = typeof authState === 'undefined' ? null : authState;
   if(!st){ box.hidden = true; return; }
+  const noneMsg = '<span class="legend">추가할 회원이 없어요. 관리자 &gt; 계정 관리에서 회원을 등록하거나 프로젝트 멤버로 지정해 주세요.</span>';
   const key = currentProjectKey(), ms = st.members.filter(m=>m.project === key);
   const pool = (ms.length ? ms.map(m=>st.profiles.find(p=>p.user_id === m.user_id)) : st.profiles).filter(p=>p && p.active && p.name);
   const proj = editingProject(), linked = new Set(activeTesters().map(n=>testerAccountOf(n, proj, st)).filter(Boolean)), cand = pool.filter(p=>!linked.has(p.user_id));
-  box.hidden = !cand.length;
-  box.innerHTML = cand.length ? `<span class="legend">${ms.length ? '프로젝트 멤버' : '직원'}에서 추가</span>${cand.map(p=>`<button type="button" class="ad-btn ad-btn--sm" data-add-member="${escapeHtml(p.user_id)}" title="${escapeHtml(p.email)}">+ ${escapeHtml(p.name)}</button>`).join('')}` : '';
+  box.hidden = false;
+  box.innerHTML = cand.length ? `<span class="legend">${ms.length ? '프로젝트 멤버' : '등록된 회원'}에서 추가</span>${cand.map(p=>`<button type="button" class="ad-btn ad-btn--sm" data-add-member="${escapeHtml(p.user_id)}" title="${escapeHtml(p.email)}">+ ${escapeHtml(p.name)}</button>`).join('')}` : noneMsg;
   box.querySelectorAll('[data-add-member]').forEach(b=>b.addEventListener('click', ()=>{ const prof = st.profiles.find(x=>x.user_id === b.dataset.addMember); if(prof) addAccountTester(prof); }));
 }
 function renderTesterChips(){
   renderTesterMembers();
+  const mm = memberTesterMode(); // 회원 체계: 이름 입력 대신 회원을 눌러 추가
+  document.getElementById('testerNameInput').hidden = mm;
+  document.getElementById('addTesterBtn').hidden = mm;
+  const lab = document.querySelector('label[for="testerNameInput"]');
+  if(lab && lab.firstChild) lab.firstChild.textContent = mm ? '회원에서 테스터 추가 ' : '테스터 이름 ';
+  const hint = document.querySelector('.tester-manage .hint');
+  if(hint) hint.textContent = mm ? '등록된 회원만 테스터가 될 수 있어요. 아래 회원을 누르면 추가돼요(역할을 먼저 고르면 함께 지정). 칩의 역할은 언제든 바꿀 수 있고, ✕를 누르면 삭제돼요.'
+    : '추가한 테스터는 담당자 탭과 담당자 고르기에 역할과 함께 보여요. 칩의 역할은 언제든 바꿀 수 있고, ✕를 누르면 삭제돼요.';
   const wrap = document.getElementById('testerChips');
   const p = editingProject();
   const scope = document.getElementById('testerScope');
   if(scope) scope.textContent = p ? `프로젝트: ${p.title || p.fileName}` : '기본 테스터';
   wrap.innerHTML = activeTesters().map((t,i)=>
-    `<span class="tester-chip"><button type="button" class="tester-name-btn" data-tren="${i}" title="눌러서 이름 바꾸기" aria-label="${escapeHtml(t)} 이름 바꾸기">${escapeHtml(t)}</button>${typeof authState !== 'undefined' && authState ? (testerAccountOf(t, p, authState) ? '<span class="acct-tag" title="계정으로 이어진 테스터(알림을 받아요)">계정</span>' : '<span class="acct-tag is-guest" title="계정이 없는 테스터(알림을 받지 않아요)">게스트</span>') : ''}<select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
+    `<span class="tester-chip"><button type="button" class="tester-name-btn" data-tren="${i}" title="눌러서 이름 바꾸기" aria-label="${escapeHtml(t)} 이름 바꾸기">${escapeHtml(t)}</button>${typeof authState !== 'undefined' && authState ? (testerAccountOf(t, p, authState) ? '<span class="acct-tag" title="계정으로 이어진 테스터(알림을 받아요)">계정</span>' : '<span class="acct-tag is-guest" title="회원이 아니에요. 새 담당으로 지정할 수 없어요. ✕로 삭제하고 회원으로 다시 추가해 주세요.">회원 아님</span>') : ''}<select class="tester-role-select" data-role-name="${escapeHtml(t)}" aria-label="${escapeHtml(t)} 역할">
       <option value="">역할</option>${TESTER_ROLES.map(r=>`<option value="${r}" ${r===testerRoleOf(t)?'selected':''}>${r}</option>`).join('')}
     </select><button type="button" data-tdel="${i}" aria-label="${escapeHtml(t)} 테스터 삭제">✕</button></span>`
   ).join('');
@@ -2694,6 +2841,7 @@ async function removeTester(name){
   });
 }
 async function addTesterFromInput(){
+  if(memberTesterMode()) return; // 회원 체계에서는 회원만(위의 회원 버튼으로 추가)
   const input = document.getElementById('testerNameInput');
   const name = input.value.trim();
   if(!name) return;
@@ -2707,7 +2855,8 @@ const testerModal = document.getElementById('testerModal');
 document.getElementById('testerAddOpenBtn').addEventListener('click', ()=>{
   renderTesterChips();
   testerModal.showModal();
-  document.getElementById('testerNameInput').focus();
+  const first = memberTesterMode() ? document.querySelector('#testerMemberChips [data-add-member]') : document.getElementById('testerNameInput');
+  if(first) first.focus();
 });
 ['testerModalClose', 'testerModalDone'].forEach(id=>document.getElementById(id).addEventListener('click', ()=>testerModal.close()));
 document.getElementById('addTesterBtn').addEventListener('click', addTesterFromInput);
@@ -3401,6 +3550,7 @@ function renderTable(){
   tcData.forEach(r=>Object.keys(r).forEach(k=>{ if((k === 'status' || k.startsWith('ts:')) && r[k] === '개발 검토중') r[k] = '개발 검토'; })); // 예전 작성 상태 이름
   const list = document.getElementById('tcCardList');
   list.innerHTML = '';
+  const scnRo = (()=>{ try{ return projectReadOnly(); }catch(e){ return false; } })(); // 보기 권한이면 수정 버튼을 두지 않는다
 
 
   // 담당자 목록: 등록된 테스터(편집 중인 프로젝트, 없으면 기본 테스터) + 지금 QC에 배정된 담당자
@@ -3412,7 +3562,7 @@ function renderTable(){
 
   // 일괄 담당 추가/빼기 드롭다운
   const optionList = list=>list.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-  document.getElementById('bulkTesterAdd').innerHTML = '<option value="">담당 추가…</option>' + optionList(testerOptionsForFilter);
+  document.getElementById('bulkTesterAdd').innerHTML = '<option value="">담당 추가…</option>' + optionList(testerOptionsForFilter.filter(n=>isMemberTester(n)));
   document.getElementById('bulkTesterRemove').innerHTML = '<option value="">담당 빼기…</option>' + optionList(usedTesters);
 
   // 유사/중복 TC 감지: 화면명+대분류가 같은 케이스가 2개 이상이면 배지 표시
@@ -3532,7 +3682,9 @@ function renderTable(){
       </div>
 
       ${isCollapsed ? '<div class="tc-card-body" style="display:none;">' : `<dialog class="tc-pop" data-pop="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세">
-        <div class="tc-pop-head"><span class="tc-pop-id">${escapeHtml(row.tcId)}</span><span class="tc-pop-title" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > ') || '(분류 없음)')}</span><button type="button" class="ad-btn ad-btn--ghost ad-btn--icon tc-pop-close" data-pop-close aria-label="상세 닫기">✕</button></div>
+        <div class="tc-pop-head"><span class="tc-pop-id">${escapeHtml(row.tcId)}</span><span class="tc-pop-title" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > ') || '(분류 없음)')}</span><span class="tc-pop-actions">${scnRo ? '' : popEditTc === row.tcId
+          ? '<span class="tc-pop-editing-note">수정 중</span><button type="button" class="ad-btn ad-btn--sm" data-pop-cancel>취소</button><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-pop-save>저장</button>'
+          : '<button type="button" class="ad-btn ad-btn--sm" data-pop-edit>수정</button>'}<button type="button" class="ad-btn ad-btn--ghost ad-btn--icon tc-pop-close" data-pop-close aria-label="상세 닫기">✕</button></span></div>
         ${popResultHtml(row, idx, assigned)}
         <div class="tc-card-body">`}
       <div class="tc-detail">
@@ -3550,35 +3702,35 @@ function renderTable(){
           </div>
           <div class="tc-field-block">
             <label class="tc-field-label">테스트 시나리오</label>
-            <div class="cell-edit tc-editable tc-oneline" contenteditable="true" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen || '')}</div>
+            <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen || '')}</div>
           </div>
           <div class="tc-field-row">
             <div class="tc-field-block">
               <label class="tc-field-label">대분류</label>
-              <div class="cell-edit tc-editable tc-oneline" contenteditable="true" data-idx="${idx}" data-key="category">${escapeHtml(row.category || '')}</div>
+              <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="category">${escapeHtml(row.category || '')}</div>
             </div>
             <div class="tc-field-block">
               <label class="tc-field-label">중분류</label>
-              <div class="cell-edit tc-editable tc-oneline" contenteditable="true" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory || '')}</div>
+              <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory || '')}</div>
             </div>
           </div>
           <div class="tc-field-block">
             <label class="tc-field-label">전제조건<small>BO 설정 포함</small></label>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="precondition">${escapeHtml(formatCircled(row.precondition))}</div>
+            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="precondition">${escapeHtml(formatCircled(row.precondition))}</div>
           </div>
           <div class="tc-field-block">
             <label class="tc-field-label">테스트 절차</label>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="procedure">${escapeHtml(formatSteps(row.procedure))}</div>
+            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="procedure">${escapeHtml(formatSteps(row.procedure))}</div>
           </div>
           <div class="tc-field-block">
             <label class="tc-field-label">시험 내역</label>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="testDetail">${escapeHtml(formatSentences(row.testDetail))}</div>
+            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="testDetail">${escapeHtml(formatSentences(row.testDetail))}</div>
           </div>
         </div>
         <div class="tc-detail-col">
           <div class="tc-field-block">
             <label class="tc-field-label">기대결과</label>
-            <div class="cell-edit tc-editable" contenteditable="true" data-idx="${idx}" data-key="expected">${escapeHtml(formatCircled(row.expected))}</div>
+            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="expected">${escapeHtml(formatCircled(row.expected))}</div>
           </div>
         </div>
       </div>
@@ -3712,16 +3864,35 @@ function renderTable(){
   });
   // 상세 팝업: 펼친 행(마지막 하나)을 모달로 연다. 받은 변경으로 다시 그려져도 스크롤 위치를 지킨다
   const pops = [...list.querySelectorAll('dialog.tc-pop')], pop = pops[pops.length - 1];
+  if(!pop) popShownTc = null;
   if(pop){
+    if(popShownTc === pop.dataset.pop) pop.classList.add('no-anim'); // 받은 변경·저장으로 다시 그릴 때는 밀려 나오는 동작을 반복하지 않는다
+    popShownTc = pop.dataset.pop;
     if(!pop.open){ try{ pop.showModal(); }catch(e){ pop.setAttribute('open', ''); } }
     pop.scrollTop = popScrollTop;
     pop.addEventListener('scroll', ()=>{ popScrollTop = pop.scrollTop; });
-    pop.addEventListener('close', ()=>{ if(!pop.isConnected) return; expandedTcRows.delete(pop.dataset.pop); popScrollTop = 0; renderTable(); });
-    pop.querySelector('[data-pop-close]').addEventListener('click', ()=>pop.close());
+    // 닫기(✕·Esc·바깥): close 이벤트에 기대지 않고 직접 닫는다(close 이벤트가 늦거나 오지 않는 환경이 있다). 수정 중이면 취소와 같다
+    const closePop = ()=>{
+      if(!pop.isConnected) return;
+      if(popEditTc === pop.dataset.pop) cancelScnEdit();
+      expandedTcRows.delete(pop.dataset.pop); popScrollTop = 0; popShownTc = null;
+      try{ pop.close(); }catch(e){ /* 이미 닫힘 */ }
+      renderTable();
+    };
+    pop.addEventListener('cancel', e=>{ e.preventDefault(); closePop(); }); // Esc
+    pop.addEventListener('close', closePop); // 그 밖의 방법으로 닫힌 경우
+    pop.querySelector('[data-pop-close]').addEventListener('click', closePop);
+    const editBtn = pop.querySelector('[data-pop-edit]');
+    if(editBtn) editBtn.addEventListener('click', ()=>startScnEdit(pop.dataset.pop));
+    const saveBtn = pop.querySelector('[data-pop-save]');
+    if(saveBtn) saveBtn.addEventListener('click', ()=>{ popEditTc = null; popEditSnap = null; autoSaveNow(); renderTable(); });
+    const cancelBtn = pop.querySelector('[data-pop-cancel]');
+    if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ cancelScnEdit(); renderTable(); });
+    if(popEditFocus && popEditTc === pop.dataset.pop){ popEditFocus = false; const first = pop.querySelector('[data-scn][contenteditable="true"]'); if(first) first.focus(); } // 수정을 누르면 첫 칸으로
     pop.addEventListener('mousedown', e=>{ // 팝업 바깥(뒤 배경)을 누르면 닫는다
       if(e.target !== pop) return;
       const r = pop.getBoundingClientRect();
-      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) pop.close();
+      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closePop();
     });
   }
   // 테스터별 결과·작성 상태: 그 테스터의 칸에만 쓰고, 행의 결과·진행상태는 대표 값으로 맞춘다(카드 머리·통계·테두리 색이 바뀌므로 다시 그린다)
@@ -3914,7 +4085,7 @@ function openTesterPicker(idx, anchor){
   pop.setAttribute('role', 'dialog');
   pop.setAttribute('aria-label', `${row.tcId} 담당자 고르기`);
   pop.innerHTML = `<p class="sub-txt" style="margin:0 0 6px;">${escapeHtml(row.tcId)} 담당자(여러 명 가능)</p>` + options.map(n=>
-    `<label class="tester-option"><input type="checkbox" value="${escapeHtml(n)}"${testersOf(row).includes(n) ? ' checked' : ''} /> ${escapeHtml(n)}${roleTag(n)}</label>`).join('');
+    `<label class="tester-option"${!testersOf(row).includes(n) && !isMemberTester(n) ? ' title="회원이 아니라 지정할 수 없어요"' : ''}><input type="checkbox" value="${escapeHtml(n)}"${testersOf(row).includes(n) ? ' checked' : isMemberTester(n) ? '' : ' disabled'} /> ${escapeHtml(n)}${roleTag(n)}${isMemberTester(n) ? '' : ' <span class="acct-tag is-guest">회원 아님</span>'}</label>`).join('');
   document.body.appendChild(pop);
   const r = anchor.getBoundingClientRect();
   pop.style.top = `${Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 8)}px`;
@@ -4005,6 +4176,23 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 
 // 상세 팝업 위쪽 '테스트 결과': 담당 테스터마다 결과·작성 상태, 그리고 우선순위·검수 단계·개발 수정 (표의 같은 칸과 같은 처리기)
 let popScrollTop = 0;
+// 시나리오 수정: 패널 머리의 "수정"을 눌러야 시나리오 칸을 고칠 수 있다. 고치는 동안에도 칸마다 바로 저장되고(팀 동기화 그대로),
+// "취소"(또는 수정 중에 패널을 닫기)는 수정을 시작할 때의 값으로 되돌린다. 결과·작성 상태·비고·바통·댓글은 수정 버튼 없이 바로 입력한다
+const SCN_KEYS = ['screen', 'category', 'subCategory', 'precondition', 'procedure', 'testDetail', 'expected'];
+let popEditTc = null, popEditSnap = null, popShownTc = null, popEditFocus = false;
+function startScnEdit(tcId){
+  const row = tcData.find(r=>r.tcId === tcId);
+  if(!row) return;
+  popEditTc = tcId; popEditFocus = true;
+  popEditSnap = Object.fromEntries(SCN_KEYS.map(k=>[k, row[k] == null ? '' : row[k]]));
+  renderTable();
+}
+function cancelScnEdit(){
+  const row = tcData.find(r=>r.tcId === popEditTc), snap = popEditSnap;
+  popEditTc = null; popEditSnap = null;
+  if(!row || !snap) return;
+  if(SCN_KEYS.some(k=>(row[k] == null ? '' : row[k]) !== snap[k])){ SCN_KEYS.forEach(k=>{ row[k] = snap[k]; }); scheduleAutoSave(); }
+}
 function popResultHtml(row, idx, assigned){
   const opt = (list, val, empty)=>(empty != null ? `<option value="">${empty}</option>` : '') + list.map(o=>`<option value="${o}"${o === val ? ' selected' : ''}>${o}</option>`).join('');
   const testers = assigned.length ? assigned.map(n=>`<div class="pop-tr"><b title="${escapeHtml(n)}">${escapeHtml(n)}</b>
@@ -4561,8 +4749,9 @@ async function handleExcelImportFile(file){
     renderTable();
     syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
   };
-  apply(normalizeTcIds(mergeExcelRows(tcData, rows)));
-  showUndoToast(`엑셀에서 시나리오 ${rows.length}건을 가져왔어요.`, ()=>apply(before));
+  const merged = normalizeTcIds(mergeExcelRows(tcData, rows)), dn = dropNonMemberTesters(merged, [], editingProject());
+  apply(merged);
+  showUndoToast(`엑셀에서 시나리오 ${rows.length}건을 가져왔어요.${nonMemberNote(dn.dropped)}`, ()=>apply(before));
   return true;
 }
 
@@ -5281,7 +5470,9 @@ function renderGateBoard(){
     const filter = c.key === 'progress' ? 'NT' : (c.key === 'openFail' || c.key === 'openHighFail') ? 'FAIL' : '';
     const val = c.key === 'signoff' ? (c.value ? '승인됨' : '승인 전') : `${c.value}${c.unit}`;
     const tgt = c.key === 'signoff' ? '' : `기준 ${c.op} ${c.target}${c.unit}`;
-    const inner = `<span class="gb-g-top"><span class="gb-g-name">${c.label}</span><b class="num">${val}</b></span><span class="gb-g-bar"><i style="width:${pct}%"></i></span><span class="gb-g-tgt">${tgt}</span>`;
+    const st = c.ok === true ? '<span class="gb-g-st">통과</span>' : c.ok === false ? '<span class="gb-g-st">미달</span>' : '';
+    const bar = c.unit === '%' ? `<span class="gb-g-bar"><i style="width:${pct}%"></i></span>` : ''; // 건수 관문(열린 Fail 등)은 막대가 뜻을 흐려 숫자만
+    const inner = `<span class="gb-g-top"><span class="gb-g-name">${c.label}</span>${st}</span><b class="num gb-g-val">${val}</b>${bar}<span class="gb-g-tgt">${tgt}</span>`;
     return filter && !c.ok
       ? `<button type="button" class="gb-gauge is-bad" data-gb-filter="${filter}" title="해당 시나리오만 목록에서 보기">${inner}</button>`
       : `<div class="gb-gauge${c.ok ? ' is-ok' : ' is-bad'}">${inner}</div>`;
@@ -6344,6 +6535,8 @@ async function offerImport(data, fileName){
   switchProject(target);
   if(!keepServer) tcData = normalizeTcIds(data.tcData.map(r=>toExportRow(r))); // 이름은 tcId 안에 있다(tcName은 사람이 보기 위한 사본)
   testerList = Array.from(new Set(data.testerList.map(n=>n.trim())));
+  const dn = dropNonMemberTesters(keepServer ? [] : tcData, testerList, target); // 아티팩트에서 이름으로 넣은 테스터 중 회원이 아닌 사람
+  testerList = dn.names;
   resetTcIdCounter();
   selectedTcIds.clear();
   saveDraftNow();
@@ -6354,6 +6547,7 @@ async function offerImport(data, fileName){
   renderHistory();
   syncChanges(); // 팀 동기화 중이면 비교 저장으로 서버에 반영한다
   if(target) goRoute({ view: 'proj', cat: categoryOf(target), id: target._id });
+  if(dn.dropped.length) showGlobalError(nonMemberNote(dn.dropped).trim());
   return true;
 }
 document.getElementById('jsonExportBtn').addEventListener('click', handleJsonExport);
@@ -6994,6 +7188,23 @@ function renderAdmin(){
    알림은 서버 트리거가 만들고, 화면은 읽고·읽음 표시만 한다. 서버에 알림 SQL이 없으면(notifMissing) 알림함·댓글을 감춘다 */
 const NOTIF_LABEL = { mention: '멘션', comment: '댓글', assign: '담당 배정', defect: '결함 등록', review: '검수 단계', handoff: '공 넘김' };
 let notifList = [], notifMissing = true, notifConfig = null, notifPrefs = { mail_off: [] }, notifChannel = null;
+let notifTab = 'all'; // 알림 패널 탭(전체·안 읽음). 패널을 다시 열어도 유지
+// 화면 모드(밝게·어둡게): 헤더의 해/달 버튼. 이 브라우저에 기억한다(cvt_theme). 첫 화면 전 적용은 build/head_top.html
+const THEME_KEY = 'cvt_theme';
+function renderThemeBtn(){
+  const dark = document.documentElement.dataset.theme === 'dark', b = document.getElementById('themeBtn');
+  if(!b) return;
+  b.innerHTML = dark ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  b.setAttribute('aria-label', dark ? '밝은 모드로 바꾸기' : '어두운 모드로 바꾸기');
+  b.title = dark ? '밝은 모드' : '어두운 모드';
+}
+function setTheme(dark){
+  if(dark) document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
+  try{ localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); }catch(e){ /* 이번 화면에서만 */ }
+  renderThemeBtn();
+}
+document.getElementById('themeBtn').addEventListener('click', ()=>setTheme(document.documentElement.dataset.theme !== 'dark'));
+renderThemeBtn();
 const commentsByRow = new Map();
 let commentsProject = null;
 // 헤더 팝업(알림함·프로필 메뉴): 하나만 열고, 바깥을 누르거나 Esc면 닫는다
@@ -7061,15 +7272,18 @@ function renderBell(){
 function renderNotifPanel(){
   const panel = document.getElementById('notifPanel'), off = notifPrefs.mail_off || [];
   const mailTypes = notifConfig && notifConfig.mail_on ? (notifConfig.mail_types || []) : [];
-  panel.innerHTML = `<div class="np-head"><b>알림</b><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" id="notifAllRead"${notifList.some(x=>!x.read_at) ? '' : ' disabled'}>모두 읽음</button></div>
-    ${notifList.length ? `<ul class="np-list">${notifList.map(n=>`<li><button type="button" class="np-item${n.read_at ? '' : ' is-unread'}" data-notif="${escapeHtml(String(n.id))}">
-      <span class="np-type t-${escapeHtml(n.type)}">${escapeHtml(NOTIF_LABEL[n.type] || n.type)}</span>
-      <span class="np-main"><span class="np-line"><b>${escapeHtml(n.actor_name || '팀원')}</b>${n.tc_id ? ` · ${escapeHtml(n.tc_id)}` : ''}</span><span class="np-body">${escapeHtml(n.body)}</span></span>
-      <time class="np-time" datetime="${escapeHtml(n.created_at)}">${escapeHtml(timeAgo(n.created_at))}</time></button></li>`).join('')}</ul>` : '<div class="ad-empty np-empty">알림이 없어요.</div>'}
+  const anyUnread = notifList.some(x=>!x.read_at), shown = notifTab === 'unread' ? notifList.filter(x=>!x.read_at) : notifList;
+  const tab = (k, t)=>`<button type="button" class="np-tab" data-ntab="${k}" aria-pressed="${notifTab === k}">${t}</button>`;
+  panel.innerHTML = `<div class="np-head"><h3>알림</h3>${tab('all', '전체')}${tab('unread', '안 읽음')}<button type="button" class="np-link" id="notifAllRead"${anyUnread ? '' : ' disabled'}>모두 읽음</button></div>
+    ${shown.length ? `<ul class="np-list">${shown.map(n=>`<li><button type="button" class="np-item${n.read_at ? '' : ' is-unread'}" data-notif="${escapeHtml(String(n.id))}" aria-label="${n.read_at ? '' : '안 읽음, '}${escapeHtml(NOTIF_LABEL[n.type] || n.type)}: ${escapeHtml(n.actor_name || '팀원')}${n.tc_id ? ` ${escapeHtml(n.tc_id)}` : ''}, ${escapeHtml(timeAgo(n.created_at))}">
+      <span class="np-t">[<span class="np-type t-${escapeHtml(n.type)}">${escapeHtml(NOTIF_LABEL[n.type] || n.type)}</span>] ${escapeHtml(n.actor_name || '팀원')}${n.tc_id ? ` · ${escapeHtml(n.tc_id)}` : ''}</span>
+      <time class="np-time" datetime="${escapeHtml(n.created_at)}">${escapeHtml(timeAgo(n.created_at))}</time>
+      <span class="np-p">${escapeHtml(n.body)}</span></button></li>`).join('')}</ul>` : `<div class="np-empty">${notifTab === 'unread' && notifList.length ? '안 읽은 알림이 없어요.' : '알림이 없어요.'}</div>`}
     <details class="np-mail"><summary>메일로 받을 알림</summary>${mailTypes.length
       ? `<div class="np-mail-types">${mailTypes.map(t=>`<label><input type="checkbox" data-mail-type="${escapeHtml(t)}"${off.includes(t) ? '' : ' checked'}> ${escapeHtml(NOTIF_LABEL[t] || t)}</label>`).join('')}</div><p class="sub-txt">${escapeHtml(authState.email)}(으)로 보내요.</p>`
       : '<p class="sub-txt">관리자가 메일 알림을 켜면 여기서 고를 수 있어요.</p>'}</details>`;
   document.getElementById('notifAllRead').addEventListener('click', ()=>markNotifsRead(notifList.filter(x=>!x.read_at).map(x=>x.id)));
+  panel.querySelectorAll('[data-ntab]').forEach(b=>b.addEventListener('click', ()=>{ notifTab = b.dataset.ntab; renderNotifPanel(); const t = panel.querySelector(`[data-ntab="${notifTab}"]`); if(t) t.focus(); }));
   panel.querySelectorAll('[data-notif]').forEach(b=>b.addEventListener('click', ()=>openNotif(b.dataset.notif)));
   panel.querySelectorAll('[data-mail-type]').forEach(cb=>cb.addEventListener('change', async ()=>{
     const mail_off = [...panel.querySelectorAll('[data-mail-type]')].filter(x=>!x.checked).map(x=>x.dataset.mailType);
