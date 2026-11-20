@@ -351,6 +351,28 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
 @media (prefers-reduced-motion: reduce){ .ad-gnb{transition:none;} }
 </style>
 <style>
+  /* 디자인: 업무 관리 워크보드 개선과 같은 디자인 MD(Downloads/DESIGN.md · Toss TDS)의 색·모서리.
+     워크보드처럼 토큰 값만 바꾸고, 글자 대비가 모자란 곳은 한 단계 진한 값으로 보정한다(글꼴은 MD가 정한 대체 글꼴 Pretendard) */
+  :root{
+    --bg:#f2f4f6; --panel:#ffffff; --line:#e5e8eb; --grey-100:#f2f4f6; --grey-400:#b0b8c1;
+    --ink:#191f28; --ink-soft:#333d4b; --muted:#4e5968;
+    --primary:#3182f6; --primary-dark:#1b64da; --primary-soft:#e8f3ff; --on-primary:#ffffff;
+    --pass:#03b26c; --pass-text:#027648; --pass-soft:#f0faf6; --pass-border:#aeefd5;
+    --minor:#fb8800; --minor-text:#b84500; --minor-soft:#fff3e0; --minor-border:#ffcd80;
+    --fatal:#f04452; --fatal-text:#d22030; --fatal-soft:#ffeeee; --fatal-border:#feafb4;
+    --na:#8b95a1; --na-soft:#f2f4f6; --overlay:rgba(0,12,30,.45);
+    --radius-sm:8px; --radius-md:10px; --radius-lg:16px; --radius-xl:16px;
+    --shadow-2:0 4px 12px rgba(0,12,30,.06); --shadow-3:0 8px 24px rgba(0,12,30,.08); --shadow-toast:0 8px 24px rgba(0,12,30,.16);
+  }
+  /* GNB·분류 탭·프로젝트 목록·헤더 내보내기/가져오기/생성 버튼은 화면에서 뺐다(기능 코드는 남겨 둔다) */
+  #sideNav, #gnbBackdrop, #gnbMenu, nav.cat-tabs, #exportMenu, #importMenu, #qcGenOpenBtn, #newProjectBtn, #tcCollapseAllBtn, #projectSort, #projectSearch{display:none !important;}
+  #panel-hist > :not(#noProjectMsg){display:none !important;}
+body.in-artifact #exportMenu{display:inline-block !important;}
+body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트: 생성 결과를 JSON으로 받아 사이트로 옮긴다 */
+  .no-project{display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px 16px;}
+  .crumb-cat{flex-shrink:0;color:var(--muted);}
+  /* 프로젝트 상세 본문 좌우 여백 5px */
+  body[data-view="proj"] .ad-main-body{padding-left:max(5px, env(safe-area-inset-left, 0px));padding-right:max(5px, env(safe-area-inset-right, 0px));}
   /* 색·글꼴·간격·모서리는 알닷 디자인 시스템 토큰(alddot-tokens.css)만 쓴다. 여기서는 새 색을 만들지 않는다.
      QA 결과 6단계 색만 이 도구 고유 이름으로 토큰에 연결한다(--major/--critical은 토큰에서 다른 뜻이라 이름을 따로 둔다). */
   :root{
@@ -886,13 +908,15 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
     *, *::before, *::after{transition:none !important;}
   }
   /* 셀렉트 공통: 기본 화살표 대신 토큰 색의 작은 꺾쇠, 왼쪽 14px·오른쪽 화살표 자리 36px */
-  select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select, select.tester-status-select{
-    -webkit-appearance:none;appearance:none;
-    background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
-    background-size:5px 5px, 5px 5px;background-repeat:no-repeat;
-    background-position:calc(100% - 17px) 52%, calc(100% - 12px) 52%;
-    padding-left:10px;padding-right:30px;
+  select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select, select.tester-status-select,
+  #tcCardList select, dialog.tc-pop select, .baton select, .tc-pop-meta select{
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23333d4b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    background-size:12px 12px !important;background-repeat:no-repeat !important;
+    background-position:right 8px center !important;
+    padding-left:10px;padding-right:26px !important;
   }
+  select:hover:not(:disabled), select:focus-visible{border-color:var(--primary) !important;} /* 고를 수 있는 칸: 화살표 + 마우스를 올리면 테두리 */
   .ad-shell select.ad-select{padding-left:10px;padding-right:30px;}
   /* 카드·일괄 변경 바의 작은 셀렉트는 여백을 줄인다 */
   .tc-card-head select, select.tester-select, .bulk-bar select.ad-select{
@@ -950,12 +974,12 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   #tcCardList .tc-card-head select.tester-result-select{width:auto;max-width:100%;min-height:0;height:26px;padding:0 24px 0 10px;border:1px solid transparent;border-radius:999px;font-size:12.5px;font-weight:700;}
   #tcCardList .result-badge{display:inline-flex;align-items:center;min-width:0;width:auto;height:26px;padding:0 10px;border:0;border-radius:999px;font-size:12.5px;font-weight:700;line-height:1;}
   .cvpill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
-  .rp-PASS{background:var(--pass-soft) !important;color:var(--pass-text) !important;}
-  .rp-MINOR{background:var(--minor-soft) !important;color:var(--minor-text) !important;}
-  .rp-Fail, .rp-MAJOR, .rp-CRITICAL, .rp-FATAL{background:var(--fatal-soft) !important;color:var(--fatal-text) !important;}
-  .rp-NA{background:var(--grey-100) !important;color:var(--ink-soft) !important;}
-  .rp-보류, .rp-BLOCK{background:var(--grey-100) !important;color:var(--ink) !important;}
-  .rp-NT{background:var(--grey-100) !important;color:var(--muted) !important;}
+  .rp-PASS{background-color:var(--pass-soft) !important;color:var(--pass-text) !important;}
+  .rp-MINOR{background-color:var(--minor-soft) !important;color:var(--minor-text) !important;}
+  .rp-Fail, .rp-MAJOR, .rp-CRITICAL, .rp-FATAL{background-color:var(--fatal-soft) !important;color:var(--fatal-text) !important;}
+  .rp-NA{background-color:var(--grey-100) !important;color:var(--ink-soft) !important;}
+  .rp-보류, .rp-BLOCK{background-color:var(--grey-100) !important;color:var(--ink) !important;}
+  .rp-NT{background-color:var(--grey-100) !important;color:var(--muted) !important;}
   /* 메모(비고): 28px 입력칸(cvMemo). 누르면 여러 줄로 펼쳐 쓴다 */
   #tcCardList .tc-note-cell{display:block;min-height:32px;max-height:32px;padding:5px 10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14px;line-height:1.5;background:transparent;border:1px solid color-mix(in srgb, var(--line) 60%, transparent);border-radius:7px;cursor:text;}
   #tcCardList .tc-note-cell:focus{background:var(--panel);}
@@ -1201,6 +1225,30 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   .cm-item.is-handoff{border-style:dashed;background:var(--bg);}
   .my-turn-btn[aria-pressed="true"]{border-color:var(--primary);color:var(--primary-dark);background:var(--primary-soft);}
   .my-turn-btn[hidden]{display:none;}
+  /* 상세 팝업(행 클릭) */
+  dialog.tc-pop{width:min(980px, calc(100vw - 48px));max-width:none;max-height:calc(100dvh - 48px);padding:0;border:0;border-radius:var(--radius-lg);background:var(--panel);color:var(--ink);box-shadow:var(--shadow-3);overflow:auto;overscroll-behavior:contain;}
+  dialog.tc-pop::backdrop{background:var(--overlay);}
+  .tc-pop-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--panel);border-bottom:1px solid var(--line);}
+  .tc-pop-id{flex:none;font-size:15px;font-weight:800;color:var(--primary-dark);}
+  .tc-pop-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:700;}
+  .tc-pop-results{display:flex;flex-direction:column;gap:8px;padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--line);}
+  .pop-tr{display:grid;grid-template-columns:minmax(0,140px) minmax(0,180px) minmax(0,180px);gap:8px;align-items:center;}
+  .pop-tr b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;}
+  .pop-tr select, .tc-pop-meta select{height:34px;border:1px solid var(--line);border-radius:var(--radius-sm);background-color:var(--panel);font:inherit;font-size:13.5px;color:var(--ink);}
+  .tc-pop-meta{display:flex;flex-wrap:wrap;gap:8px 18px;padding-top:4px;font-size:13px;color:var(--muted);}
+  .tc-pop-meta label{display:flex;align-items:center;gap:6px;}
+  #tcCardList dialog.tc-pop .tc-card-body{display:block !important;position:static;width:auto;padding:16px 20px 24px;background:var(--panel);border-top:0;} /* 표 칸에 맞추던 왼쪽 들여쓰기·고정 위치를 팝업에서는 뺀다 */
+  @media (max-width:600px){
+    dialog.tc-pop{width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;}
+    .pop-tr{grid-template-columns:1fr 1fr;} .pop-tr b{grid-column:1 / -1;}
+  }
+  /* 관리자 > 프로젝트 관리 표 열 너비 */
+  .proj-admin-table{table-layout:fixed;min-width:960px;}
+  .proj-admin-table .col-pname{width:30%;} .proj-admin-table .col-pcat{width:130px;} .proj-admin-table .col-padd{width:290px;} .proj-admin-table .col-pdel{width:72px;}
+  .proj-admin-table .proj-name{width:100%;font-weight:700;}
+  .proj-admin-table .member-add{display:flex;gap:6px;align-items:center;} .proj-admin-table .member-add .member-add-user{flex:1 1 auto;min-width:0;} .proj-admin-table .member-add .member-add-perm{width:76px;flex:none;}
+  .proj-new-row td{background:var(--primary-soft);}
+  .proj-new-btn{margin-left:auto;}
   /* 관리자 표 */
   .admin-table td, .admin-table th{vertical-align:middle;}
   .admin-table .ad-select{height:30px;padding:0 24px 0 8px;font-size:13px;}
@@ -1535,6 +1583,7 @@ select.ad-status:focus{outline:none; border-color:var(--primary);}
   <!-- ===================== 분류: 프로젝트 목록 ===================== -->
   <div class="panel" id="panel-admin"></div>
   <div class="panel" id="panel-hist">
+    <div class="ad-empty no-project" id="noProjectMsg"></div>
     <div class="card ad-card ad-panel">
       <h2 class="ad-title" id="historyCountHeading">프로젝트 (0건)</h2>
       <div id="historyList"></div>
@@ -3482,7 +3531,10 @@ function renderTable(){
         <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
       </div>
 
-      <div class="tc-card-body" style="${isCollapsed?'display:none;':''}">
+      ${isCollapsed ? '<div class="tc-card-body" style="display:none;">' : `<dialog class="tc-pop" data-pop="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세">
+        <div class="tc-pop-head"><span class="tc-pop-id">${escapeHtml(row.tcId)}</span><span class="tc-pop-title" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > ') || '(분류 없음)')}</span><button type="button" class="ad-btn ad-btn--ghost ad-btn--icon tc-pop-close" data-pop-close aria-label="상세 닫기">✕</button></div>
+        ${popResultHtml(row, idx, assigned)}
+        <div class="tc-card-body">`}
       <div class="tc-detail">
         <div class="tc-detail-col">
           <div class="tc-field-row tc-meta-row">
@@ -3532,7 +3584,7 @@ function renderTable(){
       </div>
       ${batonHtml(row, idx)}
       ${commentsHtml(row)}
-      </div>
+      </div>${isCollapsed ? '' : '</dialog>'}
     `;
     list.appendChild(card);
   });
@@ -3649,17 +3701,29 @@ function renderTable(){
       head.querySelector('.row-toggle-btn').click();
     });
   });
+  // 행을 누르면 상세를 팝업으로 연다(한 번에 하나). 같은 행을 다시 누르면 닫는다
   list.querySelectorAll('.row-toggle-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const tcId = btn.dataset.toggleTcid;
-      const body = btn.closest('.tc-card').querySelector('.tc-card-body');
-      const willCollapse = body.style.display !== 'none';
-      body.style.display = willCollapse ? 'none' : '';
-      btn.setAttribute('aria-expanded', String(!willCollapse));
-      btn.setAttribute('aria-label', `${tcId} 상세 ${willCollapse ? '펼치기' : '접기'}`);
-      if(willCollapse) expandedTcRows.delete(tcId); else expandedTcRows.add(tcId);
+      const tcId = btn.dataset.toggleTcid, open = expandedTcRows.has(tcId);
+      expandedTcRows.clear();
+      if(!open){ expandedTcRows.add(tcId); popScrollTop = 0; }
+      renderTable();
     });
   });
+  // 상세 팝업: 펼친 행(마지막 하나)을 모달로 연다. 받은 변경으로 다시 그려져도 스크롤 위치를 지킨다
+  const pops = [...list.querySelectorAll('dialog.tc-pop')], pop = pops[pops.length - 1];
+  if(pop){
+    if(!pop.open){ try{ pop.showModal(); }catch(e){ pop.setAttribute('open', ''); } }
+    pop.scrollTop = popScrollTop;
+    pop.addEventListener('scroll', ()=>{ popScrollTop = pop.scrollTop; });
+    pop.addEventListener('close', ()=>{ if(!pop.isConnected) return; expandedTcRows.delete(pop.dataset.pop); popScrollTop = 0; renderTable(); });
+    pop.querySelector('[data-pop-close]').addEventListener('click', ()=>pop.close());
+    pop.addEventListener('mousedown', e=>{ // 팝업 바깥(뒤 배경)을 누르면 닫는다
+      if(e.target !== pop) return;
+      const r = pop.getBoundingClientRect();
+      if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) pop.close();
+    });
+  }
   // 테스터별 결과·작성 상태: 그 테스터의 칸에만 쓰고, 행의 결과·진행상태는 대표 값으로 맞춘다(카드 머리·통계·테두리 색이 바뀌므로 다시 그린다)
   list.querySelectorAll('.tester-result-select, .tester-status-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
@@ -3938,6 +4002,21 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
   btn.textContent = willExpandAll ? '전체 접기' : '전체 펼치기';
   renderTable();
 });
+
+// 상세 팝업 위쪽 '테스트 결과': 담당 테스터마다 결과·작성 상태, 그리고 우선순위·검수 단계·개발 수정 (표의 같은 칸과 같은 처리기)
+let popScrollTop = 0;
+function popResultHtml(row, idx, assigned){
+  const opt = (list, val, empty)=>(empty != null ? `<option value="">${empty}</option>` : '') + list.map(o=>`<option value="${o}"${o === val ? ' selected' : ''}>${o}</option>`).join('');
+  const testers = assigned.length ? assigned.map(n=>`<div class="pop-tr"><b title="${escapeHtml(n)}">${escapeHtml(n)}</b>
+      <select class="tester-result-select ${resultTone(testerValue(row, n, 'tr'))}" data-idx="${idx}" data-name="${escapeHtml(n)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(n)} 결과">${opt(RESULT_OPTIONS, testerValue(row, n, 'tr'), '미실행')}</select>
+      <select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(n)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(n)} 작성 상태">${opt(STATUS_OPTIONS, testerValue(row, n, 'ts'), '작성 상태')}</select></div>`).join('')
+    : '<p class="sub-txt">담당 테스터를 지정하면 테스터마다 결과를 넣을 수 있어요(표의 담당자 칸).</p>';
+  const dev = DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
+  return `<section class="tc-pop-results" aria-label="테스트 결과"><span class="cm-title">테스트 결과</span>${testers}
+    <div class="tc-pop-meta"><label>우선순위 <select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${opt(PRIORITY_OPTIONS, priorityOf(row))}</select></label>
+      <label>검수 단계 <select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${opt(REVIEW_STAGES, reviewStageOf(row))}</select></label>
+      ${dev ? `<label>개발 수정 <select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${opt(DEV_FIX_OPTIONS, rv(row, 'devFix') || '미확인')}</select></label>` : ''}</div></section>`;
+}
 
 /* ---------- 테스트 시나리오 통계 ---------- */
 /* 통계 표: 행 = 총 TC · 결과(리스트의 결과 값 순서) · 미실행 · 진행률 · 결함률, 열 = 합계 · 담당 테스터마다 (순수 함수)
@@ -5596,7 +5675,11 @@ function renderHistory(){
    - 다른 사람의 변경은 Realtime(postgres_changes)으로 바로 받는다. 실시간 연결이 안 되면 30초마다 새로 받아온다.
    - QC 행은 프로젝트마다 따로다(cvt_tc_rows.project = 프로젝트 ID). 화면에는 지금 프로젝트의 행만 두고, 다른 프로젝트의 행은 otherRows에 둔다.
    - TC 번호는 서버(allocate_cvt_tc_nos)가 프로젝트 안에서 발급한다. 연결이 안 돼 이 브라우저에서 발급한 번호가 겹치면 저장할 때 새 번호로 바꾼다. */
-const SYNC_CONFIGURED = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+// Claude 아티팩트 안(window.claude가 있음)에서는 외부 서버 요청이 막혀 로그인·동기화가 안 된다.
+// 그래서 아티팩트에서는 로그인 없이 이 브라우저에만 저장하는 모드로 열고(시나리오 생성 전용),
+// 만든 결과는 "내보내기 > JSON"으로 받아 사이트의 관리자 > 프로젝트 관리 > "JSON 가져오기"로 올린다.
+const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function') && !window.__E2E_KEEP_SYNC;
+const SYNC_CONFIGURED = !!(SUPABASE_URL && SUPABASE_ANON_KEY) && !IN_ARTIFACT;
 const SYNC_ENABLED = SYNC_CONFIGURED && !!(window.supabase && window.supabase.createClient);
 const SYNC_PENDING_KEY = 'cvt_pending';
 const SYNC_DIFF_INTERVAL_MS = 1000; // ponytail: 편집 지점마다 훅을 거는 대신 1초마다 전체를 비교한다. TC가 수천 건이 되면 행별 dirty 표시로 바꾼다
@@ -5932,6 +6015,7 @@ async function loadFromServer(){
   syncLoaded = true;
   afterRemoteApply();
   openSharedProjectOnce(); // 공유 링크(?project=)로 열었으면 서버 목록을 받은 뒤 그 프로젝트를 불러온다
+  if(currentRoute.view === 'cat') applyRoute({ view: 'main' }); // 목록을 받기 전에 '프로젝트 없음'이었으면 이제 프로젝트를 연다
   syncChanges(); // 이 브라우저에만 있던 데이터를 올린다
   flushSyncQueue(); // 지난번에 못 보낸 변경도 이어서 보낸다
 }
@@ -6149,13 +6233,14 @@ async function allocateTcIds(types, name){
 
 // 동기화 오류·번호 바뀜 안내를 헤더 아래 한 줄(#syncStatus)에 보인다. 저장 상태·접속자 표시는 두지 않는다.
 function renderSyncStatus(){
-  const msg = !SYNC_CONFIGURED ? ''
+  const msg = IN_ARTIFACT ? '아티팩트에서는 로그인 없이 이 브라우저에만 저장돼요. 생성한 뒤 "내보내기 > JSON"으로 받아 사이트의 관리자 > 프로젝트 관리 > "JSON 가져오기"로 올려주세요.'
+    : !SYNC_CONFIGURED ? ''
     : !SYNC_ENABLED ? 'Supabase 라이브러리를 불러오지 못해 팀 동기화를 쓸 수 없어요. 네트워크(CDN) 차단 여부를 확인해주세요.'
     : [syncErrorMsg, syncConflictMsg].filter(Boolean).join(' ');
   const status = document.getElementById('syncStatus');
   status.textContent = msg;
   status.hidden = !msg;
-  status.dataset.state = (syncErrorMsg || !SYNC_ENABLED) ? 'error' : '';
+  status.dataset.state = IN_ARTIFACT ? '' : (syncErrorMsg || !SYNC_ENABLED) ? 'error' : '';
 }
 
 if(SYNC_ENABLED){
@@ -6375,9 +6460,29 @@ function defaultCategory(){
   const stats = categoryStats(historyList, addedCategories, hiddenCategories);
   return (stats.find(s=>s.projects) || stats[0] || { cat: UNCATEGORIZED }).cat; // 탭을 모두 지웠으면 미분류
 }
+// 처음 여는 프로젝트: 이 탭에서 마지막에 연 프로젝트, 없으면 목록 맨 위
+function homeProject(){
+  let id = null;
+  try{ id = sessionStorage.getItem(OPEN_PROJECT_KEY); }catch(e){ /* 기억이 없으면 맨 위 */ }
+  return historyList.find(h=>h._id === id) || historyList[0] || null;
+}
+// 볼 프로젝트가 없을 때 안내(관리자는 프로젝트 관리로)
+function renderNoProject(){
+  const box = document.getElementById('noProjectMsg');
+  if(!box) return;
+  const loading = SYNC_ENABLED && !syncLoaded;
+  const admin = typeof authState === 'undefined' || !authState || isAdminUser();
+  box.innerHTML = loading ? '프로젝트를 불러오는 중이에요.'
+    : admin ? `아직 프로젝트가 없어요. <button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="noProjectGo">프로젝트 관리에서 추가</button>`
+    : '볼 수 있는 프로젝트가 없어요. 관리자에게 프로젝트 멤버 지정을 요청해 주세요.';
+  const go = document.getElementById('noProjectGo');
+  if(go) go.addEventListener('click', ()=>goRoute(typeof authState !== 'undefined' && authState ? { view: 'admin', page: 'projects' } : { view: 'proj', cat: UNCATEGORIZED, id: 'new' }));
+}
 function applyRoute(r){
-  if(r.view === 'main'){
-    r = { view: 'cat', cat: defaultCategory() };
+  if(r.view === 'main' || r.view === 'cat'){ // 프로젝트 목록 화면은 없앴다(프로젝트는 헤더 셀렉트로 고르고, 관리는 관리자 화면에서)
+    const p = homeProject();
+    // 프로젝트가 없으면: 서버 없이 쓰는 화면은 예전처럼 새 프로젝트로, 서버(로그인) 화면은 안내(만들기는 관리자 화면에서)
+    r = p ? { view: 'proj', cat: categoryOf(p), id: p._id } : !SYNC_ENABLED ? { view: 'proj', cat: defaultCategory(), id: 'new' } : { view: 'cat', cat: UNCATEGORIZED };
     try{ history.replaceState(null, '', location.pathname + location.search + routeHash(r)); }catch(e){ /* 화면만 바꾼다 */ }
   }
   setGnbDrawer(false);
@@ -6408,6 +6513,7 @@ function applyRoute(r){
   // 프로젝트를 연 채로 새 프로젝트 주소(#/c/분류/p/new)로 오면 빈 새 프로젝트로 옮긴다
   if(r.view === 'proj' && r.id === 'new' && loadedHistoryId){ switchProject(null); renderTable(); }
   renderHistory();
+  if(r.view === 'cat') renderNoProject();
   if(prevView !== r.view) window.scrollTo(0, 0);
   // QC가 하나도 없는 프로젝트로 들어오면 QC 생성 창을 바로 연다(이어서 작업할 임시저장 안내가 떠 있으면 그대로 둔다)
   if(r.view === 'proj' && prevView !== 'proj' && !tcData.length && document.getElementById('draftRestoreBanner').style.display !== 'block') openQcGen();
@@ -6427,11 +6533,10 @@ function renderViewTitle(){
   }
   const { view, cat } = currentRoute;
   if(view === 'admin'){ title.textContent = `관리자 · ${ADMIN_PAGES[currentRoute.page] || '계정 관리'}`; return; }
-  if(view === 'cat'){ title.textContent = `${cat} 프로젝트`; return; }
+  if(view === 'cat'){ title.textContent = '프로젝트'; return; }
   const entry = loadedHistoryId ? historyList.find(h=>h._id === loadedHistoryId) : null;
   const name = entry ? (entry.title || entry.fileName) : (currentRoute.id === 'new' ? '새 프로젝트' : '프로젝트 불러오는 중');
-  title.innerHTML = `<button type="button" class="crumb-link" id="crumbCategory">${escapeHtml(cat)}</button><span class="crumb-sep" aria-hidden="true">&gt;</span><span class="crumb-current" title="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
-  document.getElementById('crumbCategory').addEventListener('click', ()=>goRoute({ view: 'cat', cat }));
+  title.innerHTML = `<span class="crumb-cat">${escapeHtml(cat)}</span><span class="crumb-sep" aria-hidden="true">&gt;</span><span class="crumb-current" title="${escapeHtml(name)}">${escapeHtml(name)}</span>`;
 }
 // QC 생성 창(워크보드 "업무 등록" 모달처럼 헤더의 "+ QC 생성"으로 연다). 생성하는 동안에는 닫기·Esc·바깥 클릭으로 닫히지 않는다
 const qcGenModal = document.getElementById('qcGenModal');
@@ -6757,6 +6862,44 @@ function applyReadOnly(){
 }
 /* 관리자 메뉴: 계정 관리 / 프로젝트 관리 (관리자만. 서버도 관리자만 고치게 막는다) */
 const ADMIN_PAGES = { accounts: '계정 관리', projects: '프로젝트 관리' };
+let adminNewProject = false; // 프로젝트 관리 목록 맨 위의 '새 프로젝트' 입력 줄
+// 빈 프로젝트를 만든다(관리자 > 프로젝트 관리). 서버에 올라가면 만든 관리자가 첫 편집 멤버가 된다(cvt_on_history_insert)
+async function createAdminProject(title, cat){
+  const entry = { date: formatDate(), type: 'TC', title, fileName: title, figmaUrl: '', count: 0, counts: {}, summary: '-', snapshot: [], testers: [], _id: newRowId() };
+  if(cat && cat !== UNCATEGORIZED) entry.category = cat;
+  addHistoryEntry(entry);
+  await saveHistory();
+  if(SYNC_ENABLED) syncChanges();
+  renderProjectSelect();
+  renderHistory();
+  return entry;
+}
+function saveProjectMetaChange(entry){
+  saveHistory();
+  if(SYNC_ENABLED) syncChanges();
+  renderProjectSelect();
+  if(entry._id === loadedHistoryId) renderViewTitle();
+}
+async function adminDeleteProject(id){
+  const idx = historyList.findIndex(h=>h._id === id), entry = historyList[idx];
+  if(!entry) return;
+  const name = entry.title || entry.fileName || '프로젝트';
+  const ok = await openDialog({ title: '프로젝트 삭제', body: `'${name}' 프로젝트를 목록에서 지울까요? 시나리오 행은 서버에 남겨 두어, 바로 되돌리면 그대로 돌아와요.`, okLabel: '삭제' });
+  if(ok === null) return;
+  if(id === loadedHistoryId){ switchProject(null); renderTable(); }
+  historyList.splice(idx, 1);
+  await saveHistory();
+  if(SYNC_ENABLED) syncChanges();
+  renderProjectSelect();
+  renderAdmin();
+  showUndoToast(`'${name}' 프로젝트를 삭제했어요.`, async ()=>{
+    historyList.splice(Math.min(idx, historyList.length), 0, entry);
+    await saveHistory();
+    if(SYNC_ENABLED) syncChanges();
+    renderProjectSelect();
+    renderAdmin();
+  });
+}
 const profileName = uid=>{ const p = authState && authState.profiles.find(x=>x.user_id === uid); return p ? (p.name || p.email) : '(알 수 없음)'; };
 async function adminWrite(promise, okMsg){
   const { error } = await promise;
@@ -6772,16 +6915,43 @@ function renderAdmin(){
   if(!isAdminUser()){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">관리자만 볼 수 있어요.</div></div>'; return; }
   if(page === 'projects'){
     const opts = (authState.profiles || []).filter(p=>p.active);
-    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">멤버가 한 명도 없는 프로젝트는 로그인한 직원 모두 편집할 수 있어요. 멤버를 지정하면 멤버만 봐요.</span></div>
-      <div class="plan-table-wrap"><table class="plan-table admin-table"><thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th><th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th></tr></thead><tbody>
+    const cats = categoryStats(historyList, addedCategories, hiddenCategories).map(x=>x.cat).filter(c=>c !== 'ALL');
+    if(!cats.includes(UNCATEGORIZED)) cats.push(UNCATEGORIZED);
+    const catSel = (cls, v, label)=>`<select class="ad-select ${cls}" aria-label="${escapeHtml(label)}">${cats.map(c=>`<option value="${escapeHtml(c)}"${c === v ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select>`;
+    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">관리자만 프로젝트를 추가·수정·삭제해요. 만든 관리자가 첫 멤버가 되고, 멤버를 지정하면 멤버만 봐요.</span><button type="button" class="ad-btn ad-btn--sm proj-new-btn" id="projImportBtn" title="아티팩트에서 생성하고 내보낸 JSON 파일을 프로젝트로 가져와요">JSON 가져오기</button><button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="projNewBtn">+ 새 프로젝트</button></div>
+      <div class="plan-table-wrap"><table class="plan-table admin-table proj-admin-table"><colgroup><col class="col-pname"><col class="col-pcat"><col class="col-pmem"><col class="col-padd"><col class="col-pdel"></colgroup>
+      <thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th><th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th><th scope="col"><span class="sr-only">삭제</span></th></tr></thead><tbody>
+      ${adminNewProject ? `<tr class="proj-new-row"><td><input type="text" class="ad-input proj-new-name" maxlength="60" placeholder="새 프로젝트 이름" aria-label="새 프로젝트 이름"></td><td>${catSel('proj-new-cat', projectCategory && cats.includes(projectCategory) ? projectCategory : cats[0], '새 프로젝트 분류')}</td><td colspan="3" class="sub-txt">Enter로 추가 · Esc로 취소</td></tr>` : ''}
       ${historyList.map(h=>{
         const ms = authState.members.filter(m=>m.project === h._id), have = new Set(ms.map(m=>m.user_id));
-        return `<tr data-admin-proj="${escapeHtml(h._id)}"><th scope="row">${escapeHtml(h.title || h.fileName || '(이름 없음)')}</th><td>${escapeHtml(categoryOf(h))}</td>
+        return `<tr data-admin-proj="${escapeHtml(h._id)}"><th scope="row"><input type="text" class="ad-input proj-name cell-edit" maxlength="60" value="${escapeHtml(h.title || h.fileName || '')}" aria-label="프로젝트 이름"></th><td>${catSel('proj-cat', categoryOf(h), '분류')}</td>
           <td><div class="member-chips">${ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>'}</div></td>
-          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td></tr>`;
-      }).join('') || '<tr><td colspan="4"><div class="ad-empty">프로젝트가 없어요.</div></td></tr>'}</tbody></table></div></div>`;
+          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td>
+          <td><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm proj-del" data-proj-del aria-label="${escapeHtml(h.title || h.fileName || '프로젝트')} 삭제">삭제</button></td></tr>`;
+      }).join('') || (adminNewProject ? '' : '<tr><td colspan="5"><div class="ad-empty">프로젝트가 없어요. [+ 새 프로젝트]로 추가해 주세요.</div></td></tr>')}</tbody></table></div></div>`;
+    document.getElementById('projNewBtn').addEventListener('click', ()=>{ adminNewProject = true; renderAdmin(); });
+    document.getElementById('projImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
+    const nn = box.querySelector('.proj-new-name');
+    if(nn){
+      nn.focus();
+      let done = false;
+      const finish = async save=>{
+        if(done) return; done = true;
+        const name = nn.value.trim(), cat = box.querySelector('.proj-new-cat').value;
+        adminNewProject = false;
+        if(save && name){ await createAdminProject(name, cat); showInfoToast(`'${name}' 프로젝트를 추가했어요.`); }
+        renderAdmin();
+      };
+      nn.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); finish(true); } else if(e.key === 'Escape'){ e.preventDefault(); finish(false); } });
+      nn.addEventListener('blur', ()=>setTimeout(()=>{ if(!box.contains(document.activeElement) || !document.activeElement.closest('.proj-new-row')) finish(true); }, 0));
+    }
     box.querySelectorAll('[data-admin-proj]').forEach(tr=>{
-      const project = tr.dataset.adminProj;
+      const project = tr.dataset.adminProj, entry = ()=>historyList.find(h=>h._id === project);
+      const nameIn = tr.querySelector('.proj-name');
+      nameIn.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); nameIn.blur(); } });
+      nameIn.addEventListener('change', ()=>{ const h = entry(), v = nameIn.value.trim(); if(!h || !v) return; h.title = v; saveProjectMetaChange(h); });
+      tr.querySelector('.proj-cat').addEventListener('change', e=>{ const h = entry(); if(!h) return; if(e.target.value === UNCATEGORIZED) delete h.category; else h.category = e.target.value; saveProjectMetaChange(h); });
+      tr.querySelector('[data-proj-del]').addEventListener('click', ()=>adminDeleteProject(project));
       tr.querySelectorAll('.member-perm').forEach(sel=>sel.addEventListener('change', ()=>adminWrite(sb.from('cvt_project_members').update({ perm: sel.value }).eq('project', project).eq('user_id', sel.dataset.memUser))));
       tr.querySelectorAll('[data-mem-del]').forEach(b=>b.addEventListener('click', ()=>adminWrite(sb.from('cvt_project_members').delete().eq('project', project).eq('user_id', b.dataset.memDel), '멤버를 뺐어요.')));
       tr.querySelector('.member-add-btn').addEventListener('click', ()=>{
@@ -7177,6 +7347,7 @@ tcListEl.addEventListener('click', async e=>{
 (async function init(){
   initClaudeSample();
   initClaudeDownloads();
+  document.body.classList.toggle('in-artifact', IN_ARTIFACT);
   await loadHistory();
   await loadTesters();
   if(SYNC_ENABLED){
