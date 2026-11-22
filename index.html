@@ -7,7 +7,9 @@
 <script>try{if(localStorage.getItem('cvt_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" />
 <style>
 /* ── 알닷 디자인 시스템 (alddot-design-system/ 원본 그대로, 직접 고치지 말 것) ── */
 /* 알닷 운영툴 디자인 토큰 · build_tokens.py로 생성 · 직접 고치지 말고 build_tokens.py를 고치세요 */
@@ -372,8 +374,13 @@ body.in-artifact #exportMenu{display:inline-block !important;}
 body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트: 생성 결과를 JSON으로 받아 사이트로 옮긴다 */
   .no-project{display:flex;flex-direction:column;align-items:center;gap:12px;padding:64px 16px;}
   .crumb-cat{flex-shrink:0;color:var(--muted);}
-  /* 프로젝트 상세 본문 좌우 여백 5px */
-  body[data-view="proj"] .ad-main-body{padding-left:max(5px, env(safe-area-inset-left, 0px));padding-right:max(5px, env(safe-area-inset-right, 0px));}
+  /* 프로젝트 상세 본문(테스트 목록) 좌우 여백 20px, 600px 이하 16px */
+  body[data-view="proj"] .ad-main-body{padding-left:max(20px, env(safe-area-inset-left, 0px));padding-right:max(20px, env(safe-area-inset-right, 0px));}
+  @media (max-width:600px){ body[data-view="proj"] .ad-main-body{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));} }
+  /* 글꼴: 업무 관리와 같은 Noto Sans KR(고정폭 칸 .tc-mono는 그대로) */
+  :root{--font-sans:"Noto Sans KR", -apple-system, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;}
+  body, input, select, textarea, button{font-family:var(--font-sans);}
+  .tc-mono, #tcCardList .tc-card-head .tc-id-badge{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;}
   /* 색·글꼴·간격·모서리는 알닷 디자인 시스템 토큰(alddot-tokens.css)만 쓴다. 여기서는 새 색을 만들지 않는다.
      QA 결과 6단계 색만 이 도구 고유 이름으로 토큰에 연결한다(--major/--critical은 토큰에서 다른 뜻이라 이름을 따로 둔다). */
   :root{
@@ -1518,6 +1525,254 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   :root[data-theme="dark"] :is(select.ad-select, .tc-card-head select, select.tester-select, select.tester-result-select, select.tester-status-select, #tcCardList select, dialog.tc-pop select, .baton select, .tc-pop-meta select){
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23b6bfc9' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
   }
+
+  /* ════════ 목록 표 위계 · 상세 2단(2026-11 2차) ════════ */
+  /* 목록: TC ID 고정폭 · 분류 회색 한 열 · 제목 14/500 + 칩 · 우선순위 색 글자 · 결과 채운 알약 · 검수/개발 배지 · 2줄 보조 정보 */
+  #tcTableWrap{--tc-cols:20px 112px minmax(120px,.8fr) minmax(196px,2fr) 56px 112px 96px 100px 96px 64px minmax(110px,1fr) 56px 88px 24px;}
+  .tc-table-head, #tcCardList .tc-card-head{column-gap:8px;min-width:1382px;}
+  #tcCardList .tc-card{min-width:1382px;}
+  .tc-table-head{min-height:36px;background:var(--grey-100);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0;}
+  #tcCardList .tc-card-head{align-items:start;min-height:44px;padding-top:10px;padding-bottom:10px;}
+  #tcCardList .tc-card-head .tc-c{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;}
+  #tcCardList .tc-card-head .c-sel, #tcCardList .tc-card-head .c-del{padding-top:4px;}
+  #tcCardList .tc-card-head .c-id{flex-direction:row;flex-wrap:wrap;align-items:center;}
+  .tc-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-variant-numeric:tabular-nums;}
+  #tcCardList .tc-card-head .tc-id-badge{font:400 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;color:var(--ink);letter-spacing:0;padding:0;border:0;background:none;cursor:pointer;}
+  #tcCardList .tc-card-head .tc-id-badge:hover{color:var(--primary-dark);text-decoration:underline;}
+  .tc-cat{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:1.6;color:var(--muted);}
+  #tcCardList .c-title{flex-direction:row !important;flex-wrap:wrap;align-items:center !important;gap:4px 6px !important;}
+  #tcCardList .c-title .tc-title{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:500;line-height:1.6;color:var(--ink);}
+  .tc-chip{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:4px;background:var(--grey-100);color:var(--muted);font-size:11.5px;font-weight:500;white-space:nowrap;}
+  .tc-chip.is-blue{background:var(--primary-soft);color:var(--primary-dark);}
+  #tcCardList .c-title .row-toggle-btn{margin-left:auto;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:none;color:var(--grey-400);font-size:16px;line-height:1;cursor:pointer;}
+  #tcCardList .tc-card:hover .c-title .row-toggle-btn{color:var(--ink-soft);background:var(--grey-100);}
+  .pri-txt{font-size:13.5px;font-weight:600;line-height:1.6;}
+  .pri-txt.is-High{color:var(--fatal-text);} .pri-txt.is-Mid{color:var(--minor-text);} .pri-txt.is-Low{color:var(--muted);font-weight:500;}
+  .tc-sub2{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.4;color:var(--muted);}
+  #tcCardList .c-env .tc-ro-text, #tcCardList .c-exec .tc-ro-text, #tcCardList .c-date .tc-ro-text{font-size:13px;line-height:1.6;color:var(--ink);}
+  /* 결과: 채운 알약 셀렉트(목록·상세 같은 모양) */
+  select.res-pill, #tcCardList .tc-card-head select.res-pill{height:30px !important;min-height:30px;width:100%;max-width:120px;border:1px solid transparent !important;border-radius:8px;padding-left:12px;font-size:14px !important;font-weight:700;color:var(--ink);background-color:var(--panel);}
+  select.res-pill[data-res="PASS"]{background-color:var(--pass-soft) !important;color:var(--pass-text);}
+  select.res-pill[data-res="Fail"]{background-color:var(--fatal-soft) !important;color:var(--fatal-text);}
+  select.res-pill[data-res="보류"]{background-color:var(--minor-soft) !important;color:var(--minor-text);}
+  select.res-pill[data-res="N/A"]{background-color:var(--grey-100) !important;color:var(--ink-soft);}
+  select.res-pill[data-res="none"]{border-color:var(--line) !important;font-weight:400;}
+  select.res-pill:disabled{opacity:.75;cursor:not-allowed;}
+  .res-pill-ro{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:700;background:var(--grey-100);color:var(--ink-soft);}
+  .res-pill-ro[data-res="PASS"]{background:var(--pass-soft);color:var(--pass-text);} .res-pill-ro[data-res="Fail"]{background:var(--fatal-soft);color:var(--fatal-text);}
+  .res-pill-ro[data-res="보류"]{background:var(--minor-soft);color:var(--minor-text);} .res-pill-ro[data-res="none"]{background:var(--panel);border:1px solid var(--line);font-weight:400;color:var(--ink);}
+  /* 검수 단계·개발 수정 배지 */
+  .rv-badge, .dv-badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;background:var(--grey-100);color:var(--muted);}
+  .rv-badge[data-stage="완료"]{background:var(--pass-soft);color:var(--pass-text);}
+  .rv-badge[data-stage="검수 보류"]{background:transparent;box-shadow:inset 0 0 0 1px var(--minor-border);color:var(--minor-text);}
+  .rv-badge[data-stage="수정 접수"], .rv-badge[data-stage="수정 진행"], .rv-badge[data-stage="재검수 대기"]{background:var(--primary-soft);color:var(--primary-dark);}
+  .dv-badge[data-dev="미확인"], .dv-badge[data-dev="미해결"]{background:var(--fatal-soft);color:var(--fatal-text);}
+  .dv-badge[data-dev="수정 완료"]{background:var(--pass-soft);color:var(--pass-text);}
+  .dv-badge[data-dev="검토"], .dv-badge[data-dev="수정중"]{background:var(--minor-soft);color:var(--minor-text);}
+  #tcCardList .c-review .ball-badge{margin-top:0;}
+  /* 담당 테스터: 굵은 파랑 글자(누르면 고르기) */
+  #tcCardList .c-who .tester-pick{height:auto !important;min-height:0;padding:0 !important;border:0 !important;background:none !important;font-size:13px;font-weight:700;color:var(--primary-dark);line-height:1.6;text-align:left;}
+  #tcCardList .c-who .tester-pick.is-none{color:var(--muted);font-weight:500;}
+  #tcCardList .c-who .tester-pick:hover{text-decoration:underline;}
+  #tcCardList .c-del .icon-btn{opacity:0;transition:opacity .12s;} #tcCardList .tc-card:hover .c-del .icon-btn, #tcCardList .c-del .icon-btn:focus-visible{opacity:1;}
+
+  /* 상세 2단: 머리(경로·검수 단계·제목·닫기) / 왼쪽 시나리오 / 오른쪽 결과 입력 */
+  dialog.tc-pop{width:max(72vw, 900px);overflow:hidden;}
+  dialog.tc-pop[open]{display:flex;flex-direction:column;}
+  .tc-pop-head{position:static;flex:none;align-items:flex-start;gap:12px;padding:14px 20px 12px;border-bottom:1px solid var(--line);}
+  .tc-pop-hd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .tc-pop-crumb{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:13px;color:var(--muted);}
+  .tc-pop-name{margin:0;font-size:18px;font-weight:700;line-height:1.4;color:var(--ink);overflow-wrap:anywhere;}
+  .tc-pop-head .tc-pop-close{flex:none;height:36px;}
+  .tc-pop-cols{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+  .tc-pop-l, .tc-pop-r{min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px;}
+  .tc-pop-l{border-right:1px solid var(--line);}
+  .tc-sec-head, .tr-head{display:flex;align-items:center;gap:8px;}
+  .tc-sec-head h3, .tr-head h3{margin:0;font-size:13px;font-weight:700;color:var(--primary-dark);flex:1;}
+  #tcCardList dialog.tc-pop .tc-pop-l .tc-card-body{padding:0;background:none;}
+  dialog.tc-pop .tc-pop-l .tc-detail{display:flex;flex-direction:column;gap:12px;}
+  dialog.tc-pop .tc-pop-l .tc-field-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
+  dialog.tc-pop .tc-field-label{font-size:12px;font-weight:500;color:var(--muted);}
+  .tc-ro-box{min-height:36px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--grey-100);font-size:14px;line-height:1.45;color:var(--ink);overflow-wrap:anywhere;}
+  dialog.tc-pop .tc-scn[contenteditable="false"]{min-height:36px;padding:8px 10px;border:1px solid var(--line) !important;border-radius:8px;background:var(--grey-100) !important;font-size:14px;color:var(--ink);}
+  dialog.tc-pop .tc-scn[contenteditable="true"]{padding:8px 10px;border-radius:8px;}
+  dialog.tc-pop .tc-pop-l select.screentype-select{height:36px;border:1px solid var(--line);border-radius:8px;background-color:var(--panel);font:inherit;font-size:14px;color:var(--ink);}
+  /* 오른쪽: 테스트 정보 상자 · 2~3열 입력 · 서식 막대 */
+  .tr-info{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);}
+  .tr-info-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;}
+  .tr-info-head .legend{font-size:12px;color:var(--muted);}
+  .tr-grid{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:10px 12px;}
+  .tr-f{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .tr-f > span{font-size:12px;font-weight:500;color:var(--muted);}
+  .tr-f .ad-input, .tr-f select{height:36px;min-height:36px;width:100%;border:1px solid var(--line);border-radius:8px;background-color:var(--panel);font:inherit;font-size:14px;color:var(--ink);padding-left:10px;}
+  .tr-f select.res-pill{max-width:none;height:36px !important;}
+  .tr-f .ad-input[data-prefill]{color:var(--ink-soft);font-style:italic;}
+  .tr-deny{margin:0;padding:8px 12px;border-radius:8px;background:var(--minor-soft);color:var(--minor-text);font-size:13px;}
+  .tr-deny:empty{display:none;}
+  .tr-others{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;}
+  .tr-other{padding:2px 8px;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);}
+  .tr-other[data-res="PASS"]{background:var(--pass-soft);color:var(--pass-text);} .tr-other[data-res="Fail"]{background:var(--fatal-soft);color:var(--fatal-text);} .tr-other[data-res="보류"]{background:var(--minor-soft);color:var(--minor-text);}
+  .md-bar{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:4px;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;background:var(--bg);}
+  .md-bar button{height:28px;padding:0 8px;border:0;border-radius:6px;background:none;font:inherit;font-size:12.5px;color:var(--ink-soft);cursor:pointer;}
+  .md-bar button:hover:not(:disabled){background:var(--grey-100);color:var(--ink);} .md-bar button:disabled{opacity:.5;cursor:default;}
+  .md-seg{margin-left:auto;display:inline-flex;padding:2px;border-radius:8px;background:var(--grey-100);}
+  .md-seg button[aria-pressed="true"]{background:var(--panel);color:var(--primary-dark);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+  #tcCardList dialog.tc-pop .tr-note .c-note .tc-note-cell{display:block;min-height:180px !important;max-height:none !important;padding:10px 12px;border:1px solid var(--line) !important;border-radius:0 0 8px 8px;white-space:pre-wrap;overflow:auto;font-size:14px;line-height:1.6;background:var(--panel);}
+  #tcCardList dialog.tc-pop .tr-note .c-note .tc-note-cell:empty::before{content:attr(data-placeholder);color:var(--grey-400);}
+  .md-preview{min-height:180px;padding:10px 14px;border:1px solid var(--line);border-radius:0 0 8px 8px;background:var(--panel);font-size:14px;line-height:1.6;color:var(--ink);}
+  .md-preview p, .md-preview ul, .md-preview ol{margin:0 0 6px;} .md-preview ul, .md-preview ol{padding-left:20px;} .md-preview .md-ck{list-style:none;margin-left:-18px;} .md-preview hr{border:0;border-top:1px solid var(--line);margin:8px 0;}
+  .tr-actions{display:flex;justify-content:flex-end;gap:8px;}
+  .tr-actions .ad-btn{height:38px;padding:0 16px;}
+  /* 고정 칸(선택·ID)은 새 칸 간격(8px)에 맞추고 위쪽 정렬, 셀 안 글자는 칸 폭에서 잘린다 */
+  .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{box-shadow:-11px 0 0 var(--row-bg), 8px 0 0 var(--row-bg) !important;}
+  .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:42px !important;box-shadow:8px 0 0 var(--row-bg) !important;}
+  #tcCardList .tc-card-head > .c-sel, #tcCardList .tc-card-head > .c-id{align-items:flex-start !important;align-self:stretch;}
+  #tcCardList .tc-card-head .tc-c > *{max-width:100%;}
+  #tcCardList .c-title{flex-wrap:nowrap !important;}
+  #tcCardList .c-title .tc-title{flex:0 1 auto;}
+  #tcCardList .c-title .tc-chip{flex:none;}
+  #tcCardList .tc-card-head .tc-ro-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #tcCardList .c-del .icon-btn{width:24px;height:24px;min-height:24px;padding:0;font-size:12px;} #tcCardList .tc-card-head .c-del{padding-top:0;}
+  @media (max-width:760px){
+    .tc-pop-cols{display:block;overflow:auto;}
+    .tc-pop-l, .tc-pop-r{overflow:visible;}
+    .tc-pop-l{border-right:0;border-bottom:1px solid var(--line);}
+    .tr-grid{grid-template-columns:repeat(2, minmax(0,1fr));}
+  }
+
+  /* ════════ 현황판 그래프(2026-11 3차): 표 없이 12칸 격자 ════════ */
+  #tcStatsCard, #sumStats{display:none !important;} /* 맨 아래 담당자별 통계 표·결과 칩 줄은 뺐다(엑셀 통계 시트는 그대로) */
+  .tc-board-card{padding:0;border:0;background:none;box-shadow:none;}
+  .gate-board{margin:0;padding:0;border:0;}
+  .bd-grid{display:grid;grid-template-columns:repeat(12, minmax(0,1fr));gap:12px;}
+  .bd-card{display:flex;flex-direction:column;gap:10px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);}
+  .bd-s12{grid-column:span 12;} .bd-s8{grid-column:span 8;} .bd-s4{grid-column:span 4;}
+  .bd-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;}
+  .bd-head h4{margin:0;font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:baseline;gap:6px;}
+  .bd-sub{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;}
+  .bd-h5{margin:4px 0 0;font-size:13px;font-weight:700;color:var(--ink);}
+  .bd-empty{margin:0;padding:16px 0;font-size:13px;color:var(--muted);}
+  /* A. 핵심 지표 */
+  .bd-kpi{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 24px;}
+  .bd-k{display:flex;align-items:center;gap:12px;min-width:0;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;}
+  .bd-k b{display:block;font-size:13px;font-weight:700;color:var(--ink);} .bd-k span{font-size:12px;color:var(--muted);}
+  .bd-big{min-width:60px;font-size:30px;font-weight:800;line-height:1;text-align:center;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .bd-big.is-bad{color:var(--fatal-text);}
+  .bd-k-btn{cursor:pointer;border-radius:10px;padding:4px 8px;margin:-4px -8px;} .bd-k-btn:hover{background:var(--grey-100);}
+  .bd-k-btn:focus-visible, .bd-seg:focus-visible, .bd-row-btn:focus-visible, .bd-link:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  /* 공통: 줄(이름 | 막대 | 수치) · 누적 막대 · 단일 막대 · 범례 */
+  .bd-row{display:grid;grid-template-columns:76px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:24px;font-size:12.5px;}
+  .bd-row-btn{width:100%;padding:2px 4px;margin:0 -4px;border:0;border-radius:6px;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;width:calc(100% + 8px);}
+  .bd-row-btn:hover{background:var(--grey-100);}
+  .bd-rl{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-soft);}
+  .bd-link{padding:0;border:0;background:none;font:inherit;font-weight:700;color:var(--primary-dark);text-align:left;cursor:pointer;} .bd-link:hover{text-decoration:underline;}
+  .bd-row em{font-style:normal;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .bd-stack{display:flex;gap:2px;height:14px;min-width:0;}
+  .bd-stack.is-empty{background:var(--grey-100);border-radius:4px;}
+  .bd-seg{min-width:3px;height:100%;padding:0;border:0;border-radius:4px;cursor:pointer;}
+  .bd-seg:hover{filter:brightness(.92);}
+  .is-hatch{background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.45) 0 2px, transparent 2px 6px) !important;}
+  .bd-bar{height:10px;border-radius:4px;background:var(--grey-100);overflow:hidden;}
+  .bd-bar i{display:block;height:100%;min-width:2px;border-radius:4px;background:var(--primary);}
+  .bd-bar.is-bad i{background:var(--fatal);} .bd-bar.is-warn i{background:var(--minor);}
+  .bd-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink-soft);}
+  .bd-legend i{display:inline-block;width:10px;height:10px;margin-right:4px;border-radius:3px;vertical-align:-1px;}
+  .bd-legend b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  /* J. 관문 게이지 */
+  .gb-gauges{display:grid;grid-template-columns:repeat(auto-fit, minmax(130px,1fr));gap:12px;}
+  .gb-gauge{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font:inherit;color:var(--ink);text-align:center;}
+  .gb-gauge.is-bad{border-color:var(--fatal-border);}
+  .gb-gauge .gb-g-name{font-size:13px;font-weight:700;color:var(--ink);}
+  .gb-gauge .gb-g-st{padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--grey-100);color:var(--muted);}
+  .gb-gauge.is-ok .gb-g-st{background:var(--pass-soft);color:var(--pass-text);} .gb-gauge.is-bad .gb-g-st{background:var(--fatal-soft);color:var(--fatal-text);}
+  .gb-gauge .gb-g-tgt{font-size:11.5px;color:var(--muted);}
+  .gb-stage{font-size:16px;font-weight:800;color:var(--primary-dark);}
+  .gb-stage.s-dvt{color:#6b6bf0;} .gb-stage.s-uat{color:var(--minor-text);}
+  .gb-verdict{padding:2px 10px;border-radius:999px;font-size:12px;font-weight:800;}
+  /* D. 일자별 */
+  .gb-daily{display:grid;grid-template-columns:repeat(14, minmax(0,1fr));gap:4px;height:150px;align-items:end;}
+  .gb-day{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;cursor:default;}
+  .bd-col{width:72%;display:flex;flex-direction:column-reverse;gap:2px;min-height:0;}
+  .bd-col i{display:block;min-height:2px;border-radius:3px;}
+  .gb-day em{font-style:normal;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  /* C. 진행 추이 */
+  .bd-svg{width:100%;height:auto;display:block;overflow:visible;}
+  .bd-hit{cursor:crosshair;}
+  /* G. 막힌 것 */
+  .gb-blocks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .gb-block{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;font-size:12.5px;}
+  .gb-block .gb-b-name{min-width:104px;color:var(--ink-soft);}
+  .gb-block.is-zero{color:var(--grey-400);} .gb-block.is-zero .gb-b-name{color:var(--grey-400);}
+  @media (max-width:1100px){ .bd-s8{grid-column:span 12;} .bd-s4{grid-column:span 6;} }
+  @media (max-width:700px){ .bd-s4, .bd-s8{grid-column:span 12;} .bd-kpi{justify-content:flex-start;}
+    .bd-grid > *{order:5;} .bd-grid > :nth-child(1){order:1;} .bd-grid > :nth-child(2){order:2;} .bd-grid > :nth-child(3){order:3;} .bd-grid > :nth-child(7){order:4;} } /* 좁은 화면: 지표 → 관문 → 분포 → 결함 흐름 → 나머지 */
+
+  /* ════════ 테스트 계획(2026-11 4차): 타임라인 → 단계 상세 → 예측·다음 할 일 ════════ */
+  .tc-plan-card{padding:0;border:0;background:none;box-shadow:none;}
+  .pl-wrap{display:flex;flex-direction:column;gap:12px;}
+  .pl-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);}
+  .pl-card h4{margin:0;font-size:14px;font-weight:700;color:var(--ink);} .pl-card h4 small{margin-left:4px;font-size:12px;font-weight:400;color:var(--muted);}
+  .pl-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;}
+  .pl-head h3{margin:0;font-size:14px;font-weight:700;color:var(--ink);}
+  .pl-head .legend{font-size:12px;color:var(--muted);}
+  .pl-deploy{margin-left:auto;} .pl-deploy label{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .pl-deploy input{height:32px;width:150px;}
+  /* A. 타임라인 */
+  .pl-tl-scroll{overflow-x:auto;overscroll-behavior-x:contain;}
+  .pl-tl{display:block;width:100%;height:auto;min-width:560px;}
+  .pl-row{cursor:pointer;outline:none;}
+  .pl-row .pl-row-bg{fill:transparent;}
+  .pl-row:hover .pl-row-bg{fill:var(--grey-100);}
+  .pl-row.is-on .pl-row-bg{fill:var(--primary-soft);}
+  .pl-row:focus-visible .pl-row-bg{stroke:var(--primary-dark);stroke-width:2;}
+  .pl-st{fill:var(--muted);} .pl-st.is-active{fill:var(--primary-dark);} .pl-st.is-done{fill:var(--pass-text);} .pl-st.is-forced{fill:var(--minor-text);}
+  /* B. 단계 상세 + C. 옆 카드 */
+  .pl-cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;align-items:start;}
+  .pl-side{display:flex;flex-direction:column;gap:12px;min-width:0;}
+  .pl-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .pl-stage-title{display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+  .pl-stage-title .stage-chip{font-size:18px;font-weight:800;background:none;padding:0;}
+  .stage-card .stage-purpose{margin:4px 0 0;font-size:13px;color:var(--muted);}
+  .plan-status{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--grey-100);color:var(--muted);}
+  .plan-status.is-active{background:var(--primary-soft);color:var(--primary-dark);} .plan-status.is-done{background:var(--pass-soft);color:var(--pass-text);} .plan-status.is-forced{background:var(--minor-soft);color:var(--minor-text);}
+  .stage-verdict{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:700;}
+  .stage-verdict.is-go{background:var(--pass-soft);color:var(--pass-text);} .stage-verdict.is-nogo{background:var(--fatal-soft);color:var(--fatal-text);}
+  .pl-fields{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:10px 12px;}
+  .pl-f{display:flex;flex-direction:column;gap:4px;min-width:0;} .pl-f > span{font-size:12px;font-weight:500;color:var(--muted);}
+  .pl-f .ad-input{height:36px;width:100%;}
+  .pl-f-wide{grid-column:1 / -1;}
+  .pl-line{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px;}
+  .pl-line-top{align-items:start;} .pl-line-top .pl-lab{padding-top:8px;}
+  .pl-lab{font-size:12.5px;font-weight:700;color:var(--ink-soft);}
+  .pl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
+  .pl-chip{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer;list-style:none;}
+  .pl-chip::-webkit-details-marker{display:none;}
+  .pl-chip:hover{border-color:var(--primary);}
+  .pl-chip[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-dark);font-weight:700;}
+  .pl-gates{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  .pl-gate{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:13.5px;color:var(--ink);}
+  .pl-gate.is-bad{border-color:var(--fatal-border);} .pl-gate.is-ok{border-color:var(--pass-border);}
+  .pl-gate-txt{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+  .pl-gate .gate-input{width:64px;height:30px;padding:0 6px;text-align:right;font-weight:700;}
+  .pl-gate-now{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:13px;}
+  .pl-ok{color:var(--pass-text);font-weight:700;} .pl-bad{color:var(--fatal-text);font-weight:700;}
+  .stage-round{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden;}
+  .stage-round button{height:30px;padding:0 10px;border:0;background:var(--panel);font:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .stage-round.is-on{border-color:var(--primary);} .stage-round.is-on button{background:var(--primary-soft);color:var(--primary-dark);font-weight:700;}
+  .stage-round .pl-x{padding:0 8px;color:var(--muted);border-left:1px solid var(--line);}
+  .pl-add{position:relative;}
+  .pl-add-form{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);}
+  .pl-add-form .ad-input, .pl-add-form .ad-select{height:32px;width:auto;min-width:0;}
+  .pl-add-form #roundAddName{width:120px;}
+  .stage-forced{margin:0;padding:8px 12px;border-radius:8px;background:var(--minor-soft);color:var(--minor-text);font-size:12.5px;}
+  .pl-big{margin:0;font-size:26px;font-weight:800;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums;} .pl-big small{font-size:12px;font-weight:500;color:var(--muted);}
+  .pl-big.is-ok{font-size:16px;color:var(--pass-text);}
+  .pl-fc-sub{margin:0;font-size:12.5px;color:var(--muted);}
+  .pl-fc-cmp{margin:0;font-size:15px;font-weight:800;} .pl-fc-cmp.is-ok{color:var(--pass-text);} .pl-fc-cmp.is-bad{color:var(--fatal-text);}
+  .pl-todos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink);}
+  .pl-todos li{padding:8px 10px;border-radius:8px;background:var(--bg);}
+  .pl-todo{padding:0;border:0;background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer;} .pl-todo u{color:var(--primary-dark);text-decoration:none;font-weight:700;} .pl-todo:hover u{text-decoration:underline;}
+  @media (max-width:900px){ .pl-cols{grid-template-columns:1fr;} .pl-fields{grid-template-columns:repeat(2, minmax(0,1fr));} .pl-deploy{margin-left:0;} }
 </style>
 </head>
 <body class="ad-root">
@@ -1616,10 +1871,10 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
       <div class="sum-periods" id="sumPeriods" hidden></div>
     </div>
     <div class="card ad-card ad-panel tc-progress" id="tcProgress" hidden></div>
-    <!-- 상세 탭: 테스트 목록 / 현황판(결과 건수·담당자별 통계) / 테스트 계획(DVT·CVT·UAT·배포 일정) -->
+    <!-- 상세 탭: 테스트 목록 / 테스트 결과(그래프) / 테스트 계획(타임라인·단계·예측) -->
     <div class="detail-tabs" id="detailTabs" role="tablist" aria-label="프로젝트 보기" hidden>
       <button type="button" role="tab" id="dtab-list" data-dtab="list" aria-controls="dpanel-list">테스트 목록</button>
-      <button type="button" role="tab" id="dtab-board" data-dtab="board" aria-controls="tcBoardCard">현황판</button>
+      <button type="button" role="tab" id="dtab-board" data-dtab="board" aria-controls="tcBoardCard">테스트 결과</button>
       <button type="button" role="tab" id="dtab-plan" data-dtab="plan" aria-controls="tcPlanCard">테스트 계획</button>
     </div>
     <div class="card ad-card ad-panel tc-board-card" id="tcBoardCard" data-dpanel="board" role="tabpanel" aria-labelledby="dtab-board" hidden>
@@ -1688,8 +1943,8 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
       <div class="tc-table-wrap" id="tcTableWrap">
         <div class="tc-table-head" id="tcTableHead" role="row" hidden>
           <span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
-          <span class="tc-c c-id" role="columnheader">TC ID</span><span class="tc-c c-cat" role="columnheader">대분류</span>
-          <span class="tc-c c-subcat" role="columnheader">중분류</span><span class="tc-c c-pri" role="columnheader">우선순위</span>
+          <span class="tc-c c-id" role="columnheader">TC ID</span><span class="tc-c c-cat" role="columnheader">대분류 · 중분류</span>
+          <span class="tc-c c-title" role="columnheader">테스트 시나리오</span><span class="tc-c c-pri" role="columnheader">우선순위</span>
           <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-review" role="columnheader">검수 단계</span><span class="tc-c c-dev" role="columnheader">개발 수정</span>
           <span class="tc-c c-who" role="columnheader">담당 테스터</span><span class="tc-c c-exec" role="columnheader">테스터</span><span class="tc-c c-env" role="columnheader">테스트 환경</span>
           <span class="tc-c c-date" role="columnheader">테스트 일자</span><span class="tc-c c-upd" role="columnheader">최종 수정</span><span class="tc-c c-del" role="columnheader" aria-label="삭제"></span>
@@ -2003,7 +2258,7 @@ const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['완료','테스트불가','작성중','개발 검토']; // 고르는 순서(화면·통계 표)
 const STATUS_PROGRESS = ['작성중','개발 검토','테스트불가','완료']; // 진행 순서: 대표 진행상태는 가장 앞쪽(덜 진행된) 값
 // 검수 정보(표 열): 우선순위·검수 단계·개발 수정·테스터·테스트 환경·테스트 일자·최종 수정. 행 data의 새 키에 두고, 없으면 기본값으로 읽는다
-const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt', 'ball', 'ballAt', 'devOwner', 'jira']; // ball~jira: 바통(공) 넘기기
+const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt', 'ball', 'ballAt', 'devOwner', 'jira', 'tdev', 'tos', 'tbr', 'tbuild']; // ball~jira: 바통(공) 넘기기
 const PRIORITY_OPTIONS = ['High', 'Mid', 'Low'];
 const REVIEW_STAGES = ['검수 대기', '수정 접수', '수정 진행', '재검수 대기', '완료', '검수 보류', '검수 제외'];
 const DEV_FIX_OPTIONS = ['미확인', '검토', '수정중', '수정 완료', '미해결', '버그 아님'];
@@ -2070,11 +2325,36 @@ function toExportRow(row){
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
    테스터마다 칸이 따로라, 두 테스터가 같은 테스트 시나리오에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
    담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 값에서만 뺀다. */
-const TESTER_KEY_RE = /^(t[rns]|rr):/; // 'rr:회차ID:칸' = 다른 회차의 칸(아래 rk)
+const TESTER_KEY_RE = /^(t[rns]|tdev|tos|tbr|tbuild|rr):/; // 'rr:회차ID:칸' = 다른 회차의 칸(아래 rk)
 // 회차: 지금 보는 회차의 칸 이름. 기본 회차('base')는 예전 그대로의 칸, 다른 회차는 'rr:회차ID:칸'.
 // 회차마다 따로인 칸: 결과·작성 상태·비고(행·테스터별), 검수 단계·개발 수정·테스터·테스트 일자·테스트 환경. 시나리오 내용·우선순위·담당 테스터는 모든 회차가 같이 쓴다
 let currentRoundId = 'base';
-const ROUND_KEY_RE = /^(t[rns]:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$|ball$|ballAt$)/;
+const ROUND_KEY_RE = /^(t[rns]:|tdev:|tos:|tbr:|tbuild:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$|ball$|ballAt$|tdev$|tos$|tbr$|tbuild$)/;
+// 테스트 정보: 테스트 기기·OS/버전·브라우저/앱 버전·앱 빌드 번호. 테스터별(·회차별) 칸 'tdev:이름', 담당자가 없으면 행 칸 'tdev'
+const TENV_FIELDS = [['tdev', '테스트 기기'], ['tos', 'OS / 버전'], ['tbr', '브라우저 / 앱 버전'], ['tbuild', '앱 빌드 번호']];
+const tenvKey = (f, name)=>name ? `${f}:${name}` : f;
+// 엑셀·목록에 보일 테스트 환경 한 줄: "기기 / OS / 버전 / 빌드", 없으면 예전 테스트 환경 칸 (순수 함수)
+function tenvText(row, name){
+  const v = TENV_FIELDS.map(([f])=>rv(row, tenvKey(f, name))).filter(Boolean);
+  return v.join(' / ') || rv(row, 'testEnv') || '';
+}
+// 테스트 결과 내용 미리보기: 굵게(**)·목록(-)·번호(1.)·체크(- [ ])·구분선(---)만. 먼저 escapeHtml 하고 바꾼다 (순수 함수)
+function mdLite(text){
+  const inline = s=>s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  let out = '', list = '';
+  const open = t=>{ if(list !== t){ close(); out += t === 'ol' ? '<ol>' : '<ul>'; list = t; } };
+  const close = ()=>{ if(list){ out += `</${list}>`; list = ''; } };
+  escapeHtml(String(text || '')).split('\n').forEach(l=>{
+    let m;
+    if(/^\s*-{3,}\s*$/.test(l)){ close(); out += '<hr>'; }
+    else if((m = /^\s*- \[( |x)\] (.*)$/i.exec(l))){ open('ul'); out += `<li class="md-ck">${m[1].trim() ? '☑' : '☐'} ${inline(m[2])}</li>`; }
+    else if((m = /^\s*[-•] (.*)$/.exec(l))){ open('ul'); out += `<li>${inline(m[1])}</li>`; }
+    else if((m = /^\s*\d+\. (.*)$/.exec(l))){ open('ol'); out += `<li>${inline(m[1])}</li>`; }
+    else { close(); if(l.trim()) out += `<p>${inline(l)}</p>`; }
+  });
+  close();
+  return out;
+}
 const rk = (key, rid = currentRoundId) => rid === 'base' || !ROUND_KEY_RE.test(key) ? key : `rr:${rid}:${key}`;
 const rv = (row, key, rid) => row ? row[rk(key, rid)] : undefined;
 function withRound(rid, fn){ const prev = currentRoundId; currentRoundId = rid; try{ return fn(); }finally{ currentRoundId = prev; } }
@@ -2793,7 +3073,7 @@ function renameTesterInRow(row, from, to){
   const ts = testersOf(row);
   if(ts.includes(from)){ row.tester = joinTesters(ts.map(n=>n === from ? to : n)); changed = true; }
   Object.keys(row).forEach(key=>{ // 'tr:이름'·'rr:회차:tr:이름'(모든 회차)
-    const m = /^((?:rr:[^:]+:)?t[rns]:)(.*)$/.exec(key);
+    const m = /^((?:rr:[^:]+:)?(?:t[rns]|tdev|tos|tbr|tbuild):)(.*)$/.exec(key);
     if(!m || m[2] !== from) return;
     row[m[1] + to] = row[key];
     delete row[key];
@@ -3647,49 +3927,12 @@ function renderTable(){
     const oneLine = v=>String(v || '').replace(/\s*\n\s*/g, ' ');
     const noteKey = tabTester ? `tn:${tabTester}` : !assigned.length ? 'testNote' : assigned.length === 1 ? `tn:${assigned[0]}` : null; // 여러 명이면 null(이름별 패널)
     card.setAttribute('role', 'row');
-    card.innerHTML = `
-      <div class="tc-card-head">
-        <div class="tc-c c-sel"><input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" /></div>
-        <div class="tc-c c-id">
-          <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="${escapeHtml(row.tcId)} (눌러서 고칠 수 있어요)" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
-          ${isDup ? '<span class="ad-badge ad-badge--warning tc-mini-badge" title="유사 시나리오: 화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사</span>' : ''}
-          <select class="screentype-select tc-type-mini" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">
-          ${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}
-        </select>
-          ${rowHasConflict ? `<span class="ad-badge ad-badge--danger tc-mini-badge" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨(배정 충돌)">충돌</span>` : ''}
-        </div>
-        <div class="tc-c c-cat"><span class="tc-title tc-cat-edit" data-title-idx="${idx}" data-catedit="category" role="button" tabindex="0" title="${escapeHtml(row.category || '')} (누르면 고쳐요)">${escapeHtml(row.category || '') || '<span class="sub-txt">대분류 없음</span>'}</span></div>
-        <div class="tc-c c-subcat"><span class="tc-sub tc-cat-edit" data-catedit="subCategory" data-idx="${idx}" role="button" tabindex="0" title="${escapeHtml(row.subCategory || '')} (누르면 고쳐요)">${escapeHtml(row.subCategory || '') || '<span class="sub-txt">중분류 없음</span>'}</span><button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '펼치기' : '접기'}" title="상세 펼치기/접기" aria-expanded="${!isCollapsed}">▾</button></div>
-        <div class="tc-c c-pri"><select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${PRIORITY_OPTIONS.map(o=>`<option value="${o}"${o === priorityOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select></div>
-        <div class="tc-c c-res">
-          <span class="dot result-dot" aria-hidden="true" style="background:${RESULT_COLOR[tabTester ? ownResult : result] || 'var(--line)'}"></span>
-          ${tabTester
-            ? `<select class="tester-result-select ${resultTone(ownResult)}" data-idx="${idx}" data-name="${escapeHtml(tabTester)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(tabTester)} 결과">
-            <option value="">미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===ownResult?'selected':''}>${o}</option>`).join('')}
-          </select>`
-            : `<span class="result-badge ${resultTone(result)}" style="--res:${RESULT_COLOR[result] || 'var(--line)'}" title="전체 탭에서는 결과를 보기만 해요. 담당자 탭에서 입력해요" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`}
-        </div>
-        <div class="tc-c c-review"><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${REVIEW_STAGES.map(o=>`<option value="${o}"${o === reviewStageOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select>${ballBadge(row)}</div>
-        <div class="tc-c c-dev">${DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'))
-          ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${DEV_FIX_OPTIONS.map(o=>`<option value="${o}"${o === (rv(row, 'devFix') || '미확인') ? ' selected' : ''}>${o}</option>`).join('')}</select>`
-          : '<span class="sub-txt">-</span>'}</div>
-        <div class="tc-c c-who">${testerOptions}</div>
-        <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(rv(row, 'executedBy') || '') || '<span class="sub-txt">-</span>'}</span></div>
-        <div class="tc-c c-env"><input type="text" class="ad-input env-input cell-edit" data-idx="${idx}" value="${escapeHtml(rv(row, 'testEnv') || '')}" maxlength="40" placeholder="단말·OS" aria-label="${escapeHtml(row.tcId)} 테스트 환경"></div>
-        <div class="tc-c c-date"><input type="date" class="ad-input tdate-input cell-edit" data-idx="${idx}" value="${escapeHtml(rv(row, 'testDate') || '')}" aria-label="${escapeHtml(row.tcId)} 테스트 일자"></div>
-        <div class="tc-c c-upd"><span class="tc-ro-text tc-upd" title="마지막으로 고친 시각">${escapeHtml(row.updatedAt || '') || '<span class="sub-txt">-</span>'}</span></div>
-        <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
-      </div>
-
-      ${isCollapsed ? '<div class="tc-card-body" style="display:none;">' : `<dialog class="tc-pop" data-pop="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세">
-        <div class="tc-pop-head"><span class="tc-pop-id">${escapeHtml(row.tcId)}</span><span class="tc-pop-title" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' > ') || '(분류 없음)')}</span><span class="tc-pop-actions">${scnRo ? '' : popEditTc === row.tcId
-          ? '<span class="tc-pop-editing-note">수정 중</span><button type="button" class="ad-btn ad-btn--sm" data-pop-cancel>취소</button><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-pop-save>저장</button>'
-          : '<button type="button" class="ad-btn ad-btn--sm" data-pop-edit>수정</button>'}<button type="button" class="ad-btn ad-btn--ghost ad-btn--icon tc-pop-close" data-pop-close aria-label="상세 닫기">✕</button></span></div>
-        ${popResultHtml(row, idx, assigned)}
-        <div class="tc-card-body">`}
-      <div class="tc-detail">
-        <div class="tc-detail-col">
-          <div class="tc-field-row tc-meta-row">
+    const ce = isCollapsed || popEditTc === row.tcId ? 'true' : 'false';
+    const scnField = (label, key, val, extra = '')=>`<div class="tc-field-block"><label class="tc-field-label">${label}${extra}</label><div class="cell-edit tc-editable${['screen', 'category', 'subCategory'].includes(key) ? ' tc-oneline' : ''} tc-scn" contenteditable="${ce}" data-scn="1" data-idx="${idx}" data-key="${key}">${escapeHtml(val)}</div></div>`;
+    const fScreen = scnField('테스트 시나리오', 'screen', row.screen || ''), fCat = scnField('대분류', 'category', row.category || ''), fSub = scnField('중분류', 'subCategory', row.subCategory || '');
+    const fPre = scnField('전제조건', 'precondition', formatCircled(row.precondition), '<small>BO 설정 포함</small>'), fProc = scnField('테스트 절차', 'procedure', formatSteps(row.procedure));
+    const fDetail = scnField('시험 내역', 'testDetail', formatSentences(row.testDetail)), fExp = scnField('기대결과', 'expected', formatCircled(row.expected));
+    const metaRow = `<div class="tc-field-row tc-meta-row">
             <div class="tc-field-block"><span class="tc-field-label">비고</span><div class="c-note">${noteKey
           ? `<div class="cell-edit tc-editable tc-note-cell" contenteditable="true" data-idx="${idx}" data-key="${escapeHtml(noteKey)}" data-placeholder="비고">${escapeHtml(noteKey === 'testNote' ? (rv(row, 'testNote') || '') : testerValue(row, noteKey.slice(3), 'tn'))}</div>`
           : `<button type="button" class="tc-note-multi" data-note-idx="${idx}" aria-expanded="false" aria-controls="tcNotePop${idx}" title="${escapeHtml(noteText || '눌러서 담당자별 비고 입력')}">${escapeHtml(oneLine(noteText)) || '<span class="sub-txt">담당자별 비고</span>'}</button>
@@ -3699,44 +3942,76 @@ function renderTable(){
           <option value="">작성 상태</option>${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===ownStatus?'selected':''}>${o}</option>`).join('')}
         </select>`
           : `<span class="status-badge" title="${assigned.length ? '담당 테스터의 작성 상태 중 가장 덜 진행된 상태예요' : '담당자를 지정하면 그 테스터 탭에서 작성 상태를 골라요'}" aria-label="${escapeHtml(row.tcId)} 진행상태 ${escapeHtml(status)}">${escapeHtml(status)}</span>`}</div></div>
-          </div>
-          <div class="tc-field-block">
-            <label class="tc-field-label">테스트 시나리오</label>
-            <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="screen">${escapeHtml(row.screen || '')}</div>
-          </div>
-          <div class="tc-field-row">
-            <div class="tc-field-block">
-              <label class="tc-field-label">대분류</label>
-              <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="category">${escapeHtml(row.category || '')}</div>
-            </div>
-            <div class="tc-field-block">
-              <label class="tc-field-label">중분류</label>
-              <div class="cell-edit tc-editable tc-oneline tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="subCategory">${escapeHtml(row.subCategory || '')}</div>
-            </div>
-          </div>
-          <div class="tc-field-block">
-            <label class="tc-field-label">전제조건<small>BO 설정 포함</small></label>
-            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="precondition">${escapeHtml(formatCircled(row.precondition))}</div>
-          </div>
-          <div class="tc-field-block">
-            <label class="tc-field-label">테스트 절차</label>
-            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="procedure">${escapeHtml(formatSteps(row.procedure))}</div>
-          </div>
-          <div class="tc-field-block">
-            <label class="tc-field-label">시험 내역</label>
-            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="testDetail">${escapeHtml(formatSentences(row.testDetail))}</div>
-          </div>
+          </div>`;
+    // 목록 칸(참고 표 위계): 결과만 바로 입력(담당 테스터가 한 명으로 정해질 때), 나머지는 보기 → 상세 패널에서 고친다
+    const single = tabTester || (assigned.length === 1 ? assigned[0] : '');
+    const singleVal = single ? testerValue(row, single, 'tr') : '';
+    const resAllowed = single && canInputFor(single);
+    const firstNote = String(single ? testerValue(row, single, 'tn') : !assigned.length ? (rv(row, 'testNote') || '') : '').split('\n')[0];
+    const resCell = single
+      ? `<select class="tester-result-select res-pill ${resultTone(singleVal)}" data-res="${escapeHtml(singleVal || 'none')}" data-idx="${idx}" data-name="${escapeHtml(single)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(single)} 결과"${resAllowed ? '' : ' disabled title="담당이 아니라 입력할 수 없어요"'}>
+            <option value="">미실행</option>${RESULT_OPTIONS.map(o=>`<option value="${o}" ${o===singleVal?'selected':''}>${o}</option>`).join('')}
+          </select>`
+      : `<span class="result-badge res-pill-ro ${resultTone(result)}" data-res="${escapeHtml(result || 'none')}" title="${assigned.length ? '담당자가 여러 명이라 테스터 탭이나 상세에서 입력해요' : '담당 테스터를 지정하면 결과를 넣을 수 있어요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`;
+    const nCm = cmCountOf(row._id), ball = ballOf(row), upd = String(row.updatedAt || '');
+    const chips = [upd ? `<span class="tc-chip" title="최근 수정">${escapeHtml(upd.slice(0, 5).replace('-', ''))} 수정</span>` : '',
+      nCm ? `<span class="tc-chip is-blue">댓글 ${nCm}</span>` : '', ball === 'qa' ? '<span class="tc-chip is-blue">재검수 대기</span>' : ''].join('');
+    const stage = reviewStageOf(row), devOn = DEV_FIX_STAGES.includes(stage) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
+    const envName = assigned.includes(rv(row, 'executedBy')) ? rv(row, 'executedBy') : single || assigned[0] || '';
+    const env1 = [rv(row, tenvKey('tdev', envName)), rv(row, tenvKey('tos', envName))].filter(Boolean).join(' · ') || rv(row, 'testEnv') || '';
+    const env2 = [rv(row, tenvKey('tbr', envName)), rv(row, tenvKey('tbuild', envName)) ? `빌드 ${rv(row, tenvKey('tbuild', envName))}` : ''].filter(Boolean).join(' · ');
+    const devOwnerName = row.devOwner ? safeCall(()=>profileName(row.devOwner), '') : '';
+    card.innerHTML = `
+      <div class="tc-card-head">
+        <div class="tc-c c-sel"><input type="checkbox" class="tc-select-checkbox" data-selidx="${idx}" ${isSelected?'checked':''} title="선택" aria-label="${escapeHtml(row.tcId)} 선택" /></div>
+        <div class="tc-c c-id">
+          <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="${escapeHtml(row.tcId)} (눌러서 고칠 수 있어요)" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
+          ${isDup ? '<span class="ad-badge ad-badge--warning tc-mini-badge" title="유사 시나리오: 화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사</span>' : ''}${rowHasConflict ? `<span class="ad-badge ad-badge--danger tc-mini-badge" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨(배정 충돌)">충돌</span>` : ''}
         </div>
-        <div class="tc-detail-col">
-          <div class="tc-field-block">
-            <label class="tc-field-label">기대결과</label>
-            <div class="cell-edit tc-editable tc-scn" contenteditable="${isCollapsed || popEditTc === row.tcId ? 'true' : 'false'}" data-scn="1" data-idx="${idx}" data-key="expected">${escapeHtml(formatCircled(row.expected))}</div>
-          </div>
-        </div>
+        <div class="tc-c c-cat"><span class="tc-cat" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' · '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' · '))}</span></div>
+        <div class="tc-c c-title"><span class="tc-title" title="${escapeHtml(row.screen || '')}">${escapeHtml(row.screen || '') || '<span class="sub-txt">(제목 없음)</span>'}</span>${chips}<button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '열기' : '닫기'}" title="상세 열기" aria-expanded="${!isCollapsed}">›</button></div>
+        <div class="tc-c c-pri"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div>
+        <div class="tc-c c-res">${resCell}${firstNote ? `<span class="tc-sub2" title="${escapeHtml(firstNote)}">${escapeHtml(firstNote)}</span>` : ''}</div>
+        <div class="tc-c c-review"><span class="rv-badge" data-stage="${escapeHtml(stage)}">${escapeHtml(stage)}</span>${ballBadge(row)}</div>
+        <div class="tc-c c-dev">${devOn ? `<span class="dv-badge" data-dev="${escapeHtml(rv(row, 'devFix') || '미확인')}">${escapeHtml(rv(row, 'devFix') || '미확인')}</span>` : ''}${row.jira ? `<span class="tc-sub2 tc-mono">${escapeHtml(row.jira)}</span>` : ''}${devOwnerName ? `<span class="tc-sub2">${escapeHtml(devOwnerName)}</span>` : ''}</div>
+        <div class="tc-c c-who">${testerOptions}</div>
+        <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(rv(row, 'executedBy') || '')}</span></div>
+        <div class="tc-c c-env">${env1 ? `<span class="tc-ro-text" title="${escapeHtml(env1)}">${escapeHtml(env1)}</span>` : ''}${env2 ? `<span class="tc-sub2">${escapeHtml(env2)}</span>` : ''}</div>
+        <div class="tc-c c-date"><span class="tc-ro-text">${escapeHtml((rv(row, 'testDate') || '').slice(5).replace('-', '/'))}</span></div>
+        <div class="tc-c c-upd"><span class="tc-sub2 tc-mono" title="마지막으로 고친 시각">${escapeHtml(upd.replace('-', '/'))}</span></div>
+        <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
       </div>
-      ${batonHtml(row, idx)}
-      ${commentsHtml(row)}
-      </div>${isCollapsed ? '' : '</dialog>'}
+      ${isCollapsed ? `<div class="tc-card-body" style="display:none;"><div class="tc-detail"><div class="tc-detail-col">${metaRow}${fScreen}<div class="tc-field-row">${fCat}${fSub}</div>${fPre}${fProc}${fDetail}</div><div class="tc-detail-col">${fExp}</div></div>${batonHtml(row, idx)}${commentsHtml(row)}</div>`
+      : `<dialog class="tc-pop" data-pop="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세">
+        <div class="tc-pop-head">
+          <div class="tc-pop-hd">
+            <div class="tc-pop-crumb"><span class="tc-mono">${escapeHtml(row.tcId)}</span> · ${escapeHtml(row.screenType || '')} · ${escapeHtml([row.category, row.subCategory].filter(Boolean).join('>') || '(분류 없음)')}<span class="rv-badge" data-stage="${escapeHtml(stage)}">검수 단계 · ${escapeHtml(stage)}</span></div>
+            <h2 class="tc-pop-name">${escapeHtml(row.screen || '') || '(제목 없음)'}</h2>
+          </div>
+          <button type="button" class="ad-btn tc-pop-close" data-pop-close aria-label="상세 닫기">닫기</button>
+        </div>
+        <div class="tc-pop-cols">
+          <section class="tc-pop-l" aria-label="시나리오">
+            <div class="tc-sec-head"><h3>시나리오</h3><span class="tc-pop-actions">${scnRo ? '' : popEditTc === row.tcId
+              ? '<span class="tc-pop-editing-note">수정 중</span><button type="button" class="ad-btn ad-btn--sm" data-pop-cancel>취소</button><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-pop-save>저장</button>'
+              : '<button type="button" class="ad-btn ad-btn--sm" data-pop-edit>수정</button>'}</span></div>
+            <div class="tc-card-body"><div class="tc-detail">
+              <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">TC ID</span><div class="tc-ro-box tc-mono">${escapeHtml(row.tcId)}</div></div><div class="tc-field-block"><span class="tc-field-label">담당 테스터</span><div class="tc-ro-box">${escapeHtml(assigned.join(', ')) || '<span class="sub-txt">미지정</span>'}</div></div></div>
+              ${fScreen}
+              <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">유형</span>${popEditTc === row.tcId
+                ? `<select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}</select>`
+                : `<div class="tc-ro-box">${escapeHtml(row.screenType || '')}</div>`}</div><div class="tc-field-block"><span class="tc-field-label">우선순위</span><div class="tc-ro-box"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div></div></div>
+              <div class="tc-field-row">${fCat}${fSub}</div>
+              ${fPre}${fProc}${fDetail}${fExp}
+            </div></div>
+          </section>
+          <section class="tc-pop-r" aria-label="테스트 결과">
+            ${popRightHtml(row, idx, assigned)}
+            ${batonHtml(row, idx)}
+            ${commentsHtml(row)}
+          </section>
+        </div>
+      </dialog>`}
     `;
     list.appendChild(card);
   });
@@ -3867,10 +4142,45 @@ function renderTable(){
   if(!pop) popShownTc = null;
   if(pop){
     if(popShownTc === pop.dataset.pop) pop.classList.add('no-anim'); // 받은 변경·저장으로 다시 그릴 때는 밀려 나오는 동작을 반복하지 않는다
+    else { const r0 = tcData.find(r=>r.tcId === pop.dataset.pop); popResultSnap = r0 ? snapResult(r0) : null; popTesterPick = ''; } // 처음 열 때: 되돌리기 기준
     popShownTc = pop.dataset.pop;
     if(!pop.open){ try{ pop.showModal(); }catch(e){ pop.setAttribute('open', ''); } }
-    pop.scrollTop = popScrollTop;
-    pop.addEventListener('scroll', ()=>{ popScrollTop = pop.scrollTop; });
+    const cols = [pop.querySelector('.tc-pop-l'), pop.querySelector('.tc-pop-r')]; // 왼쪽·오른쪽 열이 따로 스크롤한다
+    cols.forEach((c, i)=>{ if(!c) return; c.scrollTop = (popScrollTop && popScrollTop[i]) || 0; c.addEventListener('scroll', ()=>{ popScrollTop = cols.map(x=>x ? x.scrollTop : 0); }); });
+    const popRow = ()=>tcData.find(r=>r.tcId === pop.dataset.pop);
+    const commitPrefill = ()=>{ const r = popRow(); if(!r) return; pop.querySelectorAll('.tenv-input[data-prefill]').forEach(inp=>{ const k = rk(tenvKey(inp.dataset.f, inp.dataset.name)); if(inp.value.trim() && !r[k]){ r[k] = inp.value.trim(); } inp.removeAttribute('data-prefill'); }); };
+    pop.querySelectorAll('.tester-result-select').forEach(sel=>sel.addEventListener('change', commitPrefill, true)); // 결과를 넣으면 미리 채운 테스트 정보도 저장
+    const pick = pop.querySelector('.tr-tester-pick');
+    if(pick) pick.addEventListener('change', ()=>{ popTesterPick = pick.value; renderTable(); });
+    pop.querySelectorAll('[data-md]').forEach(b=>{
+      b.addEventListener('mousedown', e=>e.preventDefault()); // 편집칸의 선택을 지킨다
+      b.addEventListener('click', ()=>{
+        const ed = pop.querySelector('.tr-note-ed');
+        if(!ed || ed.getAttribute('contenteditable') !== 'true' || ed.hidden) return;
+        if(document.activeElement !== ed) ed.focus();
+        const sel = String(window.getSelection() || ''), empty = !ed.innerText.trim();
+        const snip = { bold: `**${sel || '굵게'}**`, ul: '\n- ', ol: '\n1. ', check: '\n- [ ] ', hr: '\n---\n', bug: '\n[환경] \n[재현 절차]\n1. \n[기대 결과] \n[실제 결과] ' }[b.dataset.md];
+        document.execCommand('insertText', false, empty ? snip.replace(/^\n/, '') : snip); // input 이벤트 → 바로 저장
+      });
+    });
+    pop.querySelectorAll('[data-md-mode]').forEach(b=>b.addEventListener('click', ()=>{
+      const preview = b.dataset.mdMode === 'preview', ed = pop.querySelector('.tr-note-ed'), pv = pop.querySelector('.md-preview');
+      if(!ed || !pv) return;
+      ed.hidden = preview; pv.hidden = !preview;
+      if(preview) pv.innerHTML = mdLite(ed.innerText) || '<p class="sub-txt">내용이 없어요.</p>';
+      pop.querySelectorAll('[data-md-mode]').forEach(x=>x.setAttribute('aria-pressed', String(x === b)));
+    }));
+    const revBtn = pop.querySelector('[data-res-revert]');
+    if(revBtn) revBtn.addEventListener('click', ()=>{ if(restoreResult(popRow(), popResultSnap)){ scheduleAutoSave(); renderTable(); renderDistribution(); } });
+    const resSave = pop.querySelector('[data-res-save]');
+    if(resSave) resSave.addEventListener('click', ()=>{
+      commitPrefill();
+      const r = popRow(), before = popResultSnap;
+      autoSaveNow();
+      popResultSnap = r ? snapResult(r) : null;
+      showUndoToast('결과를 저장했어요.', ()=>{ if(restoreResult(popRow(), before)){ popResultSnap = before; scheduleAutoSave(); renderTable(); renderDistribution(); } });
+      renderTable();
+    });
     // 닫기(✕·Esc·바깥): close 이벤트에 기대지 않고 직접 닫는다(close 이벤트가 늦거나 오지 않는 환경이 있다). 수정 중이면 취소와 같다
     const closePop = ()=>{
       if(!pop.isConnected) return;
@@ -3921,11 +4231,22 @@ function renderTable(){
     inp.addEventListener('change', ()=>{ tcData[+inp.dataset.idx][rk(inp.classList.contains('env-input') ? 'testEnv' : 'testDate')] = inp.value.trim(); scheduleAutoSave(); });
     inp.addEventListener('keydown', e=>{ if(e.key === 'Enter' && inp.type === 'text'){ e.preventDefault(); inp.blur(); } });
   });
+  list.querySelectorAll('.tenv-input').forEach(inp=>{
+    inp.addEventListener('change', ()=>{
+      tcData[+inp.dataset.idx][rk(tenvKey(inp.dataset.f, inp.dataset.name))] = inp.value.trim();
+      inp.removeAttribute('data-prefill');
+      saveLastEnv(inp.dataset.f, inp.value.trim());
+      scheduleAutoSave();
+    });
+    inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
+  });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
-      const idx = +sel.dataset.idx;
+      const idx = +sel.dataset.idx, oldId = tcData[idx].tcId;
       tcData[idx].screenType = sel.value;
       renumberTcIds(); // FO·BO 번호를 따로 다시 매긴다(접두사도 바뀐다)
+      const nid = tcData[idx].tcId; // 상세가 열려 있으면 새 번호로 따라간다
+      if(nid !== oldId){ if(expandedTcRows.delete(oldId)) expandedTcRows.add(nid); if(popEditTc === oldId) popEditTc = nid; if(popShownTc === oldId) popShownTc = nid; }
       renderTable();
       renderDistribution();
     });
@@ -4193,17 +4514,83 @@ function cancelScnEdit(){
   if(!row || !snap) return;
   if(SCN_KEYS.some(k=>(row[k] == null ? '' : row[k]) !== snap[k])){ SCN_KEYS.forEach(k=>{ row[k] = snap[k]; }); scheduleAutoSave(); }
 }
-function popResultHtml(row, idx, assigned){
+const safeCall = (f, d)=>{ try{ return f(); }catch(e){ return d; } }; // 뒤 스크립트의 함수·값(authState 등)이 아직 없을 때
+const cmCountOf = id=>safeCall(()=>(commentsByRow.get(id) || []).length, 0);
+// 이 테스터 칸에 입력할 수 있나: 회원 체계에서는 내 계정으로 이어진 테스터이거나 관리자. 로그인 없이 쓰면 누구나
+function canInputFor(name){
+  if(!memberTesterMode()) return true;
+  if(safeCall(()=>isAdminUser(), false)) return true;
+  return !!name && testerAccountOf(name, editingProject(), authState) === authState.userId;
+}
+// 상세 오른쪽에서 볼 테스터: 고른 사람 → 테스터 탭 → 내 계정 → 첫 담당자
+let popTesterPick = '';
+function popTesterOf(row, assigned){
+  if(popTesterPick && assigned.includes(popTesterPick)) return popTesterPick;
+  if(tcFilterTester !== 'ALL' && assigned.includes(tcFilterTester)) return tcFilterTester;
+  if(memberTesterMode()){ const p = editingProject(), mine = assigned.find(n=>testerAccountOf(n, p, authState) === authState.userId); if(mine) return mine; }
+  return assigned[0] || '';
+}
+// 테스트 정보 자동 채움: 마지막으로 넣은 기기·OS·버전·빌드(이 브라우저)
+const LAST_ENV_KEY = 'cvt_last_test_env';
+const lastEnv = ()=>{ try{ return JSON.parse(localStorage.getItem(LAST_ENV_KEY) || '{}') || {}; }catch(e){ return {}; } };
+function saveLastEnv(f, v){ const o = lastEnv(); o[f] = v; try{ localStorage.setItem(LAST_ENV_KEY, JSON.stringify(o)); }catch(e){ /* 이번 화면에서만 */ } }
+const TENV_SUGGEST = { tdev: ['아이폰 16', '아이폰 15', '아이폰 13 미니', '갤럭시 S25', '갤럭시 S24', '갤럭시 Z 플립6', '아이패드', 'PC'], tos: ['iOS 18', 'iOS 17', 'Android 15', 'Android 14', 'Windows 11', 'macOS 15'], tbr: ['Chrome', 'Safari', 'Edge', 'Samsung Internet'], tbuild: [] };
+// 결과 되돌리기: 패널을 연 때의 결과 관련 칸(테스터별·회차별 포함)
+const RES_SNAP_RE = /^(rr:[^:]+:)?(t[rns]:|tdev|tos|tbr|tbuild|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|ball$|ballAt$|priority$)/;
+let popResultSnap = null;
+const snapResult = row=>({ tcId: row.tcId, vals: Object.fromEntries(Object.keys(row).filter(k=>RES_SNAP_RE.test(k)).map(k=>[k, row[k]])) });
+function restoreResult(row, snap){
+  if(!row || !snap || snap.tcId !== row.tcId) return false;
+  Object.keys(row).forEach(k=>{ if(RES_SNAP_RE.test(k) && !(k in snap.vals)) delete row[k]; });
+  Object.assign(row, snap.vals);
+  return true;
+}
+// 상세 오른쪽: 테스트 정보 · 결과 · 검수 정보 · 테스트 결과 내용(편집/미리보기) · 되돌리기/결과 저장
+function popRightHtml(row, idx, assigned){
+  const cur = popTesterOf(row, assigned), allow = canInputFor(cur) && (!!cur || !assigned.length), dis = allow ? '' : ' disabled';
+  const roundName = safeCall(()=>{ const p = editingProject(), r = p && roundsOf(p).find(x=>x.id === currentRoundId); return r ? roundLabel(r) : ''; }, '');
   const opt = (list, val, empty)=>(empty != null ? `<option value="">${empty}</option>` : '') + list.map(o=>`<option value="${o}"${o === val ? ' selected' : ''}>${o}</option>`).join('');
-  const testers = assigned.length ? assigned.map(n=>`<div class="pop-tr"><b title="${escapeHtml(n)}">${escapeHtml(n)}</b>
-      <select class="tester-result-select ${resultTone(testerValue(row, n, 'tr'))}" data-idx="${idx}" data-name="${escapeHtml(n)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(n)} 결과">${opt(RESULT_OPTIONS, testerValue(row, n, 'tr'), '미실행')}</select>
-      <select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(n)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(n)} 작성 상태">${opt(STATUS_OPTIONS, testerValue(row, n, 'ts'), '작성 상태')}</select></div>`).join('')
-    : '<p class="sub-txt">담당 테스터를 지정하면 테스터마다 결과를 넣을 수 있어요(표의 담당자 칸).</p>';
-  const dev = DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
-  return `<section class="tc-pop-results" aria-label="테스트 결과"><span class="cm-title">테스트 결과</span>${testers}
-    <div class="tc-pop-meta"><label>우선순위 <select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${opt(PRIORITY_OPTIONS, priorityOf(row))}</select></label>
-      <label>검수 단계 <select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${opt(REVIEW_STAGES, reviewStageOf(row))}</select></label>
-      ${dev ? `<label>개발 수정 <select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${opt(DEV_FIX_OPTIONS, rv(row, 'devFix') || '미확인')}</select></label>` : ''}</div></section>`;
+  const last = lastEnv(), canPick = assigned.length > 1 && (!memberTesterMode() || safeCall(()=>isAdminUser(), false));
+  const who = !assigned.length ? '<div class="tc-ro-box sub-txt">담당 테스터 없음</div>'
+    : canPick ? `<select class="tr-tester-pick" data-idx="${idx}" aria-label="입력할 테스터">${assigned.map(n=>`<option value="${escapeHtml(n)}"${n === cur ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>`
+    : `<div class="tc-ro-box">${escapeHtml(cur)}</div>`;
+  const tenv = TENV_FIELDS.map(([f, label])=>{
+    const saved = rv(row, tenvKey(f, cur)) || '', fill = saved || (f === 'tdev' && rv(row, 'testEnv')) || last[f] || '';
+    return `<label class="tr-f"><span>${label}</span><input type="text" class="ad-input tenv-input" data-f="${f}" data-idx="${idx}" data-name="${escapeHtml(cur)}" value="${escapeHtml(fill)}"${!saved && fill ? ' data-prefill="1"' : ''} list="tenvList-${f}" maxlength="40" placeholder="${f === 'tbuild' ? '예) 1030' : ''}"${dis}></label>`;
+  }).join('');
+  const lists = Object.entries(TENV_SUGGEST).map(([f, v])=>`<datalist id="tenvList-${f}">${v.map(x=>`<option value="${escapeHtml(x)}">`).join('')}</datalist>`).join('');
+  const res = cur ? testerValue(row, cur, 'tr') : (rv(row, 'result') || ''), st = cur ? testerValue(row, cur, 'ts') : '';
+  const done = ballOf(row) === 'closed' ? String(rv(row, 'ballAt') || '').slice(0, 10) : reviewStageOf(row) === '완료' && effectiveResult(row) === 'PASS' ? (rv(row, 'testDate') || '') : '';
+  const devOn = DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
+  const nKey = cur ? `tn:${cur}` : 'testNote', note = cur ? testerValue(row, cur, 'tn') : (rv(row, 'testNote') || '');
+  const others = assigned.filter(n=>n !== cur).map(n=>{ const v = testerValue(row, n, 'tr'); return `<span class="tr-other" data-res="${escapeHtml(v || 'none')}">${escapeHtml(n)} · ${escapeHtml(v || '미실행')}</span>`; }).join('');
+  return `<div class="tr-head"><h3>테스트 결과${roundName ? ` · ${escapeHtml(roundName)}` : ''}</h3></div>
+    <div class="tr-info">
+      <div class="tr-info-head"><b>테스트 정보</b><span class="legend">입력한 값은 다음 TC에 자동으로 채워집니다</span></div>
+      <div class="tr-grid"><label class="tr-f"><span>테스터 이름</span>${who}</label>${tenv}<label class="tr-f"><span>테스트 일자</span><div class="tc-ro-box">${escapeHtml(rv(row, 'testDate') || '') || '<span class="sub-txt">결과를 넣으면 오늘</span>'}</div></label></div>${lists}
+    </div>
+    ${allow ? '' : `<p class="tr-deny">${assigned.length ? '담당 테스터가 아니라 결과를 입력할 수 없어요.' : ''}</p>`}
+    ${!assigned.length ? '<p class="tr-deny">담당 테스터를 지정하면 테스터별로 결과를 넣을 수 있어요(목록의 담당 테스터 칸).</p>' : ''}
+    <div class="tr-grid tc-meta-row">
+      <label class="tr-f"><span>결과</span>${cur ? `<select class="tester-result-select res-pill ${resultTone(res)}" data-res="${escapeHtml(res || 'none')}" data-idx="${idx}" data-name="${escapeHtml(cur)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(cur)} 결과"${dis}>${opt(RESULT_OPTIONS, res, '미실행')}</select>` : `<div class="tc-ro-box">${escapeHtml(res || '미실행')}</div>`}</label>
+      <label class="tr-f"><span>최종 검수 완료일</span><div class="tc-ro-box">${escapeHtml(done) || '<span class="sub-txt">-</span>'}</div></label>
+      <label class="tr-f"><span>작성 상태</span>${cur ? `<select class="tester-status-select" data-idx="${idx}" data-name="${escapeHtml(cur)}" aria-label="${escapeHtml(row.tcId)} ${escapeHtml(cur)} 작성 상태"${dis}>${opt(STATUS_OPTIONS, st, '작성 상태')}</select>` : '<div class="tc-ro-box sub-txt">-</div>'}</label>
+    </div>
+    ${others ? `<div class="tr-others"><span class="legend">다른 테스터</span>${others}</div>` : ''}
+    <div class="tr-grid">
+      <label class="tr-f"><span>우선순위</span><select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${opt(PRIORITY_OPTIONS, priorityOf(row))}</select></label>
+      <label class="tr-f"><span>검수 단계</span><select class="review-select" data-idx="${idx}" data-stage="${reviewStageOf(row)}" aria-label="${escapeHtml(row.tcId)} 검수 단계">${opt(REVIEW_STAGES, reviewStageOf(row))}</select></label>
+      <label class="tr-f"><span>개발 수정</span>${devOn ? `<select class="dev-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 개발 수정">${opt(DEV_FIX_OPTIONS, rv(row, 'devFix') || '미확인')}</select>` : '<div class="tc-ro-box sub-txt">결함일 때 골라요</div>'}</label>
+    </div>
+    <div class="tr-f tr-note tc-meta-row"><span>테스트 결과 내용</span>
+      <div class="md-bar" role="toolbar" aria-label="서식">
+        <button type="button" data-md="bold" title="굵게"${dis}><b>B</b></button><button type="button" data-md="ul"${dis}>• 목록</button><button type="button" data-md="ol"${dis}>1. 번호</button><button type="button" data-md="check"${dis}>☐ 체크</button><button type="button" data-md="hr"${dis}>— 구분선</button><button type="button" data-md="bug"${dis}>버그 양식</button>
+        <span class="md-seg"><button type="button" data-md-mode="edit" aria-pressed="true">편집</button><button type="button" data-md-mode="preview" aria-pressed="false">미리보기</button></span>
+      </div>
+      <div class="c-note"><div class="cell-edit tc-editable tc-note-cell tr-note-ed" contenteditable="${allow ? 'true' : 'false'}" data-idx="${idx}" data-key="${escapeHtml(nKey)}" data-placeholder="테스트 결과 내용을 적어요. 서식은 위 버튼으로 넣어요.">${escapeHtml(note)}</div></div>
+      <div class="md-preview" hidden></div>
+    </div>
+    <div class="tr-actions"><button type="button" class="ad-btn" data-res-revert>되돌리기</button><button type="button" class="ad-btn ad-btn--primary" data-res-save${dis}>결과 저장</button></div>`;
 }
 
 /* ---------- 테스트 시나리오 통계 ---------- */
@@ -4261,8 +4648,9 @@ function setDetailTab(tab){
   if(!DETAIL_TABS.includes(tab)) return;
   detailTab = tab;
   try{ localStorage.setItem('cvt_detail_tab', tab); }catch(e){ /* 이번 화면에서만 */ }
-  if(tab === 'plan') renderPlan();
   applyDetailTab();
+  if(tab === 'plan') renderPlan(); // 보이게 한 뒤 그려야 타임라인 폭을 잴 수 있다
+  if(tab === 'board') renderGateBoard(); // 현황판은 보일 때만 그린다
 }
 document.getElementById('detailTabs').addEventListener('click', e=>{ const b = e.target.closest('[data-dtab]'); if(b) setDetailTab(b.dataset.dtab); });
 document.getElementById('detailTabs').addEventListener('keydown', e=>{
@@ -4537,7 +4925,7 @@ function addQcListSheet(workbook, rows, title){
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
   const BASE_COLS = 8; // TC ID~기대결과
   const EXTRA = [['우선순위', 9, priorityOf], ['검수 단계', 11, reviewStageOf], ['개발 수정', 10, r=>rv(r, 'devFix') || ''], ['테스터', 10, r=>rv(r, 'executedBy') || ''],
-    ['테스트 환경', 16, r=>rv(r, 'testEnv') || ''], ['테스트 일자', 12, r=>rv(r, 'testDate') || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 지금 회차의 값 // 검수 정보(테스터 블록 뒤)
+    ['테스트 환경', 16, r=>tenvText(r, (()=>{ const ns = assigneesOf(r), ex = rv(r, 'executedBy'); return ns.includes(ex) ? ex : ns[0] || ''; })())], ['테스트 일자', 12, r=>rv(r, 'testDate') || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 지금 회차의 값 // 검수 정보(테스터 블록 뒤)
   const extraStart = 1 + BASE_COLS + groupCount * 4 + 1;
   const totalCols = extraStart + EXTRA.length - 1; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
@@ -5280,55 +5668,150 @@ function planRowsOf(h){
     ? { key: k, label: '배포', single: true, from: h.deployDate || '', to: h.deployDate || '', owner: h.deployOwner || '', memo: h.deployMemo || '' }
     : { key: k, label: k, from: '', to: '', owner: '', memo: '', ...((h.periods || {})[k] || {}) });
 }
-// 타임라인 막대 위치(%): 가장 이른 날 ~ 가장 늦은 날(오늘 포함), 종료일까지 칠한다 (순수 함수)
-function planBars(rows, today){
-  const day = d=>Date.parse(d + 'T00:00:00Z') / 864e5;
-  const dated = rows.filter(r=>r.from || r.to);
-  if(!dated.length) return null;
-  const all = dated.flatMap(r=>[r.from || r.to, r.to || r.from]).concat(today).map(day);
-  const min = Math.min(...all), span = Math.max(...all) + 1 - min;
-  const pct = n=>Math.round(n / span * 1000) / 10;
-  return {
-    start: new Date(min * 864e5).toISOString().slice(0, 10), end: new Date((min + span - 1) * 864e5).toISOString().slice(0, 10),
-    today: pct(day(today) - min + 0.5),
-    bars: rows.map(r=>{
-      if(!r.from && !r.to) return { key: r.key, empty: true };
-      const s = day(r.from || r.to), e = day(r.to || r.from);
-      return { key: r.key, left: pct(s - min), width: pct(e + 1 - s) };
-    })
-  };
+/* ---------- 테스트 계획: A 일정 타임라인 → B 선택한 단계 상세 → C 일정 예측·다음 할 일 ----------
+   저장 데이터(periods·stages·deployDate·rounds)와 판정(stageConf·stageGate·saveStage·startNextStage)은 그대로 쓴다. 새 계산은 아래 순수 함수 */
+// 타임라인 날짜 범위: 가장 이른 날 − 2일 ~ 가장 늦은 날(배포일·오늘 포함) + 2일, 날짜가 하나도 없으면 오늘부터 4주 (순수 함수)
+function timelineRange(periods, deploy, today){
+  const ds = ['DVT', 'CVT', 'UAT'].flatMap(k=>[((periods || {})[k] || {}).from, ((periods || {})[k] || {}).to]).concat(deploy || []).filter(Boolean);
+  if(!ds.length) return { from: today, to: isoShift(today, 27) };
+  const all = ds.concat(today).sort();
+  return { from: isoShift(all[0], -2), to: isoShift(all[all.length - 1], 2) };
 }
-const PLAN_STATUS_CLASS = { '미정': 'is-none', '예정': 'is-planned', '진행 중': 'is-active', '종료': 'is-done' };
+// 종료 예측: 최근 7일 실행 수로 남은 건수를 끝내는 날, 배포일과의 차이, 배포일까지 하루 필요한 건수 (순수 함수)
+function forecastFinish(remaining, done7, today, deploy){
+  const days = (x, y)=>Math.round((Date.parse(y) - Date.parse(x)) / 864e5);
+  const avg = done7 / 7, daysLeft = deploy ? days(today, deploy) : null;
+  const eta = remaining <= 0 ? today : avg > 0 ? isoShift(today, Math.ceil(remaining / avg)) : null;
+  return { avg: Math.round(avg * 10) / 10, eta, slack: deploy && eta ? days(eta, deploy) : null, daysLeft,
+    need: deploy && remaining > 0 ? (daysLeft > 0 ? Math.ceil(remaining / daysLeft) : remaining) : 0 };
+}
+// 단계 상태: 대기 / 진행 중 / 종료(다음 단계를 시작했거나 마지막 단계가 기준 충족) / 강행 종료
+function stageState(p, k, today){
+  const conf = stageConf(p, k), i = ROUND_STAGES.indexOf(k), next = ROUND_STAGES[i + 1];
+  if(conf.forced) return '강행 종료';
+  if(next ? roundsOf(p).some(r=>roundStage(r) === next) : stageGate(p, k, tcData).pass) return '종료';
+  const per = (p.periods || {})[k] || {};
+  return roundsOf(p).some(r=>roundStage(r) === k) || phaseStatus(per.from, per.to, today) === '진행 중' ? '진행 중' : '대기';
+}
+const STAGE_STATE_CLASS = { '대기': 'is-planned', '진행 중': 'is-active', '종료': 'is-done', '강행 종료': 'is-forced' };
+const STAGE_COLOR = { DVT: '#6b6bf0', CVT: 'var(--primary)', UAT: 'var(--minor-text)' };
+const GATE_SENTENCE = { progress: ['진행률이', '% 이상'], highPass: ['High 통과율이', '% 이상'], openHighFail: ['열린 High Fail이', '건 이하'], openFail: ['열린 Fail이', '건 이하'], retestWait: ['재검수 대기가', '건 이하'] };
+let planStageSel = null; // {pid, k}: 사용자가 고른 단계(없으면 지금 회차의 단계)
+function selectPlanStage(k){ const p = editingProject(); if(!p || !ROUND_STAGES.includes(k)) return; planStageSel = { pid: p._id, k }; renderPlan(); }
 function renderPlan(){
   const box = document.getElementById('tcPlanCard'), p = editingProject();
   if(!box) return;
   if(!p){ box.innerHTML = '<div class="ad-empty">프로젝트가 만들어지면 테스트 일정을 넣을 수 있어요.</div>'; return; }
-  // 다시 그려도 입력 중이던 칸으로 포커스를 돌려준다
   const a = document.activeElement, keep = box.contains(a) && a.dataset.field ? [a.closest('[data-plan]').dataset.plan, a.dataset.field] : null;
-  const idx = historyList.indexOf(p), today = isoToday(), rows = planRowsOf(p), tl = planBars(rows, today);
-  const input = (r, field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input cell-edit" data-field="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(r.label)} ${label}" ${extra}>`;
-  box.innerHTML = stageRailHtml(p, today) + roundsHtml(p, today) + `<div class="plan-head plan-head--sub"><h3 class="plan-title">테스트 일정</h3><span class="legend">오늘 ${fullDate(today)}</span></div>
-    <div class="plan-table-wrap"><table class="plan-table">
-      <thead><tr><th scope="col">단계</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">담당</th><th scope="col">메모</th><th scope="col">상태</th></tr></thead>
-      <tbody>${rows.map(r=>{ const st = phaseStatus(r.from, r.to, today);
-        return `<tr data-plan="${r.key}"><th scope="row">${r.label}</th>
-          <td>${input(r, 'from', 'date', r.single ? '배포일' : '시작일')}</td>
-          <td>${r.single ? '<span class="sub-txt">배포일 하루</span>' : input(r, 'to', 'date', '종료일')}</td>
-          <td>${input(r, 'owner', 'text', '담당', 'maxlength="30" placeholder="담당"')}</td>
-          <td>${input(r, 'memo', 'text', '메모', 'maxlength="100" placeholder="메모"')}</td>
-          <td><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span></td></tr>`; }).join('')}</tbody>
-    </table></div>
-    <div class="plan-head plan-head--sub"><h3 class="plan-title">타임라인</h3>${tl ? `<span class="legend">${fullDate(tl.start)} ~ ${fullDate(tl.end)}</span>` : ''}</div>
-    ${tl ? `<div class="plan-timeline" role="img" aria-label="테스트 일정 타임라인">${rows.map((r, i)=>{ const b = tl.bars[i], st = phaseStatus(r.from, r.to, today);
-        return `<div class="plan-tl-row"><span class="plan-tl-label">${r.label}</span><span class="plan-tl-track">${b.empty ? '<span class="plan-tl-none">미정</span>'
-          : r.single ? `<span class="plan-tl-pin ${PLAN_STATUS_CLASS[st]}${b.left > 70 ? ' is-flip' : ''}" style="left:${b.left + b.width / 2}%" title="${escapeHtml(r.label)} ${fullDate(r.from)}"><i aria-hidden="true"></i><b>${shortDate(r.from)}</b></span>`
-          : `<span class="plan-tl-bar ${PLAN_STATUS_CLASS[st]}" style="left:${b.left}%;width:${b.width}%" title="${escapeHtml(r.label)} ${fullDate(r.from || r.to)}${r.single ? '' : ` ~ ${fullDate(r.to || r.from)}`}">${shortDate(r.from) || '?'} ~ ${shortDate(r.to) || '?'}</span>`}<span class="plan-tl-today" style="left:${tl.today}%" aria-hidden="true"></span></span></div>`; }).join('')}
-      <div class="plan-tl-row plan-tl-axis"><span class="plan-tl-label"></span><span class="plan-tl-track"><span class="plan-tl-today-label" style="left:${tl.today}%">오늘</span></span></div></div>`
-      : '<div class="ad-empty plan-empty">일정을 넣으면 타임라인이 보여요.</div>'}`;
-  box.querySelectorAll('[data-plan] .plan-input').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
+  const idx = historyList.indexOf(p), today = isoToday(), per = p.periods || {};
+  const curStage = roundStage(roundOf(p, currentRoundId));
+  const sel = planStageSel && planStageSel.pid === p._id ? planStageSel.k : curStage;
+  // A. 타임라인(인라인 SVG): 줄 = DVT·CVT·UAT·배포, 오늘 점선, 회차 점, 배포 깃발
+  const rg = timelineRange(per, p.deployDate, today), span = Math.max(1, Math.round((Date.parse(rg.to) - Date.parse(rg.from)) / 864e5) + 1);
+  const W = Math.max(560, (box.clientWidth || 1100) - 34), LBL = 64, RW = W - LBL - 12, RH = 44, TOP = 26, H = TOP + RH * 4 + 8;
+  const xOf = d=>LBL + Math.round((Date.parse(d) - Date.parse(rg.from)) / 864e5) / span * RW, dayW = RW / span;
+  const ticks = []; for(let i = 0; i < span; i += Math.max(1, Math.round(span / 8))) ticks.push(isoShift(rg.from, i));
+  const tx = today >= rg.from && today <= rg.to ? xOf(today) + dayW / 2 : null;
+  const rowsSvg = ROUND_STAGES.map((k, i)=>{
+    const y = TOP + i * RH, pr = per[k] || {}, st = stageState(p, k, today), on = k === sel, c = STAGE_COLOR[k];
+    const rds = roundsOf(p).filter(r=>roundStage(r) === k);
+    let bar;
+    if(pr.from || pr.to){
+      const s = pr.from || pr.to, e = pr.to || pr.from, x = xOf(s), w = Math.max(dayW, xOf(e) - x + dayW), label = `${shortDate(s)} ~ ${shortDate(e)}`;
+      bar = `<rect class="plan-tl-bar" x="${x.toFixed(1)}" y="${y + 9}" width="${w.toFixed(1)}" height="26" rx="6" style="fill:color-mix(in srgb, ${c} 16%, var(--panel));stroke:${c};stroke-width:1.5"><title>${k} ${fullDate(s)} ~ ${fullDate(e)} · ${st}</title></rect>
+        <text x="${(w > 92 ? x + 8 : x + w + 6).toFixed(1)}" y="${y + 26}" font-size="12" font-weight="600" fill="var(--ink)">${label}</text>
+        <text x="${(w > 92 ? x + w + 6 : x + w + 92).toFixed(1)}" y="${y + 26}" font-size="11.5" font-weight="700" class="pl-st ${STAGE_STATE_CLASS[st]}">${st}</text>
+        ${rds.map((r, j)=>{ const rx = r.from ? xOf(r.from) + dayW / 2 : x + 10 + j * 14; return `<circle cx="${rx.toFixed(1)}" cy="${y + 9}" r="5" fill="${c}" stroke="var(--panel)" stroke-width="2"><title>${escapeHtml(roundLabel(r))}${r.from ? ' · ' + fullDate(r.from) : ''}</title></circle>`; }).join('')}`;
+    } else {
+      bar = `<rect x="${LBL + 4}" y="${y + 9}" width="${Math.min(160, RW * .3).toFixed(1)}" height="26" rx="6" fill="none" stroke="var(--grey-400)" stroke-dasharray="4 4"/><text x="${LBL + 14}" y="${y + 26}" font-size="12" fill="var(--muted)">기간 정하기</text>
+        <text x="${(LBL + Math.min(160, RW * .3) + 12).toFixed(1)}" y="${y + 26}" font-size="11.5" font-weight="700" class="pl-st ${STAGE_STATE_CLASS[st]}">${st}</text>`;
+    }
+    return `<g class="pl-row${on ? ' is-on' : ''}" data-plan-stage="${k}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${k} 단계 열기 · ${st}">
+      <rect x="0" y="${y}" width="${W}" height="${RH}" rx="8" class="pl-row-bg"/>
+      <text x="10" y="${y + 27}" font-size="13" font-weight="800" fill="${c}">${k}</text>${bar}</g>`;
+  }).join('');
+  const dy = TOP + RH * 3, dep = p.deployDate;
+  const deploySvg = `<text x="10" y="${dy + 27}" font-size="13" font-weight="800" fill="var(--ink-soft)">배포</text>${dep ? `<g class="pl-flag"><line x1="${xOf(dep) + dayW / 2}" x2="${xOf(dep) + dayW / 2}" y1="${dy + 6}" y2="${dy + 38}" stroke="var(--fatal)" stroke-width="2"/><path d="M${xOf(dep) + dayW / 2} ${dy + 6} l14 5 l-14 5 z" fill="var(--fatal)"/><text x="${xOf(dep) + dayW / 2 + 18}" y="${dy + 20}" font-size="12" font-weight="700" fill="var(--ink)">${shortDate(dep)}</text><title>배포 ${fullDate(dep)}</title></g>` : `<text x="${LBL + 14}" y="${dy + 27}" font-size="12" fill="var(--muted)">배포일을 위에서 정해요</text>`}`;
+  const timeline = `<section class="pl-card pl-timeline" aria-label="일정 타임라인">
+    <div class="pl-head"><h3>일정</h3><span class="legend">오늘 ${fullDate(today)} · 막대를 누르면 아래에서 그 단계를 열어요</span><span class="pl-deploy" data-plan="deploy"><label>배포일 <input type="date" class="ad-input plan-input" data-field="from" value="${escapeHtml(dep || '')}" aria-label="배포일"></label></span></div>
+    <div class="pl-tl-scroll"><svg class="pl-tl" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="DVT·CVT·UAT 기간과 배포일 타임라인">
+      ${ticks.map(d=>`<line x1="${xOf(d).toFixed(1)}" x2="${xOf(d).toFixed(1)}" y1="${TOP - 4}" y2="${H - 6}" stroke="var(--line)"/>${tx != null && Math.abs(xOf(d) + 3 - tx) < 44 ? '' : `<text x="${(xOf(d) + 3).toFixed(1)}" y="14" font-size="11" fill="var(--muted)">${shortDate(d)}</text>`}`).join('')}
+      ${rowsSvg}${deploySvg}
+      ${tx != null ? `<line x1="${tx.toFixed(1)}" x2="${tx.toFixed(1)}" y1="${TOP - 6}" y2="${H - 4}" stroke="var(--fatal-text)" stroke-dasharray="3 3" stroke-width="1.5"/><text x="${tx.toFixed(1)}" y="${TOP - 9}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--fatal-text)">오늘</text>` : ''}
+    </svg></div></section>`;
+  // B. 선택한 단계 상세
+  const k = sel, g = stageGate(p, k, tcData), conf = g.conf, pr = per[k] || {}, st = stageState(p, k, today), i = ROUND_STAGES.indexOf(k), next = ROUND_STAGES[i + 1];
+  const nextStarted = next && roundsOf(p).some(r=>roundStage(r) === next), bad = g.checks.filter(c=>c.ok === false).length;
+  const roles = Array.from(new Set([...TESTER_ROLES, ...String(conf.who || '').split(/[·,/\s]+/).filter(Boolean)])), whoOn = String(conf.who || '').split(/[·,/\s]+/).filter(Boolean);
+  const rds = roundsOf(p).filter(r=>roundStage(r) === k);
+  const gateCard = c=>{
+    const now = c.value == null ? '<span class="sub-txt">회차 없음</span>' : `<b class="num">${c.key === 'signoff' ? (c.value ? '승인됨' : '승인 전') : c.value + c.unit}</b>`;
+    const okTxt = c.ok === true ? '<span class="pl-ok">✓ 충족</span>' : c.ok === false ? '<span class="pl-bad">✕ 미달</span>' : '';
+    const text = c.key === 'signoff' ? `담당자 승인${conf.signedBy ? ` · <b>${escapeHtml(conf.signedBy)}</b>` : ''}`
+      : `${GATE_SENTENCE[c.key][0]} <input type="number" class="ad-input gate-input" data-exit="${c.key}" value="${c.target}" min="0" max="${c.unit === '%' ? 100 : 9999}" aria-label="${k} ${c.label} 기준">${GATE_SENTENCE[c.key][1]}`;
+    return `<li class="pl-gate${c.ok === true ? ' is-ok' : c.ok === false ? ' is-bad' : ''}" data-gate="${c.key}"><span class="pl-gate-txt">${text}</span><span class="pl-gate-now">${c.key === 'signoff' && !conf.signedBy ? `<button type="button" class="ad-btn ad-btn--sm" data-signoff="${k}">승인하기</button>` : now}${okTxt}</span></li>`;
+  };
+  const detail = `<section class="pl-card stage-card s-${k.toLowerCase()}" data-stage="${k}" data-plan="${k}" aria-label="${k} 단계">
+    <div class="pl-stage-head">
+      <div><div class="pl-stage-title"><span class="stage-chip" style="color:${STAGE_COLOR[k]}">${k}</span><span class="plan-status ${STAGE_STATE_CLASS[st]}">${st}</span>${g.round ? `<span class="stage-verdict ${g.pass ? 'is-go' : 'is-nogo'}">${g.pass ? '종료 기준 충족' : `기준 미달 ${bad}`}</span>` : ''}</div>
+      <p class="stage-purpose">${escapeHtml(conf.purpose)}</p></div>
+      ${next && !nextStarted && g.round ? `<button type="button" class="ad-btn${g.pass ? ' ad-btn--primary' : ''} stage-next" data-next-stage="${next}">${g.pass ? `${next} 시작` : `사유 쓰고 ${next} 시작`}</button>` : ''}
+    </div>
+    <div class="pl-fields">
+      <label class="pl-f"><span>시작일</span><input type="date" class="ad-input plan-input" data-field="from" value="${escapeHtml(pr.from || '')}" aria-label="${k} 시작일"></label>
+      <label class="pl-f"><span>종료일</span><input type="date" class="ad-input plan-input" data-field="to" value="${escapeHtml(pr.to || '')}" aria-label="${k} 종료일"></label>
+      <label class="pl-f"><span>담당</span><input type="text" class="ad-input plan-input" data-field="owner" value="${escapeHtml(pr.owner || '')}" maxlength="30" placeholder="담당" aria-label="${k} 담당"></label>
+      <label class="pl-f pl-f-wide"><span>메모</span><input type="text" class="ad-input plan-input" data-field="memo" value="${escapeHtml(pr.memo || '')}" maxlength="100" placeholder="메모" aria-label="${k} 메모"></label>
+    </div>
+    <div class="pl-line"><span class="pl-lab">참여</span><div class="pl-chips">${roles.map(r=>`<button type="button" class="pl-chip" data-role="${escapeHtml(r)}" aria-pressed="${whoOn.includes(r)}">${escapeHtml(r)}</button>`).join('')}</div></div>
+    <div class="pl-line"><span class="pl-lab">범위</span><div class="pl-chips">${PRIORITY_OPTIONS.map(o=>`<button type="button" class="pl-chip" data-scope="${o}" aria-pressed="${(conf.scope.priority || []).includes(o)}">${o}</button>`).join('')}<span class="sub-txt">${(conf.scope.priority || []).length ? '켠 우선순위만 이 단계에서 검수' : '전체'}</span></div></div>
+    <div class="pl-line pl-line-top"><span class="pl-lab">종료 기준</span><ul class="pl-gates" aria-label="${k} 종료 기준">${g.checks.map(gateCard).join('')}</ul></div>
+    ${conf.forced ? `<p class="stage-forced">기준 미달로 넘어갔어요 · ${escapeHtml(conf.forced.by)} · ${escapeHtml(conf.forced.reason)}</p>` : ''}
+    <div class="pl-line pl-line-top"><span class="pl-lab">회차</span><div class="pl-chips">${rds.length ? rds.map(r=>`<span class="stage-round${r.id === currentRoundId ? ' is-on' : ''}"><button type="button" data-round-view="${escapeHtml(r.id)}" aria-pressed="${r.id === currentRoundId}" title="이 회차 보기">${escapeHtml(r.name || '회차')} · <b class="num">${withRound(r.id, ()=>progressSummary(tcData.filter(x=>inStageScope(x, conf.scope)))).pct}%</b></button>${r.id === 'base' ? '' : `<button type="button" class="pl-x" data-round-del="${escapeHtml(r.id)}" aria-label="${escapeHtml(roundLabel(r))} 삭제">✕</button>`}</span>`).join('') : '<span class="sub-txt">아직 회차가 없어요</span>'}
+      <details class="pl-add"><summary class="pl-chip">+ 회차 추가</summary><div class="pl-add-form">
+        <select class="ad-select" id="roundAddStage" aria-label="새 회차 단계">${ROUND_STAGES.map(x=>`<option${x === k ? ' selected' : ''}>${x}</option>`).join('')}</select>
+        <input type="text" class="ad-input" id="roundAddName" maxlength="30" placeholder="${roundsOf(p).length + 1}차" aria-label="새 회차 이름">
+        <input type="date" class="ad-input" id="roundAddFrom" aria-label="새 회차 시작일"><input type="date" class="ad-input" id="roundAddTo" aria-label="새 회차 종료일">
+        <label class="round-failonly"><input type="checkbox" id="roundAddFail"> 지난 회차 Fail만</label>
+        <button type="button" class="ad-btn ad-btn--sm ad-btn--primary" id="roundAddBtn">추가</button></div></details></div></div>
+  </section>`;
+  // C. 일정 예측 · 다음 할 일(지금 회차의 단계 기준)
+  const ps = progressSummary(tcData), remaining = Math.max(0, ps.target - (ps.pass + ps.fail + ps.hold));
+  const done7 = tcData.filter(r=>effectiveResult(r) && rv(r, 'testDate') && rv(r, 'testDate') > isoShift(today, -7) && rv(r, 'testDate') <= today).length;
+  const fc = forecastFinish(remaining, done7, today, dep);
+  const forecast = `<section class="pl-card pl-fc" aria-label="종료 예측"><h4>종료 예측</h4>${remaining === 0 ? '<p class="pl-big is-ok">모두 실행했어요</p>'
+    : !done7 ? '<p class="sub-txt">최근 7일 실행 기록이 없어 예측할 수 없어요. 결과를 넣으면 예측해요.</p>'
+    : `<p class="pl-big">${shortDate(fc.eta)} <small>예상 종료</small></p><p class="pl-fc-sub">남은 ${remaining}건 · 최근 7일 하루 평균 ${fc.avg}건</p>
+      ${dep ? `<p class="pl-fc-cmp ${fc.slack >= 0 ? 'is-ok' : 'is-bad'}">${fc.slack >= 0 ? `배포까지 여유 ${fc.slack}일` : `배포보다 ${-fc.slack}일 늦음`}</p><p class="pl-fc-sub">배포일(${shortDate(dep)})까지 하루 ${fc.need}건 필요</p>` : '<p class="pl-fc-sub">배포일을 정하면 여유를 비교해요.</p>'}`}</section>`;
+  const cg = stageGate(p, curStage, tcData), todos = cg.checks.filter(c=>c.ok === false).map(c=>{
+    const n = c.value, map = { progress: ['미실행 시나리오 실행하기', ''], highPass: ['High Fail 닫기', 'FAIL'], openHighFail: [`열린 High Fail ${n}건 닫기`, 'FAIL'], openFail: [`열린 Fail ${n}건 닫기`, 'FAIL'], retestWait: [`재검수 대기 ${n}건 확인하기`, null], signoff: ['담당자 승인 받기', null] }[c.key] || [c.label, null];
+    return map[1] == null ? `<li><span>${escapeHtml(map[0])}</span></li>` : `<li><button type="button" class="pl-todo" data-todo-res="${map[1]}">${escapeHtml(map[0])} <span aria-hidden="true">→</span> <u>목록에서 보기</u></button></li>`;
+  });
+  const todo = `<section class="pl-card pl-todo-card" aria-label="다음 할 일"><h4>다음 할 일 <small>${curStage} 종료 기준</small></h4>${!cg.round ? '<p class="sub-txt">이 단계에 회차가 없어요.</p>' : todos.length ? `<ul class="pl-todos">${todos.join('')}</ul>` : '<p class="pl-big is-ok">종료 기준을 모두 채웠어요</p>'}</section>`;
+  box.innerHTML = `<div class="pl-wrap">${timeline}<div class="pl-cols">${detail}<div class="pl-side">${forecast}${todo}</div></div></div>`;
+  // 묶기
+  box.querySelectorAll('[data-plan] .plan-input[data-field]').forEach(inp=>inp.addEventListener('change', ()=>savePlanField(idx, inp.closest('[data-plan]').dataset.plan, inp.dataset.field, inp.value)));
+  box.querySelectorAll('[data-plan] .plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
+  box.querySelectorAll('[data-plan-stage]').forEach(gr=>{
+    gr.addEventListener('click', ()=>selectPlanStage(gr.dataset.planStage));
+    gr.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); selectPlanStage(gr.dataset.planStage); } });
+  });
+  const card = box.querySelector('.stage-card');
+  card.querySelectorAll('[data-role]').forEach(b=>b.addEventListener('click', ()=>{
+    const on = new Set(whoOn); if(on.has(b.dataset.role)) on.delete(b.dataset.role); else on.add(b.dataset.role);
+    saveStage(idx, k, { who: roles.filter(r=>on.has(r)).join('·') });
+  }));
+  card.querySelectorAll('[data-scope]').forEach(b=>b.addEventListener('click', ()=>{
+    const on = new Set(conf.scope.priority || []); if(on.has(b.dataset.scope)) on.delete(b.dataset.scope); else on.add(b.dataset.scope);
+    saveStage(idx, k, { scope: { priority: PRIORITY_OPTIONS.filter(o=>on.has(o)) } });
+  }));
+  card.querySelectorAll('.gate-input').forEach(inp=>inp.addEventListener('change', ()=>saveStage(idx, k, { exit: { ...stageConf(p, k).exit, [inp.dataset.exit]: Math.max(0, Math.round(+inp.value || 0)) } })));
+  const sign = card.querySelector('[data-signoff]');
+  if(sign) sign.addEventListener('click', ()=>saveStage(idx, k, { signedBy: myName() || '담당자', signedAt: new Date().toISOString() }));
+  const nx = card.querySelector('[data-next-stage]');
+  if(nx) nx.addEventListener('click', ()=>startNextStage(idx, k, nx.dataset.nextStage));
   bindRounds(box, p);
-  bindStageRail(box, p);
-  box.querySelectorAll('[data-plan] .plan-input[type="text"], [data-round] .plan-input[type="text"]').forEach(inp=>inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } }));
+  box.querySelectorAll('[data-todo-res]').forEach(b=>b.addEventListener('click', ()=>{ tcFilterResult = b.dataset.todoRes; setDetailTab('list'); renderTable(); }));
   if(keep){ const f = box.querySelector(`[data-plan="${keep[0]}"] [data-field="${keep[1]}"]`); if(f) f.focus(); }
 }
 /* 회차: 프로젝트 data.rounds = [{id, stage, name, from, to}]. 'base' = 처음부터 쓰던 칸(접두어 없는 칸)으로, 목록에 없어도 첫 회차로 있다.
@@ -5413,29 +5896,6 @@ function stageGate(p, k, rows){
   });
   return { conf, round: last, checks, pass: checks.length > 0 && checks.every(c=>c.ok) };
 }
-function stageRailHtml(p, today){
-  return `<div class="plan-head"><h3 class="plan-title">단계</h3><span class="legend">DVT → CVT → UAT · 종료 기준을 모두 채우면 다음 단계를 시작해요</span></div>
-  <div class="stage-rail">${ROUND_STAGES.map((k, i)=>{
-    const g = stageGate(p, k, tcData), conf = g.conf, per = (p.periods || {})[k] || {}, st = phaseStatus(per.from, per.to, today);
-    const rounds = roundsOf(p).filter(r=>roundStage(r) === k), next = ROUND_STAGES[i + 1];
-    const nextStarted = next && roundsOf(p).some(r=>roundStage(r) === next);
-    const bad = g.checks.filter(c=>c.ok === false).length;
-    return `<section class="stage-card s-${k.toLowerCase()}${rounds.some(r=>r.id === currentRoundId) ? ' is-current' : ''}" data-stage="${k}" aria-label="${k} 단계">
-      <div class="stage-top"><span class="stage-chip">${k}</span><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span>${g.round ? `<span class="stage-verdict ${g.pass ? 'is-go' : 'is-nogo'}">${g.pass ? '종료 기준 충족' : `기준 미달 ${bad}`}</span>` : ''}</div>
-      <p class="stage-purpose">${escapeHtml(conf.purpose)}</p>
-      <dl class="stage-meta">
-        <dt>참여</dt><dd><input type="text" class="ad-input plan-input stage-input" data-sfield="who" value="${escapeHtml(conf.who)}" maxlength="30" aria-label="${k} 참여"></dd>
-        <dt>기간</dt><dd>${per.from || per.to ? `${shortDate(per.from) || '?'} ~ ${shortDate(per.to) || '?'}` : '<span class="sub-txt">아래 일정에서 입력</span>'}</dd>
-        <dt>범위</dt><dd class="stage-scope">${PRIORITY_OPTIONS.map(o=>`<label><input type="checkbox" data-scope="${o}"${(conf.scope.priority || []).includes(o) ? ' checked' : ''}> ${o}</label>`).join('')}${(conf.scope.priority || []).length ? '' : '<span class="sub-txt">(전체)</span>'}</dd>
-        <dt>회차</dt><dd class="stage-rounds">${rounds.length ? rounds.map(r=>`<button type="button" class="stage-round${r.id === currentRoundId ? ' is-on' : ''}" data-round-view="${escapeHtml(r.id)}" aria-pressed="${r.id === currentRoundId}">${escapeHtml(r.name || '회차')} <b class="num">${withRound(r.id, ()=>progressSummary(tcData.filter(x=>inStageScope(x, conf.scope)))).pct}%</b></button>`).join('') : '<span class="sub-txt">아직 없어요</span>'}</dd>
-      </dl>
-      <ul class="gate-list" aria-label="${k} 종료 기준">${g.checks.map(c=>`<li class="gate-item${c.ok === true ? ' is-ok' : c.ok === false ? ' is-bad' : ''}" data-gate="${c.key}"><span class="gate-name">${c.label}</span>${c.key === 'signoff'
-        ? (conf.signedBy ? `<b>${escapeHtml(conf.signedBy)}</b>` : `<button type="button" class="ad-btn ad-btn--sm" data-signoff="${k}">승인하기</button>`)
-        : `<b class="num">${c.value == null ? '-' : c.value + c.unit}</b><span class="gate-target">${c.op} <input type="number" class="ad-input gate-input" data-exit="${c.key}" value="${c.target}" min="0" max="${c.unit === '%' ? 100 : 9999}" aria-label="${k} ${c.label} 기준"> ${c.unit}</span>`}</li>`).join('')}</ul>
-      ${conf.forced ? `<p class="stage-forced">기준 미달로 넘어갔어요 · ${escapeHtml(conf.forced.by)} · ${escapeHtml(conf.forced.reason)}</p>` : ''}
-      ${next && !nextStarted && g.round ? `<button type="button" class="ad-btn ad-btn--sm${g.pass ? ' ad-btn--primary' : ''} stage-next" data-next-stage="${next}">${g.pass ? `${next} 시작` : `사유 쓰고 ${next} 시작`}</button>` : ''}
-    </section>`; }).join('')}</div>`;
-}
 /* ---------- 현황판: 단계 관문 보드 ----------
    지금 보는 회차의 단계 종료 기준(stageGate)을 게이지로 보여 주고 Go / No-Go를 판정한다. 아래에 막힌 것·일자별 처리·사람별 남은 일 */
 // 현황판 숫자 (순수 함수): 지금 회차 기준. 막힌 것은 TC ID 목록, 일자별은 결과를 넣은 날(testDate) 최근 10일
@@ -5459,45 +5919,150 @@ function boardSnapshot(p, rows, today){
   return { stage, round: r0, gate, blocked, daily, people };
 }
 const BLOCK_LABEL = { stale: '공 3일 넘게', retest: '재검수 대기', devUnseen: 'Fail · 개발 미확인', hold: '보류', unassigned: '담당 없음' };
+/* ---------- 현황판 그래프(표 없이): A 핵심 지표 · J 관문 게이지 · B 결과 분포 · C 진행 추이 · D 일자별 입력 · E 담당자별 · G 결함 흐름(+막힌 것) · F 대분류 품질 · H 우선순위 · I 회차 비교
+   계산식(진행률·결함률·관문)은 기존 함수(progressSummary·stageGate·boardSnapshot)를 그대로 쓰고, 새 집계는 아래 순수 함수로만 한다.
+   결과 색은 상태 색(--pass/--fatal/--minor/--na/--grey-400)이라 늘 글자 라벨과 함께, Fail은 빗금으로도 구분한다(적록색약). */
+const BOARD_RES = ['PASS', 'Fail', '보류', 'N/A', ''];
+const isoShift = (d, n)=>{ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+// 결과별 건수 (순수 함수)
+function resultCounts(rows, resOf = r=>effectiveResult(r)){
+  const o = { PASS: 0, Fail: 0, '보류': 0, 'N/A': 0, '': 0 };
+  (rows || []).forEach(r=>{ const v = resOf(r) || ''; o[v in o ? v : '']++; });
+  return o;
+}
+// 진행 추이: 결과가 있는 행을 테스트 일자 기준으로 날짜별 누적 (순수 함수)
+function burnSeries(rows, from, to){
+  const done = (rows || []).filter(r=>effectiveResult(r) && rv(r, 'testDate')).map(r=>rv(r, 'testDate'));
+  const out = [];
+  let acc = done.filter(d=>d < from).length;
+  for(let d = from; d <= to && out.length < 400; d = isoShift(d, 1)){ acc += done.filter(x=>x === d).length; out.push({ date: d, n: acc }); }
+  return out;
+}
+// 일자별 결과 입력: 오늘까지 n일, 날짜마다 결과별 건수 (순수 함수)
+function dailyByResult(rows, today, n = 14){
+  return Array.from({ length: n }, (_, i)=>isoShift(today, i - n + 1)).map(date=>({ date, c: resultCounts((rows || []).filter(r=>effectiveResult(r) && rv(r, 'testDate') === date)) }));
+}
+// 결함 흐름: Fail이 났거나 공이 돈 행 → 개발 수정 중 / 재검수 대기 / 닫힘 (순수 함수)
+function defectFlow(rows){
+  const all = (rows || []).filter(r=>effectiveResult(r) === 'Fail' || ballOf(r));
+  return { total: all.length, dev: all.filter(r=>ballOf(r) === 'dev').length, qa: all.filter(r=>ballOf(r) === 'qa').length, closed: all.filter(r=>ballOf(r) === 'closed').length,
+    waiting: all.filter(r=>!ballOf(r)).length };
+}
+// 대분류별 품질: Fail·보류 비율 높은 순 상위 top개 (순수 함수)
+function catQuality(rows, top = 8){
+  const m = new Map();
+  (rows || []).forEach(r=>{ const k = (r.category || '').trim() || '(분류 없음)'; if(!m.has(k)) m.set(k, []); m.get(k).push(r); });
+  return [...m].map(([k, l])=>({ k, t: l.length, bad: l.filter(r=>['Fail', '보류'].includes(effectiveResult(r))).length }))
+    .map(x=>({ ...x, pct: x.t ? Math.round(x.bad / x.t * 100) : 0 })).sort((a, b)=>b.pct - a.pct || b.bad - a.bad || a.k.localeCompare(b.k, 'ko')).slice(0, top);
+}
+// 다른 회차 기준으로 잠깐 계산
+function withRound(rid, f){ const keep = currentRoundId; currentRoundId = rid; try{ return f(); }finally{ currentRoundId = keep; } }
+let boardDirty = true; // 현황판 탭이 닫혀 있는 동안 바뀌었으면 열 때 다시 그린다
+const BD_COLOR = { PASS: 'var(--pass)', Fail: 'var(--fatal)', '보류': 'var(--minor)', 'N/A': 'var(--na)', '': 'var(--grey-400)' };
+const bdLabel = k=>k || '미실행';
+function bdStack(o, label, attrs = ()=>''){ // 가로 누적 막대(2px 틈·4px 둥근 끝·Fail 빗금). 조각마다 버튼(툴팁·키보드 포커스)
+  const tot = BOARD_RES.reduce((a, k)=>a + o[k], 0);
+  if(!tot) return '<div class="bd-stack is-empty" aria-label="0건"></div>';
+  return `<div class="bd-stack" role="group" aria-label="${escapeHtml(label)} ${BOARD_RES.filter(k=>o[k]).map(k=>`${bdLabel(k)} ${o[k]}건`).join(', ')}">${BOARD_RES.filter(k=>o[k]).map(k=>
+    `<button type="button" class="bd-seg${k === 'Fail' ? ' is-hatch' : ''}" style="flex:${o[k]};background-color:${BD_COLOR[k]}" title="${escapeHtml(label)} · ${bdLabel(k)} ${o[k]}건 (${Math.round(o[k] / tot * 100)}%)" ${attrs(k)}></button>`).join('')}</div>`;
+}
+const bdLegend = o=>`<div class="bd-legend">${BOARD_RES.map(k=>`<span><i class="${k === 'Fail' ? 'is-hatch' : ''}" style="background-color:${BD_COLOR[k]}"></i>${bdLabel(k)}${o ? ` <b>${o[k]}</b>` : ''}</span>`).join('')}</div>`;
+function bdDonut(pct, color, center, size = 84){
+  const r = 32, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, pct));
+  return `<svg class="bd-donut" viewBox="0 0 84 84" width="${size}" height="${size}" aria-hidden="true"><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--grey-100)" stroke-width="9"/>${v ? `<circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(c * v / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 42 42)"/>` : ''}<text x="42" y="47" text-anchor="middle" font-size="15" font-weight="800" fill="var(--ink)">${escapeHtml(center)}</text></svg>`;
+}
+const bdCard = (span, title, sub, body, cls = '')=>`<section class="bd-card bd-s${span}${cls ? ' ' + cls : ''}"><div class="bd-head"><h4>${title}</h4>${sub ? `<span class="bd-sub">${sub}</span>` : ''}</div>${body}</section>`;
+const bdEmpty = t=>`<p class="bd-empty">${t}</p>`;
 function renderGateBoard(){
   const box = document.getElementById('gateBoard'), p = editingProject();
   if(!box) return;
   if(!p || !tcData.length){ box.innerHTML = ''; box.hidden = true; return; }
+  if(typeof detailTab !== 'undefined' && detailTab !== 'board'){ boardDirty = true; return; } // 보이지 않으면 그리지 않는다
+  boardDirty = false;
   box.hidden = false;
-  const s = boardSnapshot(p, tcData, isoToday()), g = s.gate, bad = g.checks.filter(c=>c.ok === false);
+  const rows = tcData, today = isoToday(), s = boardSnapshot(p, rows, today), g = s.gate, bad = g.checks.filter(c=>c.ok === false);
+  const ps = progressSummary(rows), all = resultCounts(rows), flow = defectFlow(rows);
+  const defect = all.PASS + all.Fail ? Math.round(all.Fail / (all.PASS + all.Fail) * 100) : 0;
+  const openFail = rows.filter(r=>effectiveResult(r) === 'Fail' && ballOf(r) !== 'closed').length;
+  const dday = p.deployDate ? Math.round((Date.parse(p.deployDate) - Date.parse(today)) / 864e5) : null;
+  // A. 핵심 지표
+  const kpi = `<section class="bd-card bd-s12 bd-kpi" aria-label="핵심 지표">
+    <div class="bd-k">${bdDonut(ps.pct, 'var(--primary)', ps.pct + '%')}<div><b>진행률</b><span>${ps.pass + ps.fail + ps.hold} / ${ps.target}건 실행</span></div></div>
+    <div class="bd-k"><strong class="bd-big">${defect}%</strong><div><b>결함률</b><span>Fail ÷ (PASS + Fail)</span></div></div>
+    <button type="button" class="bd-k bd-k-btn" data-bd-res="FAIL" title="열린 Fail만 목록에서 보기"><strong class="bd-big${openFail ? ' is-bad' : ''}">${openFail}</strong><div><b>열린 Fail</b><span>닫히지 않은 결함</span></div></button>
+    <div class="bd-k"><strong class="bd-big">${flow.qa}</strong><div><b>재검수 대기</b><span>QA 차례</span></div></div>
+    <div class="bd-k"><strong class="bd-big">${dday == null ? '–' : dday >= 0 ? 'D-' + dday : 'D+' + (-dday)}</strong><div><b>종료 예측</b><span>${p.deployDate ? '배포 ' + escapeHtml(shortDate(p.deployDate)) : '배포 일정을 넣으면 보여요'}</span></div></div>
+  </section>`;
+  // J. 관문 게이지(Go/No-Go)
   const gauge = c=>{
-    const pct = c.unit === '%' ? Math.min(100, c.value) : c.key === 'signoff' ? (c.value ? 100 : 0) : (c.value <= c.target ? 100 : Math.max(8, Math.round(c.target / c.value * 100)));
+    const pct = c.unit === '%' ? Math.min(100, c.value) : c.key === 'signoff' ? (c.value ? 100 : 0) : (c.value <= c.target ? 100 : Math.max(6, Math.round(c.target / Math.max(1, c.value) * 100)));
     const filter = c.key === 'progress' ? 'NT' : (c.key === 'openFail' || c.key === 'openHighFail') ? 'FAIL' : '';
-    const val = c.key === 'signoff' ? (c.value ? '승인됨' : '승인 전') : `${c.value}${c.unit}`;
-    const tgt = c.key === 'signoff' ? '' : `기준 ${c.op} ${c.target}${c.unit}`;
-    const st = c.ok === true ? '<span class="gb-g-st">통과</span>' : c.ok === false ? '<span class="gb-g-st">미달</span>' : '';
-    const bar = c.unit === '%' ? `<span class="gb-g-bar"><i style="width:${pct}%"></i></span>` : ''; // 건수 관문(열린 Fail 등)은 막대가 뜻을 흐려 숫자만
-    const inner = `<span class="gb-g-top"><span class="gb-g-name">${c.label}</span>${st}</span><b class="num gb-g-val">${val}</b>${bar}<span class="gb-g-tgt">${tgt}</span>`;
-    return filter && !c.ok
-      ? `<button type="button" class="gb-gauge is-bad" data-gb-filter="${filter}" title="해당 시나리오만 목록에서 보기">${inner}</button>`
-      : `<div class="gb-gauge${c.ok ? ' is-ok' : ' is-bad'}">${inner}</div>`;
+    const val = c.key === 'signoff' ? (c.value ? '승인' : '승인 전') : `${c.value}${c.unit}`;
+    const st = c.ok === true ? '<span class="gb-g-st">✓ 통과</span>' : c.ok === false ? '<span class="gb-g-st">✕ 미달</span>' : '';
+    const inner = `${bdDonut(pct, c.ok === true ? 'var(--pass)' : c.ok === false ? 'var(--fatal)' : 'var(--grey-400)', val, 76)}<span class="gb-g-name">${c.label}</span>${st}<span class="gb-g-tgt">${c.key === 'signoff' ? '' : `기준 ${c.op} ${c.target}${c.unit}`}</span>`;
+    return filter && !c.ok ? `<button type="button" class="gb-gauge is-bad" data-gb-filter="${filter}" title="해당 시나리오만 목록에서 보기">${inner}</button>` : `<div class="gb-gauge${c.ok ? ' is-ok' : c.ok === false ? ' is-bad' : ''}">${inner}</div>`;
   };
+  const gates = bdCard(8, `<span class="gb-stage s-${s.stage.toLowerCase()}">${s.stage}</span> 종료 관문`, `<span class="gb-verdict ${g.pass ? 'is-go' : 'is-nogo'}" role="status">${g.pass ? 'Go · 종료 기준 충족' : `No-Go · ${bad.length}개 미달`}</span> ${escapeHtml(s.round.name || '')} · ${(g.conf.scope.priority || []).length ? `범위 ${g.conf.scope.priority.join('·')}` : '범위 전체'} · 기준은 [테스트 계획]에서 바꿔요`,
+    `<div class="gb-gauges">${g.checks.map(gauge).join('')}</div>`);
+  // B. 결과 분포(전체·FO·BO)
+  const typeRow = (lab, list, type)=>`<div class="bd-row"><span class="bd-rl">${lab}</span>${bdStack(resultCounts(list), lab, k=>`data-bd-res="${k}"${type ? ` data-bd-type="${type}"` : ''}`)}<em>${list.length}</em></div>`;
+  const dist = bdCard(4, '결과 분포', '전체 · FO · BO', `${bdLegend(all)}${typeRow('전체', rows, '')}${typeRow('FO', rows.filter(r=>r.screenType === 'FO'), 'FO')}${typeRow('BO', rows.filter(r=>r.screenType === 'BO'), 'BO')}`);
+  // C. 진행 추이(번업): 누적 실행 + 전체 기준선 + 배포일까지 목표선
+  const dates = rows.map(r=>effectiveResult(r) && rv(r, 'testDate')).filter(Boolean).sort();
+  const from = dates[0] && dates[0] < isoShift(today, -13) ? dates[0] : isoShift(today, -13);
+  const to = p.deployDate && p.deployDate > today ? p.deployDate : today;
+  const gridW = box.clientWidth || 1100, W = Math.max(320, Math.round(gridW >= 1100 ? (gridW - 12) * 8 / 12 - 34 : gridW - 34)); // 카드 실제 폭으로 그려 글자가 커지지 않게
+  const ser = burnSeries(rows, from, to), H = 190, L = 34, R = 16, T = 14, B = 26, n = ser.length;
+  const X = i=>L + (n > 1 ? i * (W - L - R) / (n - 1) : 0), Y = v=>T + (H - T - B) * (1 - v / Math.max(1, ps.target));
+  const iToday = ser.findIndex(x=>x.date === today), upto = iToday < 0 ? ser : ser.slice(0, iToday + 1);
+  const line = upto.map((x, i)=>`${X(i).toFixed(1)},${Y(x.n).toFixed(1)}`).join(' ');
+  const ticks = [0, Math.round(ps.target / 2), ps.target].filter((v, i, a)=>a.indexOf(v) === i);
+  const lastPt = upto[upto.length - 1];
+  const burn = bdCard(8, '진행 추이', '누적 실행 · 점선은 배포일까지 목표', !dates.length ? bdEmpty('결과를 넣은 기록이 없어요. 결과를 넣으면 날짜별로 쌓여요.') : `<svg class="bd-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="진행 추이: ${escapeHtml(shortDate(from))}부터 오늘까지 누적 ${lastPt ? lastPt.n : 0}건 실행, 전체 ${ps.target}건">
+      ${ticks.map(v=>`<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`).join('')}
+      <line x1="${X(0)}" y1="${Y(0)}" x2="${X(n - 1)}" y2="${Y(ps.target)}" stroke="var(--grey-400)" stroke-width="1.5" stroke-dasharray="3 4"/>
+      ${iToday >= 0 && iToday < n - 1 ? `<line x1="${X(iToday)}" x2="${X(iToday)}" y1="${T}" y2="${H - B}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${X(iToday)}" y="${T - 2}" text-anchor="middle" font-size="10.5" fill="var(--muted)">오늘</text>` : ''}
+      <polyline points="${line}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${upto.map((x, i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(x.n).toFixed(1)}" r="9" fill="transparent" class="bd-hit"><title>${escapeHtml(shortDate(x.date))} 누적 ${x.n}건</title></circle>`).join('')}
+      ${lastPt ? `<circle cx="${X(upto.length - 1)}" cy="${Y(lastPt.n)}" r="4.5" fill="var(--primary)" stroke="var(--panel)" stroke-width="2"/><text x="${Math.min(W - R, X(upto.length - 1) + 8)}" y="${Y(lastPt.n) - 8}" font-size="12" font-weight="700" fill="var(--ink)" text-anchor="${X(upto.length - 1) > W - 80 ? 'end' : 'start'}">${lastPt.n} / ${ps.target}</text>` : ''}
+      <text x="${L}" y="${H - 6}" font-size="11" fill="var(--muted)">${escapeHtml(shortDate(from))}</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="11" fill="var(--muted)">${escapeHtml(shortDate(to))}${p.deployDate && to === p.deployDate ? ' 배포' : ''}</text>
+    </svg>`);
+  // D. 일자별 결과 입력(최근 14일, 결과별 누적)
+  const days = dailyByResult(rows, today, 14), dmx = Math.max(1, ...days.map(d=>BOARD_RES.reduce((a, k)=>a + d.c[k], 0)));
+  const daily = bdCard(4, '일자별 결과 입력', '최근 14일', `<div class="gb-daily" role="img" aria-label="최근 14일 결과 입력 ${days.map(d=>`${shortDate(d.date)} ${BOARD_RES.reduce((a, k)=>a + d.c[k], 0)}건`).join(', ')}">${days.map(d=>{ const t = BOARD_RES.reduce((a, k)=>a + d.c[k], 0);
+      return `<span class="gb-day" title="${shortDate(d.date)} ${t ? BOARD_RES.filter(k=>d.c[k]).map(k=>`${bdLabel(k)} ${d.c[k]}`).join(' · ') : '0건'}"><span class="bd-col" style="height:${t / dmx * 100}%">${BOARD_RES.filter(k=>d.c[k]).map(k=>`<i class="${k === 'Fail' ? 'is-hatch' : ''}" style="flex:${d.c[k]};background-color:${BD_COLOR[k]}"></i>`).join('')}</span><em>${d.date.slice(8)}</em></span>`; }).join('')}</div>`);
+  // E. 담당자별 진행
+  const people = Array.from(new Set([...activeTesters(), ...rows.flatMap(assigneesOf)])).map(n=>{ const mine = rows.filter(r=>assigneesOf(r).includes(n)); return { n, mine, c: resultCounts(mine, r=>testerValue(r, n, 'tr')) }; }).filter(x=>x.mine.length);
+  const ppl = bdCard(4, '담당자별 진행', '누르면 그 테스터 탭', !people.length ? bdEmpty('담당 테스터를 지정하면 사람별 진행이 보여요.')
+    : people.map(x=>`<div class="bd-row"><button type="button" class="bd-rl bd-link" data-bd-tester="${escapeHtml(x.n)}" title="${escapeHtml(x.n)} 탭으로">${escapeHtml(x.n)}</button>${bdStack(x.c, x.n, k=>`data-bd-tester="${escapeHtml(x.n)}"`)}<em>${x.mine.length - x.c['']}/${x.mine.length}</em></div>`).join(''));
+  // G. 결함 흐름 + 막힌 것
+  const fmx = Math.max(1, flow.total);
+  const stage = (lab, v, attrs = '')=>`<div class="bd-row"><span class="bd-rl">${lab}</span><div class="bd-bar"><i style="width:${v / fmx * 100}%"></i></div><em>${v}건</em></div>`;
   const blocks = Object.keys(BLOCK_LABEL).map(k=>{ const list = s.blocked[k];
-    return `<li class="gb-block${list.length ? '' : ' is-zero'}"><span class="gb-b-name">${BLOCK_LABEL[k]}</span><b class="num">${list.length}</b>${list.slice(0, 5).map(id=>`<button type="button" class="gb-tc" data-gb-tc="${escapeHtml(id)}">${escapeHtml(id)}</button>`).join('')}${list.length > 5 ? `<span class="sub-txt">외 ${list.length - 5}</span>` : ''}</li>`; }).join('');
-  const maxN = Math.max(1, ...s.daily.map(d=>d.n));
-  box.innerHTML = `<div class="gb-head s-${s.stage.toLowerCase()}">
-      <span class="gb-stage">${s.stage}</span><span class="gb-round">${escapeHtml(s.round.name || '회차')}</span>
-      <span class="gb-verdict ${g.pass ? 'is-go' : 'is-nogo'}" role="status">${g.pass ? 'Go · 종료 기준 충족' : `No-Go · ${bad.length}개 미달`}</span>
-      <span class="legend">${(g.conf.scope.priority || []).length ? `범위 ${g.conf.scope.priority.join('·')}` : '범위 전체'} · 기준은 [테스트 계획]에서 바꿔요</span></div>
-    <div class="gb-gauges">${g.checks.map(gauge).join('')}</div>
-    <div class="gb-cols">
-      <section class="gb-col" aria-label="막힌 것"><h4 class="gb-title">막힌 것</h4><ul class="gb-blocks">${blocks}</ul></section>
-      <section class="gb-col" aria-label="일자별 결과 입력"><h4 class="gb-title">일자별 결과 입력 <span class="legend">최근 10일</span></h4>
-        ${s.daily.some(d=>d.n) ? '' : '<p class="sub-txt">최근 10일 안에 결과를 넣은 기록이 없어요.</p>'}<div class="gb-daily"${s.daily.some(d=>d.n) ? '' : ' hidden'} role="img" aria-label="최근 10일 결과 입력 ${s.daily.map(d=>`${shortDate(d.date)} ${d.n}건`).join(', ')}">${s.daily.map(d=>`<span class="gb-day" title="${shortDate(d.date)} ${d.n}건"><i style="height:${Math.round(d.n / maxN * 100)}%"></i><b class="num">${d.n || ''}</b><small>${d.date.slice(8)}</small></span>`).join('')}</div></section>
-      <section class="gb-col" aria-label="사람별 남은 일"><h4 class="gb-title">사람별 남은 일</h4>${s.people.length ? `<ul class="gb-people">${s.people.map(x=>`<li><span class="gb-p-name">${escapeHtml(x.name)}</span><span class="gb-p-bar"><i style="width:${x.total ? Math.round((x.total - x.left) / x.total * 100) : 0}%"></i></span><span class="num">남은 ${x.left}</span>${x.fail ? `<span class="gb-p-fail num">Fail ${x.fail}</span>` : ''}</li>`).join('')}</ul>` : '<p class="sub-txt">담당 테스터가 없어요.</p>'}</section>
-    </div>`;
-  box.querySelectorAll('[data-gb-filter]').forEach(b=>b.addEventListener('click', ()=>{ tcFilterResult = b.dataset.gbFilter === 'NT' ? '' : b.dataset.gbFilter; setDetailTab('list'); renderTable(); }));
+    return `<li class="gb-block${list.length ? '' : ' is-zero'}"><span class="gb-b-name">${BLOCK_LABEL[k]}</span><b class="num">${list.length}</b>${list.slice(0, 4).map(id=>`<button type="button" class="gb-tc" data-gb-tc="${escapeHtml(id)}">${escapeHtml(id)}</button>`).join('')}${list.length > 4 ? `<span class="sub-txt">외 ${list.length - 4}</span>` : ''}</li>`; }).join('');
+  const flowCard = bdCard(4, '결함 흐름', 'Fail이 지금 어디에 있나', `${flow.total ? `<button type="button" class="bd-row bd-row-btn" data-bd-res="FAIL" title="Fail만 목록에서 보기"><span class="bd-rl">Fail 전체</span><div class="bd-bar is-bad"><i style="width:100%"></i></div><em>${flow.total}건</em></button>${stage('개발 전달 전', flow.waiting)}${stage('개발 수정 중', flow.dev)}${stage('재검수 대기', flow.qa)}${stage('닫힘', flow.closed)}` : bdEmpty('Fail이 없어요.')}
+    <h5 class="bd-h5">막힌 것</h5><ul class="gb-blocks">${blocks}</ul>`);
+  // F. 대분류별 품질
+  const cats = catQuality(rows, 8);
+  const catCard = bdCard(4, '대분류별 Fail·보류', '비율 높은 순 상위 8', cats.every(c=>!c.bad) ? bdEmpty('Fail·보류가 있는 대분류가 없어요.')
+    : cats.map(c=>`<button type="button" class="bd-row bd-row-btn" data-bd-search="${escapeHtml(c.k === '(분류 없음)' ? '' : c.k)}" title="${escapeHtml(c.k)} 검색"><span class="bd-rl" title="${escapeHtml(c.k)}">${escapeHtml(c.k)}</span><div class="bd-bar is-warn"><i style="width:${c.pct}%"></i></div><em>${c.pct}% · ${c.bad}/${c.t}</em></button>`).join(''));
+  // H. 우선순위 × 결과
+  const pri = bdCard(4, '우선순위별 결과', '', PRIORITY_OPTIONS.map(k=>{ const list = rows.filter(r=>priorityOf(r) === k); return `<div class="bd-row"><span class="bd-rl pri-txt is-${k}">${k}</span>${bdStack(resultCounts(list), k, kk=>`data-bd-res="${kk}"`)}<em>${list.length}</em></div>`; }).join(''));
+  // I. 회차 비교(회차가 2개 이상일 때)
+  const rds = roundsOf(p);
+  const rounds = rds.length < 2 ? '' : bdCard(4, '회차 비교', '회차별 결과 · PASS율', rds.map(r=>{ const c = withRound(r.id, ()=>resultCounts(rows)), tot = BOARD_RES.reduce((a, k)=>a + c[k], 0) - c['N/A'];
+    return `<div class="bd-row"><span class="bd-rl" title="${escapeHtml(roundLabel(r))}">${escapeHtml(r.name || roundLabel(r))}</span>${bdStack(c, roundLabel(r))}<em>${tot ? Math.round(c.PASS / tot * 100) : 0}%</em></div>`; }).join(''));
+  box.innerHTML = `<div class="bd-grid">${kpi}${gates}${dist}${burn}${daily}${ppl}${flowCard}${catCard}${pri}${rounds}</div>`;
+  // 누르면 목록으로: 결과·화면유형·테스터·검색
+  const toList = f=>{ f(); setDetailTab('list'); renderTable(); const l = document.getElementById('dpanel-list'); if(l) l.scrollIntoView({ block: 'start' }); };
+  box.querySelectorAll('[data-gb-filter]').forEach(b=>b.addEventListener('click', ()=>toList(()=>{ tcFilterResult = b.dataset.gbFilter === 'NT' ? '' : b.dataset.gbFilter; })));
+  box.querySelectorAll('[data-bd-res]').forEach(b=>b.addEventListener('click', ()=>toList(()=>{ tcFilterResult = b.dataset.bdRes === 'FAIL' ? 'FAIL' : b.dataset.bdRes; tcFilterType = b.dataset.bdType || 'ALL'; if(b.dataset.bdTester) tcFilterTester = b.dataset.bdTester; })));
+  box.querySelectorAll('[data-bd-tester]:not([data-bd-res])').forEach(b=>b.addEventListener('click', ()=>toList(()=>{ tcFilterTester = b.dataset.bdTester; try{ localStorage.setItem('cvt_tester_tab', tcFilterTester); }catch(e){ /* 이번 화면에서만 */ } })));
+  box.querySelectorAll('[data-bd-search]').forEach(b=>b.addEventListener('click', ()=>toList(()=>{ const q = document.getElementById('tcListSearch'); tcSearchQuery = b.dataset.bdSearch.toLowerCase(); if(q) q.value = b.dataset.bdSearch; })));
   box.querySelectorAll('[data-gb-tc]').forEach(b=>b.addEventListener('click', ()=>{
     const row = tcData.find(r=>r.tcId === b.dataset.gbTc);
     if(!row) return;
-    tcFilterResult = 'ALL'; expandedTcRows.add(row.tcId); setDetailTab('list'); renderTable();
-    const card = [...document.querySelectorAll('#tcCardList .tc-card')].find(c=>c.querySelector('.tc-id-badge') && c.querySelector('.tc-id-badge').textContent === row.tcId);
-    if(card) card.scrollIntoView({ block: 'center' });
+    tcFilterResult = 'ALL'; expandedTcRows.clear(); expandedTcRows.add(row.tcId); setDetailTab('list'); renderTable();
   }));
 }
 async function saveStage(idx, k, patch){
@@ -5518,22 +6083,6 @@ async function startNextStage(idx, from, next){
     await saveStage(idx, from, { forced: { by: myName() || '알 수 없음', at: new Date().toISOString(), reason: reason.trim() } });
   }
   await addRound(idx, { stage: next, name: '1차' });
-}
-function bindStageRail(box, p){
-  const idx = historyList.indexOf(p);
-  box.querySelectorAll('.stage-card').forEach(card=>{
-    const k = card.dataset.stage;
-    card.querySelectorAll('.stage-input').forEach(inp=>inp.addEventListener('change', ()=>saveStage(idx, k, { [inp.dataset.sfield]: inp.value.trim() })));
-    card.querySelectorAll('[data-scope]').forEach(cb=>cb.addEventListener('change', ()=>saveStage(idx, k, { scope: { priority: [...card.querySelectorAll('[data-scope]:checked')].map(x=>x.dataset.scope) } })));
-    card.querySelectorAll('.gate-input').forEach(inp=>inp.addEventListener('change', ()=>{
-      const v = Math.max(0, Math.round(+inp.value || 0));
-      saveStage(idx, k, { exit: { ...stageConf(p, k).exit, [inp.dataset.exit]: v } });
-    }));
-    const sign = card.querySelector('[data-signoff]');
-    if(sign) sign.addEventListener('click', ()=>saveStage(idx, k, { signedBy: myName() || '담당자', signedAt: new Date().toISOString() }));
-    const nx = card.querySelector('[data-next-stage]');
-    if(nx) nx.addEventListener('click', ()=>startNextStage(idx, k, nx.dataset.nextStage));
-  });
 }
 async function addRound(idx, { stage, name, from, to, failOnly }){
   const entry = historyList[idx];
@@ -5566,31 +6115,6 @@ async function removeRound(idx, rid){
   await saveRounds(entry, before.filter(x=>x.id !== rid));
   if(currentRoundId === rid) setCurrentRound(roundsOf(entry)[roundsOf(entry).length - 1].id);
   showUndoToast(`'${roundLabel(r)}' 회차를 지웠어요.`, async ()=>{ await saveRounds(entry, before); setCurrentRound(rid); });
-}
-function roundsHtml(p, today){
-  const idx = historyList.indexOf(p);
-  const stageSel = (v, attrs)=>`<select class="ad-select plan-input round-input" ${attrs}>${ROUND_STAGES.map(st=>`<option${st === v ? ' selected' : ''}>${st}</option>`).join('')}</select>`;
-  const rows = roundsOf(p).map(r=>{
-    const pg = withRound(r.id, ()=>progressSummary(tcData)), st = phaseStatus(r.from, r.to, today), on = r.id === currentRoundId;
-    const f = (field, type, label, extra = '')=>`<input type="${type}" class="ad-input plan-input round-input" data-rfield="${field}" value="${escapeHtml(r[field] || '')}" aria-label="${escapeHtml(roundLabel(r))} ${label}" ${extra}>`;
-    return `<tr data-round="${escapeHtml(r.id)}"${on ? ' class="is-current"' : ''}>
-      <td>${stageSel(r.stage || 'CVT', `data-rfield="stage" aria-label="${escapeHtml(roundLabel(r))} 단계"`)}</td>
-      <td>${f('name', 'text', '이름', 'maxlength="30"')}</td><td>${f('from', 'date', '시작일')}</td><td>${f('to', 'date', '종료일')}</td>
-      <td><span class="plan-status ${PLAN_STATUS_CLASS[st]}">${st}</span></td>
-      <td><span class="round-pg"><span class="round-pg-bar"><span style="width:${pg.pct}%"></span></span>${pg.pct}%</span></td>
-      <td class="round-actions">${on ? '<span class="ad-badge ad-badge--neutral">보는 중</span>' : `<button type="button" class="ad-btn ad-btn--sm" data-round-view="${escapeHtml(r.id)}">보기</button>`}${r.id === 'base' ? '' : `<button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" data-round-del="${escapeHtml(r.id)}" aria-label="${escapeHtml(roundLabel(r))} 회차 삭제">삭제</button>`}</td></tr>`;
-  }).join('');
-  return `<div class="plan-head"><h3 class="plan-title">회차</h3><span class="legend">보는 중: ${escapeHtml(roundLabel(roundOf(p, currentRoundId)))} · 결과는 회차마다 따로 넣어요</span></div>
-    <div class="plan-table-wrap"><table class="plan-table round-table" data-pidx="${idx}">
-      <thead><tr><th scope="col">단계</th><th scope="col">이름</th><th scope="col">시작일</th><th scope="col">종료일</th><th scope="col">상태</th><th scope="col">진행률</th><th scope="col"><span class="sr-only">동작</span></th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr class="round-add">
-        <td>${stageSel('CVT', 'id="roundAddStage" aria-label="새 회차 단계"')}</td>
-        <td><input type="text" class="ad-input plan-input" id="roundAddName" maxlength="30" placeholder="${roundsOf(p).length + 1}차 통합테스트" aria-label="새 회차 이름"></td>
-        <td><input type="date" class="ad-input plan-input" id="roundAddFrom" aria-label="새 회차 시작일"></td><td><input type="date" class="ad-input plan-input" id="roundAddTo" aria-label="새 회차 종료일"></td>
-        <td colspan="2"><label class="round-failonly"><input type="checkbox" id="roundAddFail"> 지난 회차 Fail만</label></td>
-        <td><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" id="roundAddBtn">회차 추가</button></td></tr></tfoot>
-    </table></div>`;
 }
 function bindRounds(box, p){
   const idx = historyList.indexOf(p);
