@@ -1837,6 +1837,14 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   @media (max-width:700px){ .admin-card .plan-head{flex-wrap:wrap;} .admin-card .plan-head .legend{flex:1 1 100%;order:3;} } /* 좁은 화면: 안내 문구는 다음 줄 전체 폭 */
   .proj-admin-table .member-chip{display:inline-flex;align-items:center;gap:4px;flex:none;white-space:nowrap;}
   .proj-admin-table .member-chip .member-perm{width:auto;min-width:0;height:26px;padding-left:6px;font-size:12.5px;}
+
+  /* ════════ TC 표 가독성(2026-11 7차): 칸 간격 12px · 열 머리 고정 칸 바탕 · 상세 머리 제목 편집 ════════ */
+  #tcTableWrap{--tc-cols:20px 100px minmax(96px,1fr) minmax(128px,1.3fr) 56px 108px 96px 96px 96px 64px minmax(120px,1.2fr) 72px 96px 24px;--tc-gap:12px;--tc-min:1352px;}
+  .tc-table-head{--row-bg:var(--grey-100);} /* 열 머리의 고정 칸(선택·TC ID)도 머리와 같은 회색 바탕 */
+  .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:46px !important;} /* 안쪽 여백 14 + 선택 20 + 간격 12 */
+  .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{box-shadow:-11px 0 0 var(--row-bg), var(--tc-gap) 0 0 var(--row-bg) !important;}
+  dialog.tc-pop .tc-pop-name.tc-scn{display:block;margin:2px 0 0;padding:4px 8px;border:1px solid var(--primary) !important;border-radius:8px;background:var(--panel) !important;font-size:16px;font-weight:700;color:var(--ink);outline:none;}
+  dialog.tc-pop .tc-pop-name.tc-scn:empty::before{content:attr(data-placeholder);color:var(--grey-400);font-weight:500;}
 </style>
 </head>
 <body class="ad-root">
@@ -4062,9 +4070,11 @@ function renderTable(){
         <div class="tc-pop-head">
           <div class="tc-pop-hd">
             <div class="tc-pop-crumb"><span class="tc-mono">${escapeHtml(row.tcId)}</span> · ${escapeHtml(row.screenType || '')} · ${escapeHtml([row.category, row.subCategory].filter(Boolean).join('>') || '(분류 없음)')}<span class="rv-badge" data-stage="${escapeHtml(stage)}">검수 단계 · ${escapeHtml(stage)}</span></div>
-            <h2 class="tc-pop-name">${escapeHtml(row.screen || '') || '(제목 없음)'}</h2>
+            ${popEditTc === row.tcId
+              ? `<h2 class="tc-pop-name cell-edit tc-editable tc-oneline tc-scn" contenteditable="true" data-scn="1" data-idx="${idx}" data-key="screen" data-placeholder="테스트 시나리오 제목" aria-label="${escapeHtml(row.tcId)} 테스트 시나리오 제목">${escapeHtml(row.screen || '')}</h2>`
+              : `<h2 class="tc-pop-name">${escapeHtml(row.screen || '') || '(제목 없음)'}</h2>`}
           </div>
-          <button type="button" class="ad-btn tc-pop-close" data-pop-close aria-label="상세 닫기">닫기</button>
+          <button type="button" class="ad-btn tc-pop-close" data-pop-close aria-label="상세 닫기" autofocus>닫기</button>
         </div>
         <div class="tc-pop-cols">
           <section class="tc-pop-l" aria-label="시나리오">
@@ -4073,7 +4083,6 @@ function renderTable(){
               : '<button type="button" class="ad-btn ad-btn--sm" data-pop-edit>수정</button>'}</span></div>
             <div class="tc-card-body"><div class="tc-detail">
               <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">TC ID</span><div class="tc-ro-box tc-mono">${escapeHtml(row.tcId)}</div></div><div class="tc-field-block"><span class="tc-field-label">담당 테스터</span><div class="tc-ro-box">${escapeHtml(assigned.join(', ')) || '<span class="sub-txt">미지정</span>'}</div></div></div>
-              ${fScreen}
               <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">유형</span>${popEditTc === row.tcId
                 ? `<select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}</select>`
                 : `<div class="tc-ro-box">${escapeHtml(row.screenType || '')}</div>`}</div><div class="tc-field-block"><span class="tc-field-label">우선순위</span><div class="tc-ro-box"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div></div></div>
@@ -4220,7 +4229,7 @@ function renderTable(){
     if(popShownTc === pop.dataset.pop) pop.classList.add('no-anim'); // 받은 변경·저장으로 다시 그릴 때는 밀려 나오는 동작을 반복하지 않는다
     else { const r0 = tcData.find(r=>r.tcId === pop.dataset.pop); popResultSnap = r0 ? snapResult(r0) : null; popTesterPick = ''; } // 처음 열 때: 되돌리기 기준
     popShownTc = pop.dataset.pop;
-    if(!pop.open){ try{ pop.showModal(); }catch(e){ pop.setAttribute('open', ''); } }
+    if(!pop.open){ try{ pop.showModal(); }catch(e){ pop.setAttribute('open', ''); } } // 다시 열 때 포커스는 '닫기'(autofocus)로: 수정 중 제목칸에 포커스가 가면 팀원 변경 반영이 계속 미뤄진다
     const cols = [pop.querySelector('.tc-pop-l'), pop.querySelector('.tc-pop-r')]; // 왼쪽·오른쪽 열이 따로 스크롤한다
     cols.forEach((c, i)=>{ if(!c) return; c.scrollTop = (popScrollTop && popScrollTop[i]) || 0; c.addEventListener('scroll', ()=>{ popScrollTop = cols.map(x=>x ? x.scrollTop : 0); }); });
     const popRow = ()=>tcData.find(r=>r.tcId === pop.dataset.pop);
