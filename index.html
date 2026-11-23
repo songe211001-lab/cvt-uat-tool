@@ -1773,6 +1773,70 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   .pl-todos li{padding:8px 10px;border-radius:8px;background:var(--bg);}
   .pl-todo{padding:0;border:0;background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer;} .pl-todo u{color:var(--primary-dark);text-decoration:none;font-weight:700;} .pl-todo:hover u{text-decoration:underline;}
   @media (max-width:900px){ .pl-cols{grid-template-columns:1fr;} .pl-fields{grid-template-columns:repeat(2, minmax(0,1fr));} .pl-deploy{margin-left:0;} }
+
+  /* ════════ 상세 패널 다듬기(2026-11 5차): 폭 · 시나리오 글자 · PC/MW 환경 · 검수 수정 ════════ */
+  dialog.tc-pop{width:min(1120px, max(64vw, 860px));}
+  @media (max-width:760px){ dialog.tc-pop{width:100vw;} }
+  /* 왼쪽 시나리오: 본문 13px · 줄 높이 1.55 · 여백 6px 10px · 칸 간격 10px. 라벨은 12px/500 muted(목록용 #tcCardList 규칙이 이기던 것 수정) */
+  dialog.tc-pop .tc-pop-l .tc-detail{gap:10px;}
+  dialog.tc-pop .tc-pop-l .tc-field-row{gap:10px;}
+  #tcCardList dialog.tc-pop .tc-field-label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;text-transform:none;}
+  #tcCardList dialog.tc-pop .tc-pop-l .tc-scn, #tcCardList dialog.tc-pop .tc-pop-l .tc-ro-box{min-height:32px;padding:6px 10px;font-size:13px;line-height:1.55;}
+  /* 오른쪽 입력 격자: 칸이 좁아지면(1024px 등) 3열 → 2열로, 입력칸이 잘리지 않게 */
+  .tr-grid{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));}
+  /* 환경(PC·MW) 토글 */
+  .tr-plat{grid-column:1 / -1;}
+  .tplat-group{display:inline-flex;gap:4px;padding:3px;border-radius:10px;background:var(--grey-100);width:max-content;}
+  .tplat-btn{min-width:64px;height:30px;padding:0 14px;border:0;border-radius:8px;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;}
+  .tplat-btn[aria-pressed="true"]{background:var(--panel);color:var(--primary-dark);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.1);}
+  .tplat-group[data-prefill] .tplat-btn[aria-pressed="true"]{color:var(--ink-soft);font-style:italic;}
+  .tplat-btn:disabled{cursor:not-allowed;opacity:.6;}
+  .tr-f.is-off .ad-input{background:var(--grey-100);color:var(--muted);cursor:not-allowed;}
+  /* 키보드 포커스 표시(패널 안 버튼·칩) */
+  .tplat-btn:focus-visible, .md-bar button:focus-visible, dialog.tc-pop .ad-btn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  /* 좁은 화면: 머리가 화면을 다 차지하지 않게 제목 2줄·경로 1줄로 줄인다(전체 제목은 왼쪽 '테스트 시나리오' 칸에 있음) */
+  @media (max-width:760px){
+    .tc-pop-head{padding:10px 14px;}
+    .tc-pop-crumb{flex-wrap:nowrap;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block;font-size:12px;}
+    .tc-pop-crumb .rv-badge{display:none;}
+    .tc-pop-name{font-size:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  }
+
+  /* ════════ 표 정리(2026-11 6차): TC 표 대분류|중분류 · 최종 수정자 · 프로젝트 관리 표 너비 ════════ */
+  /* TC 표: 선택·TC ID·대분류·중분류·우선순위·결과·검수 단계·개발 수정·담당 테스터·테스터·테스트 환경·테스트 일자·최종 수정·삭제 */
+  #tcTableWrap{--tc-cols:20px 112px minmax(104px,.9fr) minmax(140px,1.2fr) 56px 112px 96px 100px 96px 64px minmax(104px,1fr) 72px 96px 24px;--tc-gap:8px;--tc-min:1338px;}
+  .tc-table-head, #tcCardList .tc-card-head{grid-template-columns:var(--tc-cols) !important;column-gap:var(--tc-gap) !important;padding-left:14px !important;padding-right:14px !important;min-width:var(--tc-min) !important;box-sizing:border-box;}
+  #tcCardList .tc-card{min-width:var(--tc-min) !important;}
+  .tc-table-head .tc-c{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  #tcCardList .c-cat .tc-cat{font-size:13px;color:var(--muted);}
+  #tcCardList .c-subcat{gap:4px !important;}
+  .tc-subline{display:flex;align-items:center;gap:4px;width:100%;min-width:0;}
+  #tcCardList .c-subcat .tc-sub{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;line-height:1.6;color:var(--ink);cursor:pointer;}
+  #tcCardList .c-subcat .row-toggle-btn{flex:none;width:22px;height:22px;padding:0;border:0;border-radius:6px;background:none;color:var(--grey-400);font-size:16px;line-height:1;cursor:pointer;}
+  #tcCardList .tc-card:hover .c-subcat .row-toggle-btn{color:var(--ink-soft);background:var(--grey-100);}
+  .tc-chips{display:flex;flex-wrap:wrap;gap:4px;}
+  .tc-chips .tc-chip{height:18px;font-size:12px;}
+  .tc-upd-by{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.5;color:var(--ink-soft);}
+  /* 고정 칸(선택·TC ID): 안쪽 여백 14px + 선택 20px + 간격 8px = 42px */
+  .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{left:14px !important;}
+  .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:42px !important;box-shadow:var(--tc-gap) 0 0 var(--row-bg) !important;}
+
+  /* 프로젝트 관리 표: 프로젝트(나머지) · 분류 140 · 멤버·권한 320 · 멤버 추가 260 · 삭제 72, 카드 폭 100% */
+  .proj-admin-table{table-layout:fixed;width:100%;min-width:0;}
+  .proj-admin-table .col-pname{width:auto;} .proj-admin-table .col-pcat{width:140px;} .proj-admin-table .col-pmem{width:320px;} .proj-admin-table .col-padd{width:260px;} .proj-admin-table .col-pdel{width:72px;}
+  .proj-admin-table th, .proj-admin-table td{vertical-align:middle;overflow:hidden;}
+  .proj-admin-table .proj-name, .proj-admin-table .proj-new-name{width:100%;min-width:0;text-overflow:ellipsis;}
+  .proj-admin-table .proj-cat, .proj-admin-table .proj-new-cat{width:100%;min-width:0;}
+  .proj-admin-table .member-chips{display:flex;flex-wrap:wrap;gap:4px;}
+  .proj-admin-table .member-add{display:flex;gap:6px;align-items:center;}
+  .proj-admin-table .member-add .member-add-user{flex:1 1 auto;min-width:0;width:auto;}
+  .proj-admin-table .member-add .member-add-perm{width:76px;flex:none;}
+  .proj-admin-table .member-add .ad-btn{flex:none;}
+  @media (max-width:1100px){ .proj-admin-table .col-pcat{width:120px;} .proj-admin-table .col-pmem{width:260px;} .proj-admin-table .col-padd{width:220px;} } /* 좁은 화면: 이름 칸을 남긴다 */
+  @media (max-width:900px){ .admin-card .plan-table-wrap{overflow-x:auto;} .proj-admin-table{min-width:880px;} }
+  @media (max-width:700px){ .admin-card .plan-head{flex-wrap:wrap;} .admin-card .plan-head .legend{flex:1 1 100%;order:3;} } /* 좁은 화면: 안내 문구는 다음 줄 전체 폭 */
+  .proj-admin-table .member-chip{display:inline-flex;align-items:center;gap:4px;flex:none;white-space:nowrap;}
+  .proj-admin-table .member-chip .member-perm{width:auto;min-width:0;height:26px;padding-left:6px;font-size:12.5px;}
 </style>
 </head>
 <body class="ad-root">
@@ -1943,8 +2007,8 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
       <div class="tc-table-wrap" id="tcTableWrap">
         <div class="tc-table-head" id="tcTableHead" role="row" hidden>
           <span class="tc-c c-sel" role="columnheader" aria-label="선택"></span>
-          <span class="tc-c c-id" role="columnheader">TC ID</span><span class="tc-c c-cat" role="columnheader">대분류 · 중분류</span>
-          <span class="tc-c c-title" role="columnheader">테스트 시나리오</span><span class="tc-c c-pri" role="columnheader">우선순위</span>
+          <span class="tc-c c-id" role="columnheader">TC ID</span><span class="tc-c c-cat" role="columnheader">대분류</span>
+          <span class="tc-c c-subcat" role="columnheader">중분류</span><span class="tc-c c-pri" role="columnheader">우선순위</span>
           <span class="tc-c c-res" role="columnheader">결과</span><span class="tc-c c-review" role="columnheader">검수 단계</span><span class="tc-c c-dev" role="columnheader">개발 수정</span>
           <span class="tc-c c-who" role="columnheader">담당 테스터</span><span class="tc-c c-exec" role="columnheader">테스터</span><span class="tc-c c-env" role="columnheader">테스트 환경</span>
           <span class="tc-c c-date" role="columnheader">테스트 일자</span><span class="tc-c c-upd" role="columnheader">최종 수정</span><span class="tc-c c-del" role="columnheader" aria-label="삭제"></span>
@@ -2258,7 +2322,7 @@ const SCREEN_TYPE_OPTIONS = ['FO','BO'];
 const STATUS_OPTIONS = ['완료','테스트불가','작성중','개발 검토']; // 고르는 순서(화면·통계 표)
 const STATUS_PROGRESS = ['작성중','개발 검토','테스트불가','완료']; // 진행 순서: 대표 진행상태는 가장 앞쪽(덜 진행된) 값
 // 검수 정보(표 열): 우선순위·검수 단계·개발 수정·테스터·테스트 환경·테스트 일자·최종 수정. 행 data의 새 키에 두고, 없으면 기본값으로 읽는다
-const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt', 'ball', 'ballAt', 'devOwner', 'jira', 'tdev', 'tos', 'tbr', 'tbuild']; // ball~jira: 바통(공) 넘기기
+const META_KEYS = ['priority', 'reviewStage', 'devFix', 'executedBy', 'testEnv', 'testDate', 'updatedAt', 'updatedBy', 'ball', 'ballAt', 'devOwner', 'jira', 'tplat', 'tdev', 'tos', 'tbr', 'tbuild']; // ball~jira: 바통(공) 넘기기
 const PRIORITY_OPTIONS = ['High', 'Mid', 'Low'];
 const REVIEW_STAGES = ['검수 대기', '수정 접수', '수정 진행', '재검수 대기', '완료', '검수 보류', '검수 제외'];
 const DEV_FIX_OPTIONS = ['미확인', '검토', '수정중', '수정 완료', '미해결', '버그 아님'];
@@ -2325,18 +2389,28 @@ function toExportRow(row){
 /* 테스터별 결과·작성 상태·테스트 내역: 행의 최상위 칸 'tr:이름'(결과)·'ts:이름'(작성 상태)·'tn:이름'(테스트 내역).
    테스터마다 칸이 따로라, 두 테스터가 같은 테스트 시나리오에 동시에 적어도 동기화(칸 단위 patch)에서 둘 다 남는다.
    담당자에서 빠진 테스터의 칸은 지우지 않고 화면·대표 값에서만 뺀다. */
-const TESTER_KEY_RE = /^(t[rns]|tdev|tos|tbr|tbuild|rr):/; // 'rr:회차ID:칸' = 다른 회차의 칸(아래 rk)
+const TESTER_KEY_RE = /^(t[rns]|tplat|tdev|tos|tbr|tbuild|rr):/; // 'rr:회차ID:칸' = 다른 회차의 칸(아래 rk)
 // 회차: 지금 보는 회차의 칸 이름. 기본 회차('base')는 예전 그대로의 칸, 다른 회차는 'rr:회차ID:칸'.
 // 회차마다 따로인 칸: 결과·작성 상태·비고(행·테스터별), 검수 단계·개발 수정·테스터·테스트 일자·테스트 환경. 시나리오 내용·우선순위·담당 테스터는 모든 회차가 같이 쓴다
 let currentRoundId = 'base';
-const ROUND_KEY_RE = /^(t[rns]:|tdev:|tos:|tbr:|tbuild:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$|ball$|ballAt$|tdev$|tos$|tbr$|tbuild$)/;
-// 테스트 정보: 테스트 기기·OS/버전·브라우저/앱 버전·앱 빌드 번호. 테스터별(·회차별) 칸 'tdev:이름', 담당자가 없으면 행 칸 'tdev'
+const ROUND_KEY_RE = /^(t[rns]:|tplat:|tdev:|tos:|tbr:|tbuild:|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|testEnv$|ball$|ballAt$|tplat$|tdev$|tos$|tbr$|tbuild$)/;
+// 테스트 정보: 환경(PC·MW) + 기기·OS/버전·브라우저/버전. 테스터별(·회차별) 칸 'tdev:이름', 담당자가 없으면 행 칸 'tdev'.
+// 앱 빌드 번호(tbuild)는 화면에서 뺐지만 예전 값은 남겨 두고 표시에 쓴다
 const TENV_FIELDS = [['tdev', '테스트 기기'], ['tos', 'OS / 버전'], ['tbr', '브라우저 / 앱 버전'], ['tbuild', '앱 빌드 번호']];
+const TENV_PLATS = { PC: [['tos', 'OS / 버전'], ['tbr', '브라우저 / 버전']], MW: [['tdev', '기기'], ['tos', 'OS / 버전'], ['tbr', '브라우저 / 버전']] };
 const tenvKey = (f, name)=>name ? `${f}:${name}` : f;
-// 엑셀·목록에 보일 테스트 환경 한 줄: "기기 / OS / 버전 / 빌드", 없으면 예전 테스트 환경 칸 (순수 함수)
+// 엑셀·목록에 보일 테스트 환경 한 줄: "PC · Windows 11 · Chrome" / "MW · 아이폰 15 · iOS 18 · Safari", 환경이 없는 예전 값은 "기기 / OS / 버전 / 빌드" (순수 함수)
 function tenvText(row, name){
+  const plat = rv(row, tenvKey('tplat', name)), build = rv(row, tenvKey('tbuild', name));
+  if(TENV_PLATS[plat]) return [plat, ...TENV_PLATS[plat].map(([f])=>rv(row, tenvKey(f, name))), build ? `빌드 ${build}` : ''].filter(Boolean).join(' · ');
   const v = TENV_FIELDS.map(([f])=>rv(row, tenvKey(f, name))).filter(Boolean);
   return v.join(' / ') || rv(row, 'testEnv') || '';
+}
+// 자동 채움 기억(cvt_last_test_env) 읽기: 새 구조 {plat, PC:{…}, MW:{…}}, 예전 구조 {tdev, tos, tbr, tbuild}는 MW 값으로 본다 (순수 함수)
+function envMemoryFor(o, plat){
+  o = o || {};
+  if(o[plat] && typeof o[plat] === 'object') return o[plat];
+  return plat === 'MW' && ['tdev', 'tos', 'tbr'].some(k=>typeof o[k] === 'string' && o[k]) ? { tdev: o.tdev || '', tos: o.tos || '', tbr: o.tbr || '' } : {};
 }
 // 테스트 결과 내용 미리보기: 굵게(**)·목록(-)·번호(1.)·체크(- [ ])·구분선(---)만. 먼저 escapeHtml 하고 바꾼다 (순수 함수)
 function mdLite(text){
@@ -3073,7 +3147,7 @@ function renameTesterInRow(row, from, to){
   const ts = testersOf(row);
   if(ts.includes(from)){ row.tester = joinTesters(ts.map(n=>n === from ? to : n)); changed = true; }
   Object.keys(row).forEach(key=>{ // 'tr:이름'·'rr:회차:tr:이름'(모든 회차)
-    const m = /^((?:rr:[^:]+:)?(?:t[rns]|tdev|tos|tbr|tbuild):)(.*)$/.exec(key);
+    const m = /^((?:rr:[^:]+:)?(?:t[rns]|tplat|tdev|tos|tbr|tbuild):)(.*)$/.exec(key);
     if(!m || m[2] !== from) return;
     row[m[1] + to] = row[key];
     delete row[key];
@@ -3954,12 +4028,14 @@ function renderTable(){
           </select>`
       : `<span class="result-badge res-pill-ro ${resultTone(result)}" data-res="${escapeHtml(result || 'none')}" title="${assigned.length ? '담당자가 여러 명이라 테스터 탭이나 상세에서 입력해요' : '담당 테스터를 지정하면 결과를 넣을 수 있어요'}" aria-label="${escapeHtml(row.tcId)} 결과 ${escapeHtml(result || '없음')}">${escapeHtml(result || '미실행')}</span>`;
     const nCm = cmCountOf(row._id), ball = ballOf(row), upd = String(row.updatedAt || '');
-    const chips = [upd ? `<span class="tc-chip" title="최근 수정">${escapeHtml(upd.slice(0, 5).replace('-', ''))} 수정</span>` : '',
-      nCm ? `<span class="tc-chip is-blue">댓글 ${nCm}</span>` : '', ball === 'qa' ? '<span class="tc-chip is-blue">재검수 대기</span>' : ''].join('');
+    const chips = [nCm ? `<span class="tc-chip is-blue">댓글 ${nCm}</span>` : '', ball === 'qa' ? '<span class="tc-chip is-blue">재검수 대기</span>' : ''].join('');
     const stage = reviewStageOf(row), devOn = DEV_FIX_STAGES.includes(stage) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
     const envName = assigned.includes(rv(row, 'executedBy')) ? rv(row, 'executedBy') : single || assigned[0] || '';
-    const env1 = [rv(row, tenvKey('tdev', envName)), rv(row, tenvKey('tos', envName))].filter(Boolean).join(' · ') || rv(row, 'testEnv') || '';
-    const env2 = [rv(row, tenvKey('tbr', envName)), rv(row, tenvKey('tbuild', envName)) ? `빌드 ${rv(row, tenvKey('tbuild', envName))}` : ''].filter(Boolean).join(' · ');
+    const ep = rv(row, tenvKey('tplat', envName)), ev_ = f=>rv(row, tenvKey(f, envName)) || '';
+    const env1 = ep === 'PC' ? ['PC', ev_('tos')].filter(Boolean).join(' · ') : ep === 'MW' ? ['MW', ev_('tdev')].filter(Boolean).join(' · ')
+      : [ev_('tdev'), ev_('tos')].filter(Boolean).join(' · ') || rv(row, 'testEnv') || '';
+    const env2 = ep === 'PC' ? ev_('tbr') : ep === 'MW' ? [ev_('tos'), ev_('tbr')].filter(Boolean).join(' · ')
+      : [ev_('tbr'), ev_('tbuild') ? `빌드 ${ev_('tbuild')}` : ''].filter(Boolean).join(' · ');
     const devOwnerName = row.devOwner ? safeCall(()=>profileName(row.devOwner), '') : '';
     card.innerHTML = `
       <div class="tc-card-head">
@@ -3968,8 +4044,8 @@ function renderTable(){
           <button type="button" class="tc-id-badge" data-edit-tcid="${idx}" title="${escapeHtml(row.tcId)} (눌러서 고칠 수 있어요)" aria-label="${escapeHtml(row.tcId)} 시나리오 ID 고치기">${escapeHtml(row.tcId)}</button>
           ${isDup ? '<span class="ad-badge ad-badge--warning tc-mini-badge" title="유사 시나리오: 화면명·대분류가 같은 테스트 시나리오가 더 있습니다">유사</span>' : ''}${rowHasConflict ? `<span class="ad-badge ad-badge--danger tc-mini-badge" title="${escapeHtml(conflictNames.join(', '))} 님에게 제약 테스트 시나리오가 2건 이상 배정됨(배정 충돌)">충돌</span>` : ''}
         </div>
-        <div class="tc-c c-cat"><span class="tc-cat" title="${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' · '))}">${escapeHtml([row.category, row.subCategory].filter(Boolean).join(' · '))}</span></div>
-        <div class="tc-c c-title"><span class="tc-title" title="${escapeHtml(row.screen || '')}">${escapeHtml(row.screen || '') || '<span class="sub-txt">(제목 없음)</span>'}</span>${chips}<button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '열기' : '닫기'}" title="상세 열기" aria-expanded="${!isCollapsed}">›</button></div>
+        <div class="tc-c c-cat"><span class="tc-cat" title="${escapeHtml(row.category || '')}">${escapeHtml(row.category || '')}</span></div>
+        <div class="tc-c c-subcat"><span class="tc-subline"><span class="tc-sub" title="${escapeHtml(row.subCategory || '')}">${escapeHtml(row.subCategory || '')}</span><button type="button" class="row-toggle-btn" data-toggle-tcid="${escapeHtml(row.tcId)}" aria-label="${escapeHtml(row.tcId)} 상세 ${isCollapsed ? '열기' : '닫기'}" title="상세 열기" aria-expanded="${!isCollapsed}">›</button></span>${chips ? `<span class="tc-chips">${chips}</span>` : ''}</div>
         <div class="tc-c c-pri"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div>
         <div class="tc-c c-res">${resCell}${firstNote ? `<span class="tc-sub2" title="${escapeHtml(firstNote)}">${escapeHtml(firstNote)}</span>` : ''}</div>
         <div class="tc-c c-review"><span class="rv-badge" data-stage="${escapeHtml(stage)}">${escapeHtml(stage)}</span>${ballBadge(row)}</div>
@@ -3978,7 +4054,7 @@ function renderTable(){
         <div class="tc-c c-exec"><span class="tc-ro-text" title="결과를 넣은 테스터">${escapeHtml(rv(row, 'executedBy') || '')}</span></div>
         <div class="tc-c c-env">${env1 ? `<span class="tc-ro-text" title="${escapeHtml(env1)}">${escapeHtml(env1)}</span>` : ''}${env2 ? `<span class="tc-sub2">${escapeHtml(env2)}</span>` : ''}</div>
         <div class="tc-c c-date"><span class="tc-ro-text">${escapeHtml((rv(row, 'testDate') || '').slice(5).replace('-', '/'))}</span></div>
-        <div class="tc-c c-upd"><span class="tc-sub2 tc-mono" title="마지막으로 고친 시각">${escapeHtml(upd.replace('-', '/'))}</span></div>
+        <div class="tc-c c-upd">${row.updatedBy ? `<span class="tc-upd-by" title="최종 수정자">${escapeHtml(row.updatedBy)}</span>` : ''}<span class="tc-sub2 tc-mono" title="마지막으로 고친 시각">${escapeHtml(upd.replace('-', '/'))}</span></div>
         <div class="tc-c c-del"><button class="icon-btn ad-btn ad-btn--ghost ad-btn--icon" data-del="${idx}" title="삭제" aria-label="${escapeHtml(row.tcId)} 삭제">✕</button></div>
       </div>
       ${isCollapsed ? `<div class="tc-card-body" style="display:none;"><div class="tc-detail"><div class="tc-detail-col">${metaRow}${fScreen}<div class="tc-field-row">${fCat}${fSub}</div>${fPre}${fProc}${fDetail}</div><div class="tc-detail-col">${fExp}</div></div>${batonHtml(row, idx)}${commentsHtml(row)}</div>`
@@ -4148,7 +4224,18 @@ function renderTable(){
     const cols = [pop.querySelector('.tc-pop-l'), pop.querySelector('.tc-pop-r')]; // 왼쪽·오른쪽 열이 따로 스크롤한다
     cols.forEach((c, i)=>{ if(!c) return; c.scrollTop = (popScrollTop && popScrollTop[i]) || 0; c.addEventListener('scroll', ()=>{ popScrollTop = cols.map(x=>x ? x.scrollTop : 0); }); });
     const popRow = ()=>tcData.find(r=>r.tcId === pop.dataset.pop);
-    const commitPrefill = ()=>{ const r = popRow(); if(!r) return; pop.querySelectorAll('.tenv-input[data-prefill]').forEach(inp=>{ const k = rk(tenvKey(inp.dataset.f, inp.dataset.name)); if(inp.value.trim() && !r[k]){ r[k] = inp.value.trim(); } inp.removeAttribute('data-prefill'); }); };
+    const commitPrefill = ()=>{ const r = popRow(); if(!r) return;
+      const g = pop.querySelector('.tplat-group[data-prefill]'), on = g && g.querySelector('[aria-pressed="true"]');
+      if(on){ const k = rk(tenvKey('tplat', g.dataset.name)); if(!r[k]) r[k] = on.dataset.tplat; g.removeAttribute('data-prefill'); }
+      pop.querySelectorAll('.tenv-input[data-prefill]').forEach(inp=>{ const k = rk(tenvKey(inp.dataset.f, inp.dataset.name)); if(inp.value.trim() && !r[k]){ r[k] = inp.value.trim(); } inp.removeAttribute('data-prefill'); }); };
+    pop.querySelectorAll('.tplat-btn').forEach(b=>b.addEventListener('click', ()=>{ // 환경을 고르면 바로 저장하고 그 환경의 칸으로 다시 그린다
+      const g = b.closest('.tplat-group'), r = popRow(); if(!r) return;
+      const pk = rk(tenvKey('tplat', g.dataset.name));
+      if(r[pk] !== b.dataset.tplat) ['tdev', 'tos', 'tbr'].forEach(f=>{ delete r[rk(tenvKey(f, g.dataset.name))]; }); // 환경을 바꾸면 그 환경의 값만 남게 비운다(새 환경의 마지막 값으로 미리 채움)
+      r[pk] = b.dataset.tplat;
+      saveLastEnv('plat', b.dataset.tplat);
+      scheduleAutoSave(); renderTable();
+    }));
     pop.querySelectorAll('.tester-result-select').forEach(sel=>sel.addEventListener('change', commitPrefill, true)); // 결과를 넣으면 미리 채운 테스트 정보도 저장
     const pick = pop.querySelector('.tr-tester-pick');
     if(pick) pick.addEventListener('change', ()=>{ popTesterPick = pick.value; renderTable(); });
@@ -4235,7 +4322,7 @@ function renderTable(){
     inp.addEventListener('change', ()=>{
       tcData[+inp.dataset.idx][rk(tenvKey(inp.dataset.f, inp.dataset.name))] = inp.value.trim();
       inp.removeAttribute('data-prefill');
-      saveLastEnv(inp.dataset.f, inp.value.trim());
+      if(inp.dataset.plat){ saveLastEnv(inp.dataset.f, inp.value.trim(), inp.dataset.plat); const g = inp.closest('dialog.tc-pop') && inp.closest('dialog.tc-pop').querySelector('.tplat-group[data-prefill]'); if(g){ const on = g.querySelector('[aria-pressed="true"]'), k = rk(tenvKey('tplat', g.dataset.name)), r = tcData[+inp.dataset.idx]; if(on && !r[k]) r[k] = on.dataset.tplat; g.removeAttribute('data-prefill'); } }
       scheduleAutoSave();
     });
     inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
@@ -4533,10 +4620,18 @@ function popTesterOf(row, assigned){
 // 테스트 정보 자동 채움: 마지막으로 넣은 기기·OS·버전·빌드(이 브라우저)
 const LAST_ENV_KEY = 'cvt_last_test_env';
 const lastEnv = ()=>{ try{ return JSON.parse(localStorage.getItem(LAST_ENV_KEY) || '{}') || {}; }catch(e){ return {}; } };
-function saveLastEnv(f, v){ const o = lastEnv(); o[f] = v; try{ localStorage.setItem(LAST_ENV_KEY, JSON.stringify(o)); }catch(e){ /* 이번 화면에서만 */ } }
-const TENV_SUGGEST = { tdev: ['아이폰 16', '아이폰 15', '아이폰 13 미니', '갤럭시 S25', '갤럭시 S24', '갤럭시 Z 플립6', '아이패드', 'PC'], tos: ['iOS 18', 'iOS 17', 'Android 15', 'Android 14', 'Windows 11', 'macOS 15'], tbr: ['Chrome', 'Safari', 'Edge', 'Samsung Internet'], tbuild: [] };
+function saveLastEnv(f, v, plat){ // 환경(PC·MW)별로 따로 기억한다. plat 없이 부르면 환경 자체를 기억
+  const o = lastEnv();
+  if(!plat){ o.plat = v; }
+  else { o[plat] = { ...envMemoryFor(o, plat), [f]: v }; o.plat = plat; }
+  try{ localStorage.setItem(LAST_ENV_KEY, JSON.stringify(o)); }catch(e){ /* 이번 화면에서만 */ }
+}
+const TENV_SUGGEST = {
+  PC: { tos: ['Windows 11', 'Windows 10', 'macOS 15', 'macOS 14'], tbr: ['Chrome', 'Edge', 'Safari', 'Firefox', 'Whale'] },
+  MW: { tdev: ['아이폰 16', '아이폰 15', '아이폰 13 미니', '갤럭시 S25', '갤럭시 S24', '갤럭시 Z 플립6'], tos: ['iOS 18', 'iOS 17', 'Android 15', 'Android 14'], tbr: ['Safari', 'Chrome', 'Samsung Internet', '네이버앱'] }
+};
 // 결과 되돌리기: 패널을 연 때의 결과 관련 칸(테스터별·회차별 포함)
-const RES_SNAP_RE = /^(rr:[^:]+:)?(t[rns]:|tdev|tos|tbr|tbuild|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|ball$|ballAt$|priority$)/;
+const RES_SNAP_RE = /^(rr:[^:]+:)?(t[rns]:|tplat|tdev|tos|tbr|tbuild|result$|status$|testNote$|reviewStage$|devFix$|executedBy$|testDate$|ball$|ballAt$|priority$)/;
 let popResultSnap = null;
 const snapResult = row=>({ tcId: row.tcId, vals: Object.fromEntries(Object.keys(row).filter(k=>RES_SNAP_RE.test(k)).map(k=>[k, row[k]])) });
 function restoreResult(row, snap){
@@ -4554,11 +4649,16 @@ function popRightHtml(row, idx, assigned){
   const who = !assigned.length ? '<div class="tc-ro-box sub-txt">담당 테스터 없음</div>'
     : canPick ? `<select class="tr-tester-pick" data-idx="${idx}" aria-label="입력할 테스터">${assigned.map(n=>`<option value="${escapeHtml(n)}"${n === cur ? ' selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>`
     : `<div class="tc-ro-box">${escapeHtml(cur)}</div>`;
-  const tenv = TENV_FIELDS.map(([f, label])=>{
-    const saved = rv(row, tenvKey(f, cur)) || '', fill = saved || (f === 'tdev' && rv(row, 'testEnv')) || last[f] || '';
-    return `<label class="tr-f"><span>${label}</span><input type="text" class="ad-input tenv-input" data-f="${f}" data-idx="${idx}" data-name="${escapeHtml(cur)}" value="${escapeHtml(fill)}"${!saved && fill ? ' data-prefill="1"' : ''} list="tenvList-${f}" maxlength="40" placeholder="${f === 'tbuild' ? '예) 1030' : ''}"${dis}></label>`;
+  // 환경(PC·MW): 저장된 값, 없으면 마지막에 고른 환경을 미리 채운다(결과를 넣을 때 저장). 환경에 따라 칸이 달라진다
+  const platSaved = rv(row, tenvKey('tplat', cur)) || '', plat = TENV_PLATS[platSaved] ? platSaved : TENV_PLATS[last.plat] ? last.plat : '';
+  const platPre = !platSaved && !!plat, mem = plat ? envMemoryFor(last, plat) : {};
+  const platToggle = `<div class="tr-f tr-plat"><span id="tplatLab${idx}">환경</span><div class="tplat-group" role="group" aria-labelledby="tplatLab${idx}"${platPre ? ' data-prefill="1"' : ''} data-idx="${idx}" data-name="${escapeHtml(cur)}">${Object.keys(TENV_PLATS).map(k=>`<button type="button" class="tplat-btn" data-tplat="${k}" aria-pressed="${k === plat}"${dis}>${k}</button>`).join('')}</div></div>`;
+  const fields = plat ? TENV_PLATS[plat] : TENV_PLATS.MW;
+  const tenv = fields.map(([f, label])=>{
+    const saved = rv(row, tenvKey(f, cur)) || '', fill = !plat ? saved : saved || (f === 'tdev' && plat === 'MW' && rv(row, 'testEnv')) || mem[f] || '';
+    return `<label class="tr-f${plat ? '' : ' is-off'}"><span>${label}</span><input type="text" class="ad-input tenv-input" data-f="${f}" data-plat="${plat}" data-idx="${idx}" data-name="${escapeHtml(cur)}" value="${escapeHtml(fill)}"${!saved && fill ? ' data-prefill="1"' : ''} list="tenvList-${plat || 'MW'}-${f}" maxlength="40" placeholder="${plat ? '' : 'PC/MW를 먼저 골라요'}"${!plat ? ' disabled' : dis}></label>`;
   }).join('');
-  const lists = Object.entries(TENV_SUGGEST).map(([f, v])=>`<datalist id="tenvList-${f}">${v.map(x=>`<option value="${escapeHtml(x)}">`).join('')}</datalist>`).join('');
+  const lists = plat ? Object.entries(TENV_SUGGEST[plat]).map(([f, v])=>`<datalist id="tenvList-${plat}-${f}">${v.map(x=>`<option value="${escapeHtml(x)}">`).join('')}</datalist>`).join('') : '';
   const res = cur ? testerValue(row, cur, 'tr') : (rv(row, 'result') || ''), st = cur ? testerValue(row, cur, 'ts') : '';
   const done = ballOf(row) === 'closed' ? String(rv(row, 'ballAt') || '').slice(0, 10) : reviewStageOf(row) === '완료' && effectiveResult(row) === 'PASS' ? (rv(row, 'testDate') || '') : '';
   const devOn = DEV_FIX_STAGES.includes(reviewStageOf(row)) || DEV_FIX_OPTIONS.includes(rv(row, 'devFix'));
@@ -4567,7 +4667,7 @@ function popRightHtml(row, idx, assigned){
   return `<div class="tr-head"><h3>테스트 결과${roundName ? ` · ${escapeHtml(roundName)}` : ''}</h3></div>
     <div class="tr-info">
       <div class="tr-info-head"><b>테스트 정보</b><span class="legend">입력한 값은 다음 TC에 자동으로 채워집니다</span></div>
-      <div class="tr-grid"><label class="tr-f"><span>테스터 이름</span>${who}</label>${tenv}<label class="tr-f"><span>테스트 일자</span><div class="tc-ro-box">${escapeHtml(rv(row, 'testDate') || '') || '<span class="sub-txt">결과를 넣으면 오늘</span>'}</div></label></div>${lists}
+      <div class="tr-grid">${platToggle}<label class="tr-f"><span>테스터 이름</span>${who}</label>${tenv}<label class="tr-f"><span>테스트 일자</span><div class="tc-ro-box">${escapeHtml(rv(row, 'testDate') || '') || '<span class="sub-txt">결과를 넣으면 오늘</span>'}</div></label></div>${lists}
     </div>
     ${allow ? '' : `<p class="tr-deny">${assigned.length ? '담당 테스터가 아니라 결과를 입력할 수 없어요.' : ''}</p>`}
     ${!assigned.length ? '<p class="tr-deny">담당 테스터를 지정하면 테스터별로 결과를 넣을 수 있어요(목록의 담당 테스터 칸).</p>' : ''}
@@ -4925,7 +5025,7 @@ function addQcListSheet(workbook, rows, title){
   const groupCount = 1 + testerGroups.length; // 1 = "취합 영역"
   const BASE_COLS = 8; // TC ID~기대결과
   const EXTRA = [['우선순위', 9, priorityOf], ['검수 단계', 11, reviewStageOf], ['개발 수정', 10, r=>rv(r, 'devFix') || ''], ['테스터', 10, r=>rv(r, 'executedBy') || ''],
-    ['테스트 환경', 16, r=>tenvText(r, (()=>{ const ns = assigneesOf(r), ex = rv(r, 'executedBy'); return ns.includes(ex) ? ex : ns[0] || ''; })())], ['테스트 일자', 12, r=>rv(r, 'testDate') || ''], ['최종 수정', 12, r=>r.updatedAt || '']]; // 지금 회차의 값 // 검수 정보(테스터 블록 뒤)
+    ['테스트 환경', 16, r=>tenvText(r, (()=>{ const ns = assigneesOf(r), ex = rv(r, 'executedBy'); return ns.includes(ex) ? ex : ns[0] || ''; })())], ['테스트 일자', 12, r=>rv(r, 'testDate') || ''], ['최종 수정', 18, r=>[r.updatedBy, r.updatedAt].filter(Boolean).join(' ')]]; // 지금 회차의 값 // 검수 정보(테스터 블록 뒤)
   const extraStart = 1 + BASE_COLS + groupCount * 4 + 1;
   const totalCols = extraStart + EXTRA.length - 1; // A열은 여백으로 비워둠(참고 양식과 동일)
   const aggStartCol = 1 + BASE_COLS + 1; // "취합 영역" 블록 시작 열(1-indexed)
@@ -5173,13 +5273,16 @@ function scheduleAutoSave(){
   autoSaveTimer = setTimeout(autoSaveNow, 300);
 }
 const rowStampSeen = new Map();
-const rowStampSig = r=>{ const { updatedAt, ...rest } = toExportRow(r); return JSON.stringify(rest); };
+const rowStampSig = r=>{ const { updatedAt, updatedBy, ...rest } = toExportRow(r); return JSON.stringify(rest); }; // 찍는 칸은 비교에서 뺀다(찍을 때마다 다시 바뀐 것으로 보지 않게)
+// 바뀐 행에 고친 시각·사람을 찍는다. 내가 고친 행만 찍고, 받은 변경(팀원)은 받은 값을 그대로 둔다 (순수 함수)
+function stampRow(r, changed, now, who){ if(changed){ r.updatedAt = now; r.updatedBy = who || ''; } return r; }
+const editorName = ()=>safeCall(()=>(authState && authState.me && authState.me.name) || '', '') || myName();
 function refreshRowStamps(){ tcData.forEach(r=>rowStampSeen.set(r._id || r.tcId, rowStampSig(r))); }
 function stampChangedRows(){
-  const now = stampNow();
+  const now = stampNow(), who = editorName();
   tcData.forEach(r=>{
     const key = r._id || r.tcId, sig = rowStampSig(r), prev = rowStampSeen.get(key);
-    if(prev !== undefined && prev !== sig) r.updatedAt = now;
+    stampRow(r, prev !== undefined && prev !== sig, now, who);
     rowStampSeen.set(key, sig);
   });
 }
