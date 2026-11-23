@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>테스트 시나리오 생성</title>
+<title>테스트 관리</title>
 <script>try{if(localStorage.getItem('cvt_theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
@@ -1839,12 +1839,17 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   .proj-admin-table .member-chip .member-perm{width:auto;min-width:0;height:26px;padding-left:6px;font-size:12.5px;}
 
   /* ════════ TC 표 가독성(2026-11 7차): 칸 간격 12px · 열 머리 고정 칸 바탕 · 상세 머리 제목 편집 ════════ */
-  #tcTableWrap{--tc-cols:20px 100px minmax(96px,1fr) minmax(128px,1.3fr) 56px 108px 96px 96px 96px 64px minmax(120px,1.2fr) 72px 96px 24px;--tc-gap:12px;--tc-min:1352px;}
+  #tcTableWrap{--tc-cols:20px 100px minmax(128px,1.6fr) minmax(180px,2.4fr) 56px 100px 88px 88px 88px 60px minmax(104px,1fr) 72px 88px 24px;--tc-gap:12px;--tc-min:1376px;} /* 대분류·중분류를 넓게(2026-11 8차) */
   .tc-table-head{--row-bg:var(--grey-100);} /* 열 머리의 고정 칸(선택·TC ID)도 머리와 같은 회색 바탕 */
   .tc-table-head > .c-id, #tcCardList .tc-card-head > .c-id{left:46px !important;} /* 안쪽 여백 14 + 선택 20 + 간격 12 */
   .tc-table-head > .c-sel, #tcCardList .tc-card-head > .c-sel{box-shadow:-11px 0 0 var(--row-bg), var(--tc-gap) 0 0 var(--row-bg) !important;}
   dialog.tc-pop .tc-pop-name.tc-scn{display:block;margin:2px 0 0;padding:4px 8px;border:1px solid var(--primary) !important;border-radius:8px;background:var(--panel) !important;font-size:16px;font-weight:700;color:var(--ink);outline:none;}
   dialog.tc-pop .tc-pop-name.tc-scn:empty::before{content:attr(data-placeholder);color:var(--grey-400);font-weight:500;}
+
+  /* 상세 패널 시나리오 쪽(2026-11 8차): 바탕 연한 회색, 칸은 흰색 */
+  dialog.tc-pop .tc-pop-l{background:var(--grey-100);}
+  #tcCardList dialog.tc-pop .tc-pop-l .tc-scn, #tcCardList dialog.tc-pop .tc-pop-l .tc-ro-box,
+  dialog.tc-pop .tc-pop-l select, dialog.tc-pop .tc-pop-l input, dialog.tc-pop .tc-pop-l textarea{background-color:var(--panel) !important;}
 </style>
 </head>
 <body class="ad-root">
@@ -7485,7 +7490,7 @@ authGate.hidden = true;
 document.body.appendChild(authGate);
 const $gate = s=>authGate.querySelector(s);
 function gateCard(html){
-  authGate.innerHTML = `<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><h1 id="gateTitle">테스트 시나리오 생성</h1>${html}</div>`;
+  authGate.innerHTML = `<div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><h1 id="gateTitle">테스트 관리</h1>${html}</div>`;
   authGate.hidden = false;
   document.body.classList.add('is-gated');
 }
