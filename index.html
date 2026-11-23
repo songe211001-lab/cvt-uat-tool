@@ -1850,6 +1850,9 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   dialog.tc-pop .tc-pop-l{background:var(--grey-100);}
   #tcCardList dialog.tc-pop .tc-pop-l .tc-scn, #tcCardList dialog.tc-pop .tc-pop-l .tc-ro-box,
   dialog.tc-pop .tc-pop-l select, dialog.tc-pop .tc-pop-l input, dialog.tc-pop .tc-pop-l textarea{background-color:var(--panel) !important;}
+
+  /* 테스트 결과 보강(2026-11 9차): 배포일 경과 표시 */
+  .gb-late{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fatal-soft);color:var(--fatal-text);font-weight:700;font-size:12.5px;}
 </style>
 </head>
 <body class="ad-root">
@@ -5812,7 +5815,7 @@ function stageState(p, k, today){
 }
 const STAGE_STATE_CLASS = { '대기': 'is-planned', '진행 중': 'is-active', '종료': 'is-done', '강행 종료': 'is-forced' };
 const STAGE_COLOR = { DVT: '#6b6bf0', CVT: 'var(--primary)', UAT: 'var(--minor-text)' };
-const GATE_SENTENCE = { progress: ['진행률이', '% 이상'], highPass: ['High 통과율이', '% 이상'], openHighFail: ['열린 High Fail이', '건 이하'], openFail: ['열린 Fail이', '건 이하'], retestWait: ['재검수 대기가', '건 이하'] };
+const GATE_SENTENCE = { progress: ['진행률이', '% 이상'], highPass: ['High 통과율이', '% 이상'], openHighFail: ['열린 High Fail이', '건 이하'], openFail: ['열린 Fail이', '건 이하'], devUnsent: ['개발 미전달 Fail이', '건 이하'], retestWait: ['재검수 대기가', '건 이하'] };
 let planStageSel = null; // {pid, k}: 사용자가 고른 단계(없으면 지금 회차의 단계)
 function selectPlanStage(k){ const p = editingProject(); if(!p || !ROUND_STAGES.includes(k)) return; planStageSel = { pid: p._id, k }; renderPlan(); }
 function renderPlan(){
@@ -5901,7 +5904,7 @@ function renderPlan(){
     : `<p class="pl-big">${shortDate(fc.eta)} <small>예상 종료</small></p><p class="pl-fc-sub">남은 ${remaining}건 · 최근 7일 하루 평균 ${fc.avg}건</p>
       ${dep ? `<p class="pl-fc-cmp ${fc.slack >= 0 ? 'is-ok' : 'is-bad'}">${fc.slack >= 0 ? `배포까지 여유 ${fc.slack}일` : `배포보다 ${-fc.slack}일 늦음`}</p><p class="pl-fc-sub">배포일(${shortDate(dep)})까지 하루 ${fc.need}건 필요</p>` : '<p class="pl-fc-sub">배포일을 정하면 여유를 비교해요.</p>'}`}</section>`;
   const cg = stageGate(p, curStage, tcData), todos = cg.checks.filter(c=>c.ok === false).map(c=>{
-    const n = c.value, map = { progress: ['미실행 시나리오 실행하기', ''], highPass: ['High Fail 닫기', 'FAIL'], openHighFail: [`열린 High Fail ${n}건 닫기`, 'FAIL'], openFail: [`열린 Fail ${n}건 닫기`, 'FAIL'], retestWait: [`재검수 대기 ${n}건 확인하기`, null], signoff: ['담당자 승인 받기', null] }[c.key] || [c.label, null];
+    const n = c.value, map = { progress: ['미실행 시나리오 실행하기', ''], highPass: ['High Fail 닫기', 'FAIL'], openHighFail: [`열린 High Fail ${n}건 닫기`, 'FAIL'], openFail: [`열린 Fail ${n}건 닫기`, 'FAIL'], devUnsent: [`Fail ${n}건 개발에게 넘기기`, 'FAIL'], retestWait: [`재검수 대기 ${n}건 확인하기`, null], signoff: ['담당자 승인 받기', null] }[c.key] || [c.label, null];
     return map[1] == null ? `<li><span>${escapeHtml(map[0])}</span></li>` : `<li><button type="button" class="pl-todo" data-todo-res="${map[1]}">${escapeHtml(map[0])} <span aria-hidden="true">→</span> <u>목록에서 보기</u></button></li>`;
   });
   const todo = `<section class="pl-card pl-todo-card" aria-label="다음 할 일"><h4>다음 할 일 <small>${curStage} 종료 기준</small></h4>${!cg.round ? '<p class="sub-txt">이 단계에 회차가 없어요.</p>' : todos.length ? `<ul class="pl-todos">${todos.join('')}</ul>` : '<p class="pl-big is-ok">종료 기준을 모두 채웠어요</p>'}</section>`;
@@ -5979,11 +5982,11 @@ async function saveRoundField(idx, rid, field, value){
    프로젝트 data.stages[단계] = { purpose, who, scope:{priority:[]}, exit:{기준:값}, signedBy, signedAt, forced:{by,at,reason} } (스키마 변경 없음) */
 const STAGE_INFO = {
   DVT: { purpose: '개발 결과가 설계대로 동작하는지 확인해요', who: '개발·기획', scope: { priority: ['High'] }, exit: { highPass: 90, openHighFail: 0 } },
-  CVT: { purpose: '전체 기능과 연동의 품질을 확인해요', who: 'QA', scope: { priority: [] }, exit: { progress: 100, openHighFail: 0, openFail: 3, retestWait: 0 } },
+  CVT: { purpose: '전체 기능과 연동의 품질을 확인해요', who: 'QA', scope: { priority: [] }, exit: { progress: 100, openHighFail: 0, openFail: 3, devUnsent: 0, retestWait: 0 } },
   UAT: { purpose: '실제 업무에 써도 되는지 사업·운영이 확인해요', who: '사업·운영', scope: { priority: [] }, exit: { progress: 100, openFail: 0, signoff: 1 } }
 };
 // 기준: [이름, 단위, 비교] — ≥ 이상이면 통과, ≤ 이하이면 통과, signoff는 승인 여부
-const GATE_LABEL = { progress: ['진행률', '%', '≥'], highPass: ['High 통과율', '%', '≥'], openHighFail: ['열린 High Fail', '건', '≤'], openFail: ['열린 Fail', '건', '≤'], retestWait: ['재검수 대기', '건', '≤'], signoff: ['담당자 승인', '', ''] };
+const GATE_LABEL = { progress: ['진행률', '%', '≥'], highPass: ['High 통과율', '%', '≥'], openHighFail: ['열린 High Fail', '건', '≤'], openFail: ['열린 Fail', '건', '≤'], devUnsent: ['개발 미전달 Fail', '건', '≤'], retestWait: ['재검수 대기', '건', '≤'], signoff: ['담당자 승인', '', ''] };
 function stageConf(p, k){
   const s = ((p && p.stages) || {})[k] || {}, d = STAGE_INFO[k];
   return { purpose: s.purpose || d.purpose, who: s.who != null ? s.who : d.who, scope: { ...d.scope, ...(s.scope || {}) }, exit: { ...d.exit, ...(s.exit || {}) },
@@ -6004,6 +6007,7 @@ function stageGate(p, k, rows){
     highPass: high.length ? Math.round(high.filter(r=>res(r) === 'PASS').length / high.length * 100) : 100,
     openHighFail: scoped.filter(r=>priorityOf(r) === 'High' && res(r) === 'Fail').length,
     openFail: scoped.filter(r=>res(r) === 'Fail').length,
+    devUnsent: scoped.filter(r=>res(r) === 'Fail' && !withRound(last.id, ()=>ballOf(r))).length, // Fail인데 아직 개발에게 넘기지 않은 것
     retestWait: scoped.filter(r=>withRound(last.id, ()=>reviewStageOf(r)) === '재검수 대기').length,
     signoff: conf.signedBy ? 1 : 0
   };
@@ -6028,7 +6032,7 @@ function boardSnapshot(p, rows, today){
     stale: ids(scoped.filter(r=>(ballOf(r) === 'dev' || ballOf(r) === 'qa') && ballDays(r, Date.parse(today + 'T23:59:59Z')) >= 3))
   };
   const days = Array.from({ length: 10 }, (_, i)=>new Date(Date.parse(today + 'T00:00:00Z') - (9 - i) * 864e5).toISOString().slice(0, 10));
-  const daily = days.map(d=>({ date: d, n: scoped.filter(r=>res(r) && rv(r, 'testDate') === d).length }));
+  const daily = days.map(d=>({ date: d, n: scoped.filter(r=>res(r) && resultDate(r, today) === d).length }));
   const people = Array.from(new Set(scoped.flatMap(assigneesOf))).map(name=>{
     const mine = scoped.filter(r=>assigneesOf(r).includes(name)), v = r=>testerValue(r, name, 'tr');
     return { name, total: mine.length, left: mine.filter(r=>!v(r)).length, fail: mine.filter(r=>v(r) === 'Fail').length };
@@ -6048,8 +6052,17 @@ function resultCounts(rows, resOf = r=>effectiveResult(r)){
   return o;
 }
 // 진행 추이: 결과가 있는 행을 테스트 일자 기준으로 날짜별 누적 (순수 함수)
+// 결과를 넣은 날 (순수 함수): 테스트 일자, 없으면 최종 수정일(MM-DD, 연도는 ref 기준으로 채움)
+function resultDate(r, ref){
+  const d = rv(r, 'testDate');
+  if(d) return d;
+  const m = /^(\d{2})-(\d{2})/.exec(String((r && r.updatedAt) || ''));
+  if(!m || !ref) return '';
+  const md = m[1] + '-' + m[2], y = +ref.slice(0, 4);
+  return (md > ref.slice(5) ? y - 1 : y) + '-' + md;
+}
 function burnSeries(rows, from, to){
-  const done = (rows || []).filter(r=>effectiveResult(r) && rv(r, 'testDate')).map(r=>rv(r, 'testDate'));
+  const done = (rows || []).filter(r=>effectiveResult(r)).map(r=>resultDate(r, to)).filter(Boolean);
   const out = [];
   let acc = done.filter(d=>d < from).length;
   for(let d = from; d <= to && out.length < 400; d = isoShift(d, 1)){ acc += done.filter(x=>x === d).length; out.push({ date: d, n: acc }); }
@@ -6057,13 +6070,24 @@ function burnSeries(rows, from, to){
 }
 // 일자별 결과 입력: 오늘까지 n일, 날짜마다 결과별 건수 (순수 함수)
 function dailyByResult(rows, today, n = 14){
-  return Array.from({ length: n }, (_, i)=>isoShift(today, i - n + 1)).map(date=>({ date, c: resultCounts((rows || []).filter(r=>effectiveResult(r) && rv(r, 'testDate') === date)) }));
+  return Array.from({ length: n }, (_, i)=>isoShift(today, i - n + 1)).map(date=>({ date, c: resultCounts((rows || []).filter(r=>effectiveResult(r) && resultDate(r, today) === date)) }));
 }
 // 결함 흐름: Fail이 났거나 공이 돈 행 → 개발 수정 중 / 재검수 대기 / 닫힘 (순수 함수)
 function defectFlow(rows){
   const all = (rows || []).filter(r=>effectiveResult(r) === 'Fail' || ballOf(r));
   return { total: all.length, dev: all.filter(r=>ballOf(r) === 'dev').length, qa: all.filter(r=>ballOf(r) === 'qa').length, closed: all.filter(r=>ballOf(r) === 'closed').length,
     waiting: all.filter(r=>!ballOf(r)).length };
+}
+// 데이터 채움률 (순수 함수): 일자·환경·메모는 실행한 TC(N/A 제외) 기준, 우선순위는 전체 기준
+function fillRates(rows){
+  const all = rows || [], ran = all.filter(r=>{ const v = effectiveResult(r); return v && v !== 'N/A'; });
+  const byTester = (r, k)=>assigneesOf(r).some(n=>String(r[rk(k + ':' + n)] || '').trim());
+  return [
+    { key: 'testDate', label: '테스트 일자', base: '실행한 TC', n: ran.filter(r=>rv(r, 'testDate')).length, t: ran.length },
+    { key: 'priority', label: '우선순위', base: '전체 TC', n: all.filter(r=>PRIORITY_OPTIONS.includes(r.priority)).length, t: all.length },
+    { key: 'env', label: '테스트 환경', base: '실행한 TC', n: ran.filter(r=>String(rv(r, 'testEnv') || '').trim() || byTester(r, 'tplat') || byTester(r, 'tdev')).length, t: ran.length },
+    { key: 'note', label: '테스트 메모', base: '실행한 TC', n: ran.filter(r=>String(rv(r, 'testNote') || '').trim() || byTester(r, 'tn')).length, t: ran.length }
+  ];
 }
 // 대분류별 품질: Fail·보류 비율 높은 순 상위 top개 (순수 함수)
 function catQuality(rows, top = 8){
@@ -6113,19 +6137,20 @@ function renderGateBoard(){
   // J. 관문 게이지(Go/No-Go)
   const gauge = c=>{
     const pct = c.unit === '%' ? Math.min(100, c.value) : c.key === 'signoff' ? (c.value ? 100 : 0) : (c.value <= c.target ? 100 : Math.max(6, Math.round(c.target / Math.max(1, c.value) * 100)));
-    const filter = c.key === 'progress' ? 'NT' : (c.key === 'openFail' || c.key === 'openHighFail') ? 'FAIL' : '';
+    const filter = c.key === 'progress' ? 'NT' : (c.key === 'openFail' || c.key === 'openHighFail' || c.key === 'devUnsent') ? 'FAIL' : '';
     const val = c.key === 'signoff' ? (c.value ? '승인' : '승인 전') : `${c.value}${c.unit}`;
     const st = c.ok === true ? '<span class="gb-g-st">✓ 통과</span>' : c.ok === false ? '<span class="gb-g-st">✕ 미달</span>' : '';
     const inner = `${bdDonut(pct, c.ok === true ? 'var(--pass)' : c.ok === false ? 'var(--fatal)' : 'var(--grey-400)', val, 76)}<span class="gb-g-name">${c.label}</span>${st}<span class="gb-g-tgt">${c.key === 'signoff' ? '' : `기준 ${c.op} ${c.target}${c.unit}`}</span>`;
     return filter && !c.ok ? `<button type="button" class="gb-gauge is-bad" data-gb-filter="${filter}" title="해당 시나리오만 목록에서 보기">${inner}</button>` : `<div class="gb-gauge${c.ok ? ' is-ok' : c.ok === false ? ' is-bad' : ''}">${inner}</div>`;
   };
-  const gates = bdCard(8, `<span class="gb-stage s-${s.stage.toLowerCase()}">${s.stage}</span> 종료 관문`, `<span class="gb-verdict ${g.pass ? 'is-go' : 'is-nogo'}" role="status">${g.pass ? 'Go · 종료 기준 충족' : `No-Go · ${bad.length}개 미달`}</span> ${escapeHtml(s.round.name || '')} · ${(g.conf.scope.priority || []).length ? `범위 ${g.conf.scope.priority.join('·')}` : '범위 전체'} · 기준은 [테스트 계획]에서 바꿔요`,
+  const gates = bdCard(8, `<span class="gb-stage s-${s.stage.toLowerCase()}">${s.stage}</span> 종료 관문`, `<span class="gb-verdict ${g.pass ? 'is-go' : 'is-nogo'}" role="status">${g.pass ? 'Go · 종료 기준 충족' : `No-Go · ${bad.length}개 미달`}</span> ${dday != null && dday < 0 && stageOf(p) !== '완료' ? `<span class="gb-late">배포일 ${-dday}일 지남</span> ` : ''}${escapeHtml(s.round.name || '')} · ${(g.conf.scope.priority || []).length ? `범위 ${g.conf.scope.priority.join('·')}` : '범위 전체'} · 기준은 [테스트 계획]에서 바꿔요`,
     `<div class="gb-gauges">${g.checks.map(gauge).join('')}</div>`);
   // B. 결과 분포(전체·FO·BO)
   const typeRow = (lab, list, type)=>`<div class="bd-row"><span class="bd-rl">${lab}</span>${bdStack(resultCounts(list), lab, k=>`data-bd-res="${k}"${type ? ` data-bd-type="${type}"` : ''}`)}<em>${list.length}</em></div>`;
   const dist = bdCard(4, '결과 분포', '전체 · FO · BO', `${bdLegend(all)}${typeRow('전체', rows, '')}${typeRow('FO', rows.filter(r=>r.screenType === 'FO'), 'FO')}${typeRow('BO', rows.filter(r=>r.screenType === 'BO'), 'BO')}`);
   // C. 진행 추이(번업): 누적 실행 + 전체 기준선 + 배포일까지 목표선
-  const dates = rows.map(r=>effectiveResult(r) && rv(r, 'testDate')).filter(Boolean).sort();
+  const dates = rows.map(r=>effectiveResult(r) && resultDate(r, today)).filter(Boolean).sort();
+  const guessed = rows.filter(r=>effectiveResult(r) && !rv(r, 'testDate') && resultDate(r, today)).length; // 최종 수정일로 센 행
   const from = dates[0] && dates[0] < isoShift(today, -13) ? dates[0] : isoShift(today, -13);
   const to = p.deployDate && p.deployDate > today ? p.deployDate : today;
   const gridW = box.clientWidth || 1100, W = Math.max(320, Math.round(gridW >= 1100 ? (gridW - 12) * 8 / 12 - 34 : gridW - 34)); // 카드 실제 폭으로 그려 글자가 커지지 않게
@@ -6135,7 +6160,7 @@ function renderGateBoard(){
   const line = upto.map((x, i)=>`${X(i).toFixed(1)},${Y(x.n).toFixed(1)}`).join(' ');
   const ticks = [0, Math.round(ps.target / 2), ps.target].filter((v, i, a)=>a.indexOf(v) === i);
   const lastPt = upto[upto.length - 1];
-  const burn = bdCard(8, '진행 추이', '누적 실행 · 점선은 배포일까지 목표', !dates.length ? bdEmpty('결과를 넣은 기록이 없어요. 결과를 넣으면 날짜별로 쌓여요.') : `<svg class="bd-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="진행 추이: ${escapeHtml(shortDate(from))}부터 오늘까지 누적 ${lastPt ? lastPt.n : 0}건 실행, 전체 ${ps.target}건">
+  const burn = bdCard(8, '진행 추이', `누적 실행 · 점선은 배포일까지 목표${guessed ? ` · 테스트 일자 없는 ${guessed}건은 최종 수정일로` : ''}`, !dates.length ? bdEmpty('결과를 넣은 날짜가 없어요. 테스트 일자를 넣거나 결과를 다시 넣으면 날짜별로 쌓여요.') : `<svg class="bd-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="진행 추이: ${escapeHtml(shortDate(from))}부터 오늘까지 누적 ${lastPt ? lastPt.n : 0}건 실행, 전체 ${ps.target}건">
       ${ticks.map(v=>`<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`).join('')}
       <line x1="${X(0)}" y1="${Y(0)}" x2="${X(n - 1)}" y2="${Y(ps.target)}" stroke="var(--grey-400)" stroke-width="1.5" stroke-dasharray="3 4"/>
       ${iToday >= 0 && iToday < n - 1 ? `<line x1="${X(iToday)}" x2="${X(iToday)}" y1="${T}" y2="${H - B}" stroke="var(--line)" stroke-dasharray="2 3"/><text x="${X(iToday)}" y="${T - 2}" text-anchor="middle" font-size="10.5" fill="var(--muted)">오늘</text>` : ''}
@@ -6164,12 +6189,18 @@ function renderGateBoard(){
   const catCard = bdCard(4, '대분류별 Fail·보류', '비율 높은 순 상위 8', cats.every(c=>!c.bad) ? bdEmpty('Fail·보류가 있는 대분류가 없어요.')
     : cats.map(c=>`<button type="button" class="bd-row bd-row-btn" data-bd-search="${escapeHtml(c.k === '(분류 없음)' ? '' : c.k)}" title="${escapeHtml(c.k)} 검색"><span class="bd-rl" title="${escapeHtml(c.k)}">${escapeHtml(c.k)}</span><div class="bd-bar is-warn"><i style="width:${c.pct}%"></i></div><em>${c.pct}% · ${c.bad}/${c.t}</em></button>`).join(''));
   // H. 우선순위 × 결과
-  const pri = bdCard(4, '우선순위별 결과', '', PRIORITY_OPTIONS.map(k=>{ const list = rows.filter(r=>priorityOf(r) === k); return `<div class="bd-row"><span class="bd-rl pri-txt is-${k}">${k}</span>${bdStack(resultCounts(list), k, kk=>`data-bd-res="${kk}"`)}<em>${list.length}</em></div>`; }).join(''));
+  const priRaw = r=>PRIORITY_OPTIONS.includes(r.priority) ? r.priority : '미지정'; // 비어 있으면 Mid로 세지 않는다
+  const priSet = rows.filter(r=>priRaw(r) !== '미지정').length;
+  const pri = bdCard(4, '우선순위별 결과', priSet && priSet < rows.length ? `미지정 ${rows.length - priSet}건` : '', !priSet ? bdEmpty(`우선순위가 지정된 TC가 없어요(${rows.length}건 미지정). 목록에서 우선순위를 넣으면 보여요.`)
+    : [...PRIORITY_OPTIONS, '미지정'].map(k=>{ const list = rows.filter(r=>priRaw(r) === k); if(k === '미지정' && !list.length) return ''; return `<div class="bd-row"><span class="bd-rl${k === '미지정' ? '' : ' pri-txt is-' + k}">${k}</span>${bdStack(resultCounts(list), k, kk=>`data-bd-res="${kk}"`)}<em>${list.length}</em></div>`; }).join(''));
+  // K. 데이터 채움률: 판단에 필요한 칸이 얼마나 채워졌나
+  const fill = bdCard(4, '데이터 채움률', '판단에 필요한 칸', fillRates(rows).map(x=>{ const pct = x.t ? Math.round(x.n / x.t * 100) : 0;
+    return `<div class="bd-row" title="${x.base} ${x.t}건 중 ${x.n}건"><span class="bd-rl">${x.label}</span><div class="bd-bar${pct < 50 ? ' is-warn' : ''}"><i style="width:${pct}%"></i></div><em>${pct}% · ${x.n}/${x.t}</em></div>`; }).join(''));
   // I. 회차 비교(회차가 2개 이상일 때)
   const rds = roundsOf(p);
   const rounds = rds.length < 2 ? '' : bdCard(4, '회차 비교', '회차별 결과 · PASS율', rds.map(r=>{ const c = withRound(r.id, ()=>resultCounts(rows)), tot = BOARD_RES.reduce((a, k)=>a + c[k], 0) - c['N/A'];
     return `<div class="bd-row"><span class="bd-rl" title="${escapeHtml(roundLabel(r))}">${escapeHtml(r.name || roundLabel(r))}</span>${bdStack(c, roundLabel(r))}<em>${tot ? Math.round(c.PASS / tot * 100) : 0}%</em></div>`; }).join(''));
-  box.innerHTML = `<div class="bd-grid">${kpi}${gates}${dist}${burn}${daily}${ppl}${flowCard}${catCard}${pri}${rounds}</div>`;
+  box.innerHTML = `<div class="bd-grid">${kpi}${gates}${dist}${burn}${daily}${ppl}${flowCard}${catCard}${pri}${fill}${rounds}</div>`;
   // 누르면 목록으로: 결과·화면유형·테스터·검색
   const toList = f=>{ f(); setDetailTab('list'); renderTable(); const l = document.getElementById('dpanel-list'); if(l) l.scrollIntoView({ block: 'start' }); };
   box.querySelectorAll('[data-gb-filter]').forEach(b=>b.addEventListener('click', ()=>toList(()=>{ tcFilterResult = b.dataset.gbFilter === 'NT' ? '' : b.dataset.gbFilter; })));
