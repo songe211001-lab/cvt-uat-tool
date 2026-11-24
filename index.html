@@ -1853,6 +1853,32 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
 
   /* 테스트 결과 보강(2026-11 9차): 배포일 경과 표시 */
   .gb-late{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--fatal-soft);color:var(--fatal-text);font-weight:700;font-size:12.5px;}
+
+  /* 2026-11 10차: TC 목록 바로 위 검색 · 로그인 없이 쓸 때 머리의 프로젝트 관리 */
+  .tc-search-row{display:flex;margin:4px 0 10px;}
+  .tc-search-row .tc-search-box{flex:1 1 auto;width:auto;max-width:520px;}
+  .tc-search-row .tc-list-search{width:100%;}
+  #localProjBtn{margin-right:4px;}
+  @media (max-width:900px){ .proj-admin-table:not(:has(.col-pmem)){min-width:0;} } /* 멤버 칸이 없으면(로그인 없이) 좁은 화면에서도 가로 스크롤 없이 */
+  @media (max-width:640px){ .tc-search-row .tc-search-box{max-width:none;} }
+
+  /* 대분류별 담당 지정(2026-11 11차) */
+  .cat-assign{margin:4px 0 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);}
+  .cat-assign > summary{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;font-weight:700;color:var(--ink);list-style:none;}
+  .cat-assign > summary::-webkit-details-marker{display:none;}
+  .cat-assign > summary::before{content:'▸';color:var(--muted);font-size:12px;transition:transform .15s;}
+  .cat-assign[open] > summary::before{transform:rotate(90deg);}
+  .cat-assign .ca-sum{font-size:12.5px;font-weight:600;color:var(--muted);}
+  .cat-assign .ca-sum.is-warn{color:var(--fatal-text);}
+  .cat-assign-list{display:flex;flex-direction:column;border-top:1px solid var(--line);}
+  .ca-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 52px minmax(0,2fr) auto;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);font-size:13px;}
+  .ca-row:last-child{border-bottom:0;}
+  .ca-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink);}
+  .ca-count{color:var(--muted);text-align:right;}
+  .ca-who{display:flex;flex-wrap:wrap;gap:4px;min-width:0;}
+  .ca-chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:12px;white-space:nowrap;}
+  .ca-chip.is-none{background:var(--fatal-soft);color:var(--fatal-text);font-weight:600;}
+  @media (max-width:640px){ .ca-row{grid-template-columns:minmax(0,1fr) auto;} .ca-count{display:none;} .ca-who{grid-column:1 / -1;order:3;} }
 </style>
 </head>
 <body class="ad-root">
@@ -1913,6 +1939,7 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
     </div>
     <!-- 로그인했을 때만: 알림함(🔔) + 프로필 메뉴(이름 바꾸기·관리자 메뉴·로그아웃) -->
     <div class="hdr-end">
+    <button type="button" class="ad-btn ad-btn--sm" id="localProjBtn" hidden>프로젝트 관리</button>
     <button type="button" class="ad-btn ad-btn--ghost hdr-ico" id="themeBtn" aria-label="어두운 모드로 바꾸기"></button>
     <div class="hdr-user" id="hdrUser" hidden>
       <div class="hdr-pop-wrap">
@@ -1984,7 +2011,6 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
             <button type="button" class="ad-btn ad-btn--sm" data-type="FO" aria-pressed="false">FO</button>
             <button type="button" class="ad-btn ad-btn--sm" data-type="BO" aria-pressed="false">BO</button>
           </div>
-          <label class="tc-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="tc-list-search" id="tcListSearch" placeholder="화면명 · 분류 · 내용 검색" aria-label="테스트 시나리오 검색" autocomplete="off" /></label>
         </div>
       </div>
 
@@ -2001,22 +2027,17 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
         <select class="ad-select" id="bulkTesterRemove" aria-label="선택한 테스트 시나리오에서 담당 빼기">
           <option value="">담당 빼기…</option>
         </select>
-        <select class="ad-select" id="bulkResultSelect" aria-label="선택한 테스트 시나리오 결과 일괄 변경">
-          <option value="">결과값 일괄 변경…</option>
-          <option value="PASS">PASS</option>
-          <option value="Fail">Fail</option>
-          <option value="N/A">N/A</option>
-          <option value="보류">보류</option>
-        </select>
-        <select class="ad-select" id="bulkStatusSelect" aria-label="선택한 테스트 시나리오 진행상태 일괄 변경">
-          <option value="">진행상태 일괄 변경…</option>
-          <option value="완료">완료</option>
-          <option value="테스트불가">테스트불가</option>
-          <option value="작성중">작성중</option>
-          <option value="개발 검토">개발 검토</option>
-        </select>
         <button class="ad-btn ad-btn--sm" id="bulkClearBtn" type="button">선택 해제</button>
         <button class="ad-btn ad-btn--sm ad-btn--danger" id="bulkDeleteBtn" type="button">선택 삭제</button>
+      </div>
+
+      <details class="cat-assign" id="catAssign" hidden>
+        <summary>대분류별 담당 지정 <span class="ca-sum" id="catAssignSum"></span></summary>
+        <div class="cat-assign-list" id="catAssignList"></div>
+      </details>
+
+      <div class="tc-search-row">
+        <label class="tc-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="tc-list-search" id="tcListSearch" placeholder="TC ID · 대분류 · 중분류 · 제목 검색" aria-label="테스트 시나리오 검색" autocomplete="off" /></label>
       </div>
 
       <!-- 표 양식: 머리 줄 + 행(.tc-card = 한 줄, 누르면 아래에 상세 행) -->
@@ -2496,6 +2517,7 @@ let tcSearchQuery = '';
 let tcFilterType = 'ALL';
 let tcFilterResult = 'ALL';
 // 담당자 탭: 'ALL' | 담당자 이름. 이 브라우저에만 기억한다(cvt_tester_tab)
+let testerTabFirst = true; // '전체' 탭이 없어서, 처음 그릴 때 저장된 'ALL'은 첫 테스터로 바꾼다
 let tcFilterTester = (()=>{ try{ return localStorage.getItem('cvt_tester_tab') || 'ALL'; }catch(e){ return 'ALL'; } })();
 let selectedTcIds = new Set(); // 일괄 수정을 위해 선택된 tcData 인덱스가 아닌 tcId(행이 재배치돼도 안전)
 let expandedTcRows = new Set(); // 펼친 TC 행의 tcId 목록 (기본은 모두 접힌 한 줄 요약)
@@ -3927,7 +3949,9 @@ function renderTable(){
   const usedTesters = Array.from(new Set(tcData.flatMap(testersOf)));
   const testers = activeTesters();
   const testerOptionsForFilter = Array.from(new Set([...testers, ...usedTesters]));
-  if(tcFilterTester !== 'ALL' && !testerOptionsForFilter.includes(tcFilterTester)) tcFilterTester = 'ALL';
+  // '전체' 탭은 없앴다: 저장된 값이 'ALL'이거나 없는 이름이면 첫 번째 테스터로(테스터가 없으면 전부 보인다)
+  if(!testerOptionsForFilter.includes(tcFilterTester) && (tcFilterTester !== 'ALL' || testerTabFirst)) tcFilterTester = testerOptionsForFilter[0] || 'ALL';
+  if(testerOptionsForFilter.length) testerTabFirst = false; // 처음 한 번만 '전체'를 첫 테스터로 바꾼다('ALL'은 코드에서만 쓰는 값으로 남는다)
   renderTesterTabs(testerOptionsForFilter);
 
   // 일괄 담당 추가/빼기 드롭다운
@@ -3955,10 +3979,10 @@ function renderTable(){
     .filter(({row})=>{
       if(tcFilterType !== 'ALL' && row.screenType !== tcFilterType) return false;
       if(tcFilterResult !== 'ALL' && !(tcFilterResult === 'FAIL' ? FAIL_RESULTS.includes(effectiveResult(row)) : (effectiveResult(row) || '') === tcFilterResult)) return false; // FAIL = MINOR~FATAL
-      if(tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester)) return false;
+      if(tcFilterTester !== 'ALL' && !testersOf(row).includes(tcFilterTester)) return false; // 테스터 탭에는 그 테스터에게 지정된 TC만. 담당자 지정은 위 '대분류별 담당 지정'에서
       if(tcMyTurn && !isMyTurn(row, editingProject(), authState)) return false; // 내 차례만
       if(tcSearchQuery){
-        const hay = [row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
+        const hay = [row.tcId, row.screen, row.category, row.subCategory, row.precondition, row.procedure, row.testDetail, row.expected]
           .join(' ').toLowerCase();
         if(!hay.includes(tcSearchQuery)) return false;
       }
@@ -4090,10 +4114,10 @@ function renderTable(){
               ? '<span class="tc-pop-editing-note">수정 중</span><button type="button" class="ad-btn ad-btn--sm" data-pop-cancel>취소</button><button type="button" class="ad-btn ad-btn--sm ad-btn--primary" data-pop-save>저장</button>'
               : '<button type="button" class="ad-btn ad-btn--sm" data-pop-edit>수정</button>'}</span></div>
             <div class="tc-card-body"><div class="tc-detail">
-              <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">TC ID</span><div class="tc-ro-box tc-mono">${escapeHtml(row.tcId)}</div></div><div class="tc-field-block"><span class="tc-field-label">담당 테스터</span><div class="tc-ro-box">${escapeHtml(assigned.join(', ')) || '<span class="sub-txt">미지정</span>'}</div></div></div>
+              <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">TC ID</span>${popEditTc === row.tcId ? `<input type="text" class="ad-input tc-mono tc-id-edit" data-idx="${idx}" value="${escapeHtml(row.tcId)}" maxlength="40" aria-label="${escapeHtml(row.tcId)} TC ID 고치기" title="예: FO-LOGIN-001, BO-003">` : `<div class="tc-ro-box tc-mono">${escapeHtml(row.tcId)}</div>`}</div><div class="tc-field-block"><span class="tc-field-label">담당 테스터</span><div class="tc-ro-box">${escapeHtml(assigned.join(', ')) || '<span class="sub-txt">미지정</span>'}</div></div></div>
               <div class="tc-field-row"><div class="tc-field-block"><span class="tc-field-label">유형</span>${popEditTc === row.tcId
                 ? `<select class="screentype-select" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 화면유형">${SCREEN_TYPE_OPTIONS.map(o=>`<option value="${o}" ${o===row.screenType?'selected':''}>${o}</option>`).join('')}</select>`
-                : `<div class="tc-ro-box">${escapeHtml(row.screenType || '')}</div>`}</div><div class="tc-field-block"><span class="tc-field-label">우선순위</span><div class="tc-ro-box"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div></div></div>
+                : `<div class="tc-ro-box">${escapeHtml(row.screenType || '')}</div>`}</div><div class="tc-field-block"><span class="tc-field-label">우선순위</span>${popEditTc === row.tcId ? `<select class="pri-select is-${priorityOf(row)}" data-idx="${idx}" aria-label="${escapeHtml(row.tcId)} 우선순위">${PRIORITY_OPTIONS.map(o=>`<option value="${o}"${o === priorityOf(row) ? ' selected' : ''}>${o}</option>`).join('')}</select>` : `<div class="tc-ro-box"><span class="pri-txt is-${priorityOf(row)}">${escapeHtml(priorityOf(row))}</span></div>`}</div></div>
               <div class="tc-field-row">${fCat}${fSub}</div>
               ${fPre}${fProc}${fDetail}${fExp}
             </div></div>
@@ -4285,10 +4309,18 @@ function renderTable(){
       showUndoToast('결과를 저장했어요.', ()=>{ if(restoreResult(popRow(), before)){ popResultSnap = before; scheduleAutoSave(); renderTable(); renderDistribution(); } });
       renderTable();
     });
-    // 닫기(✕·Esc·바깥): close 이벤트에 기대지 않고 직접 닫는다(close 이벤트가 늦거나 오지 않는 환경이 있다). 수정 중이면 취소와 같다
+    // 닫기(✕·Esc·바깥): close 이벤트에 기대지 않고 직접 닫는다(close 이벤트가 늦거나 오지 않는 환경이 있다).
+    // 수정 중에 닫으면 고친 내용은 남긴다(예전엔 말없이 되돌려서 "수정이 안 된다"로 보였다). 되돌리기는 알림에서
     const closePop = ()=>{
       if(!pop.isConnected) return;
-      if(popEditTc === pop.dataset.pop) cancelScnEdit();
+      if(popEditTc === pop.dataset.pop){
+        const row = tcData.find(r=>r.tcId === popEditTc), snap = popEditSnap;
+        popEditTc = null; popEditSnap = null;
+        if(row && snap && SCN_KEYS.some(k=>(row[k] == null ? '' : row[k]) !== snap[k])){
+          autoSaveNow();
+          showUndoToast('수정한 시나리오를 저장했어요.', ()=>{ SCN_KEYS.forEach(k=>{ row[k] = snap[k]; }); scheduleAutoSave(); renderTable(); });
+        }
+      }
       expandedTcRows.delete(pop.dataset.pop); popScrollTop = 0; popShownTc = null;
       try{ pop.close(); }catch(e){ /* 이미 닫힘 */ }
       renderTable();
@@ -4344,6 +4376,21 @@ function renderTable(){
     });
     inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
   });
+  list.querySelectorAll('.tc-id-edit').forEach(inp=>{ // 시나리오 수정 중 TC ID: Enter·칸 밖으로 확정, 같은 FO/BO 번호는 거절
+    inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
+    inp.addEventListener('change', ()=>{
+      const idx = +inp.dataset.idx, old = tcData[idx].tcId;
+      if(inp.value.trim() === old) return;
+      const err = applyTcIdEdit(idx, inp.value);
+      if(err){ showGlobalError(err); inp.value = old; return; }
+      const nid = tcData[idx].tcId;
+      if(popEditTc === old) popEditTc = nid;
+      if(popShownTc === old) popShownTc = nid;
+      scheduleAutoSave();
+      renderTable();
+      renderDistribution();
+    });
+  });
   list.querySelectorAll('.screentype-select').forEach(sel=>{
     sel.addEventListener('change', ()=>{
       const idx = +sel.dataset.idx, oldId = tcData[idx].tcId;
@@ -4388,6 +4435,7 @@ function renderTable(){
   updateButtons();
   renderDistribution();
   renderBulkBar();
+  renderCatAssign();
 
   // 전체 선택 체크박스 상태 동기화 (필터에 걸린 항목 기준)
   const selectAllCb = document.getElementById('selectAllTc');
@@ -4473,13 +4521,12 @@ document.getElementById('bulkTesterRemove').addEventListener('change', (e)=>{
   renderTable();
 });
 
-// 담당자별 탭: 전체 / 담당자마다. "건수 · 완료 n"을 보인다(여러 명에게 배정된 QC는 각 탭에 모두 나온다)
+// 담당자별 탭: 담당자마다('전체' 탭 없음). "건수 · 완료 n"을 보인다(여러 명에게 배정된 QC는 각 탭에 모두 나온다)
 function renderTesterTabs(names){
   const wrap = document.getElementById('testerTabs');
   if(!wrap) return;
   const stat = (rows, done)=>`<span class="count">${rows.length} · 완료 ${rows.filter(done).length}</span>`;
-  const tabs = [['ALL', '전체', tcData, r=>effectiveStatus(r) === '완료'],
-    ...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료', roleTag(n)])];
+  const tabs = [...names.map(n=>[n, n, tcData.filter(r=>testersOf(r).includes(n)), r=>testerValue(r, n, 'ts') === '완료', roleTag(n)])];
   wrap.innerHTML = tabs.map(([v, label, rows, done, tag = ''])=>`<button type="button" class="ad-btn ad-btn--sm tester-tab" data-tester="${escapeHtml(v)}" aria-pressed="${v === tcFilterTester}">${escapeHtml(label)}${tag}${stat(rows, done)}</button>`).join('');
   wrap.querySelectorAll('[data-tester]').forEach(b=>b.addEventListener('click', ()=>{
     tcFilterTester = b.dataset.tester;
@@ -4487,6 +4534,72 @@ function renderTesterTabs(names){
     renderTable();
   }));
 }
+
+// 대분류별 담당 지정 (2026-11): 대분류마다 건수·담당자별 건수·미배정. 고르면 그 대분류 TC 전체에 더하거나 뺀다
+const CAT_NONE = '(분류 없음)';
+// 대분류별 집계 (순수 함수): [{ cat, total, none, by: { 이름: 건수 } }] — 목록에 나온 순서
+function catAssignStats(rows){
+  const m = new Map();
+  (rows || []).forEach(r=>{
+    const k = String(r.category || '').trim() || CAT_NONE;
+    if(!m.has(k)) m.set(k, { cat: k, total: 0, none: 0, by: {} });
+    const x = m.get(k), ns = testersOf(r);
+    x.total++;
+    if(!ns.length) x.none++;
+    ns.forEach(n=>{ x.by[n] = (x.by[n] || 0) + 1; });
+  });
+  return [...m.values()];
+}
+const catRowsOf = cat=>tcData.filter(r=>(String(r.category || '').trim() || CAT_NONE) === cat);
+function renderCatAssign(){
+  const box = document.getElementById('catAssign'), list = document.getElementById('catAssignList');
+  if(!box || !list) return;
+  if(!tcData.length){ box.hidden = true; return; }
+  box.hidden = false;
+  const ro = (()=>{ try{ return projectReadOnly(); }catch(e){ return false; } })();
+  const stats = catAssignStats(tcData), none = stats.reduce((a, x)=>a + x.none, 0);
+  document.getElementById('catAssignSum').textContent = none ? `미배정 ${none}건` : '모두 배정됨';
+  document.getElementById('catAssignSum').classList.toggle('is-warn', !!none);
+  if(none && !box.dataset.touched) box.open = true; // 미배정이 있으면 펼쳐 둔다(사용자가 접으면 그대로)
+  list.innerHTML = stats.map(x=>{
+    const who = Object.entries(x.by).map(([n, c])=>`<span class="ca-chip">${escapeHtml(n)} ${c}</span>`).join('') + (x.none ? `<span class="ca-chip is-none">미배정 ${x.none}</span>` : '');
+    return `<div class="ca-row"><span class="ca-name" title="${escapeHtml(x.cat)}">${escapeHtml(x.cat)}</span><span class="ca-count">${x.total}건</span><span class="ca-who">${who}</span>${ro ? '' : `<button type="button" class="ad-btn ad-btn--sm ca-btn" data-ca-cat="${escapeHtml(x.cat)}" aria-haspopup="dialog">담당 지정</button>`}</div>`;
+  }).join('');
+  list.querySelectorAll('[data-ca-cat]').forEach(b=>b.addEventListener('click', ()=>openCatPicker(b.dataset.caCat, b)));
+}
+function closeCatPicker(){ const p = document.getElementById('catPopover'); if(p) p.remove(); }
+function openCatPicker(cat, anchor){
+  const was = document.getElementById('catPopover');
+  closeCatPicker();
+  if(was && was.dataset.cat === cat) return;
+  const rows = catRowsOf(cat);
+  if(!rows.length) return;
+  const options = Array.from(new Set([...activeTesters(), ...rows.flatMap(testersOf)]));
+  const pop = document.createElement('div');
+  pop.id = 'catPopover'; pop.dataset.cat = cat;
+  pop.className = 'ad-modal tester-popover';
+  pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', `${cat} 담당 지정`);
+  const state = n=>{ const c = rows.filter(r=>testersOf(r).includes(n)).length; return c === rows.length ? 'all' : c ? 'some' : 'none'; };
+  pop.innerHTML = `<p class="sub-txt" style="margin:0 0 6px;">${escapeHtml(cat)} ${rows.length}건 전체에 지정해요</p>` + (options.length ? options.map(n=>{ const st = state(n), ok = isMemberTester(n) || st !== 'none';
+    return `<label class="tester-option"${ok ? '' : ' title="회원이 아니라 지정할 수 없어요"'}><input type="checkbox" value="${escapeHtml(n)}"${st === 'all' ? ' checked' : ''}${ok ? '' : ' disabled'} data-some="${st === 'some' ? 1 : ''}" /> ${escapeHtml(n)}${roleTag(n)}${st === 'some' ? ' <span class="sub-txt">일부</span>' : ''}</label>`; }).join('')
+    : '<p class="sub-txt" style="margin:0;">먼저 [+ 테스터 추가]로 테스터를 등록해 주세요.</p>');
+  document.body.appendChild(pop);
+  pop.querySelectorAll('input[data-some="1"]').forEach(cb=>{ cb.indeterminate = true; });
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = `${Math.min(r.bottom + 6, window.innerHeight - pop.offsetHeight - 8)}px`;
+  pop.style.left = `${Math.max(8, Math.min(r.right - pop.offsetWidth, window.innerWidth - pop.offsetWidth - 8))}px`;
+  pop.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const n = cb.value;
+    catRowsOf(cat).forEach(row=>{ row.tester = joinTesters(cb.checked ? [...testersOf(row), n] : testersOf(row).filter(t=>t !== n)); });
+    scheduleAutoSave();
+    renderTable(); // 팝오버는 목록 밖에 있어 그대로 열려 있다
+  }));
+  const first = pop.querySelector('input:not([disabled])');
+  if(first) first.focus();
+}
+document.addEventListener('mousedown', e=>{ if(document.getElementById('catPopover') && !e.target.closest('#catPopover') && !e.target.closest('[data-ca-cat]')) closeCatPicker(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && document.getElementById('catPopover')) closeCatPicker(); });
+document.getElementById('catAssign').addEventListener('toggle', e=>{ e.currentTarget.dataset.touched = '1'; });
 
 // 담당자 고르기 팝오버(카드 머리 버튼): 체크하는 즉시 저장. Esc·바깥 클릭으로 닫힌다
 let testerPickerIdx = -1;
@@ -4540,21 +4653,6 @@ document.addEventListener('keydown', e=>{
   }
 });
 window.addEventListener('scroll', ()=>{ if(testerPickerIdx >= 0) closeTesterPicker(); }, { passive: true });
-document.getElementById('bulkResultSelect').addEventListener('change', (e)=>{
-  const val = e.target.value;
-  if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r[rk('result')] = val; assigneesOf(r).forEach(n=>{ r[rk('tr:' + n)] = val; }); applyResultMeta(r, null); } }); // 담당자가 있으면 담당자마다(지금 회차)
-  e.target.value = '';
-  renderTable();
-  renderDistribution();
-});
-document.getElementById('bulkStatusSelect').addEventListener('change', (e)=>{
-  const val = e.target.value;
-  if(!val || !selectedTcIds.size) return;
-  tcData.forEach(r=>{ if(selectedTcIds.has(r.tcId)){ r[rk('status')] = val; assigneesOf(r).forEach(n=>{ r[rk('ts:' + n)] = val; }); } });
-  e.target.value = '';
-  renderTable();
-});
 document.getElementById('bulkClearBtn').addEventListener('click', ()=>{
   selectedTcIds.clear();
   renderTable();
@@ -4602,8 +4700,8 @@ document.getElementById('tcCollapseAllBtn').addEventListener('click', ()=>{
 // 상세 팝업 위쪽 '테스트 결과': 담당 테스터마다 결과·작성 상태, 그리고 우선순위·검수 단계·개발 수정 (표의 같은 칸과 같은 처리기)
 let popScrollTop = 0;
 // 시나리오 수정: 패널 머리의 "수정"을 눌러야 시나리오 칸을 고칠 수 있다. 고치는 동안에도 칸마다 바로 저장되고(팀 동기화 그대로),
-// "취소"(또는 수정 중에 패널을 닫기)는 수정을 시작할 때의 값으로 되돌린다. 결과·작성 상태·비고·바통·댓글은 수정 버튼 없이 바로 입력한다
-const SCN_KEYS = ['screen', 'category', 'subCategory', 'precondition', 'procedure', 'testDetail', 'expected'];
+// "취소"는 수정을 시작할 때의 값으로 되돌린다(수정 중에 닫으면 고친 값은 남기고 알림에서 되돌릴 수 있다). 결과·작성 상태·비고·바통·댓글은 수정 버튼 없이 바로 입력한다
+const SCN_KEYS = ['screen', 'category', 'subCategory', 'precondition', 'procedure', 'testDetail', 'expected', 'priority']; // 취소하면 이 값들로 되돌린다(TC ID는 바로 확정)
 let popEditTc = null, popEditSnap = null, popShownTc = null, popEditFocus = false;
 function startScnEdit(tcId){
   const row = tcData.find(r=>r.tcId === tcId);
@@ -7778,23 +7876,26 @@ async function adminWrite(promise, okMsg){
 }
 function renderAdmin(){
   const box = document.getElementById('panel-admin'), page = currentRoute.page;
-  if(!isAdminUser()){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">관리자만 볼 수 있어요.</div></div>'; return; }
+  const localOnly = !SYNC_CONFIGURED; // 로그인 없이(아티팩트 등): 이 브라우저의 프로젝트만, 멤버·권한 칸 없음
+  if(localOnly && page !== 'projects'){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">로그인 없이 쓸 때는 프로젝트 관리만 볼 수 있어요.</div></div>'; return; }
+  if(!localOnly && !isAdminUser()){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">관리자만 볼 수 있어요.</div></div>'; return; }
   if(page === 'projects'){
-    const opts = (authState.profiles || []).filter(p=>p.active);
+    const st = authState || { profiles: [], members: [] };
+    const opts = (st.profiles || []).filter(p=>p.active);
     const cats = categoryStats(historyList, addedCategories, hiddenCategories).map(x=>x.cat).filter(c=>c !== 'ALL');
     if(!cats.includes(UNCATEGORIZED)) cats.push(UNCATEGORIZED);
     const catSel = (cls, v, label)=>`<select class="ad-select ${cls}" aria-label="${escapeHtml(label)}">${cats.map(c=>`<option value="${escapeHtml(c)}"${c === v ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select>`;
-    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">관리자만 프로젝트를 추가·수정·삭제해요. 만든 관리자가 첫 멤버가 되고, 멤버를 지정하면 멤버만 봐요.</span><button type="button" class="ad-btn ad-btn--sm proj-new-btn" id="projImportBtn" title="아티팩트에서 생성하고 내보낸 JSON 파일을 프로젝트로 가져와요">JSON 가져오기</button><button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="projNewBtn">+ 새 프로젝트</button></div>
-      <div class="plan-table-wrap"><table class="plan-table admin-table proj-admin-table"><colgroup><col class="col-pname"><col class="col-pcat"><col class="col-pmem"><col class="col-padd"><col class="col-pdel"></colgroup>
-      <thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th><th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th><th scope="col"><span class="sr-only">삭제</span></th></tr></thead><tbody>
-      ${adminNewProject ? `<tr class="proj-new-row"><td><input type="text" class="ad-input proj-new-name" maxlength="60" placeholder="새 프로젝트 이름" aria-label="새 프로젝트 이름"></td><td>${catSel('proj-new-cat', projectCategory && cats.includes(projectCategory) ? projectCategory : cats[0], '새 프로젝트 분류')}</td><td colspan="3" class="sub-txt">Enter로 추가 · Esc로 취소</td></tr>` : ''}
+    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">${localOnly ? '이 브라우저에만 저장돼요. 만든 뒤 "내보내기 > JSON"으로 받아 사이트로 옮길 수 있어요.' : '관리자만 프로젝트를 추가·수정·삭제해요. 만든 관리자가 첫 멤버가 되고, 멤버를 지정하면 멤버만 봐요.'}</span><button type="button" class="ad-btn ad-btn--sm proj-new-btn" id="projImportBtn" title="아티팩트에서 생성하고 내보낸 JSON 파일을 프로젝트로 가져와요">JSON 가져오기</button><button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="projNewBtn">+ 새 프로젝트</button></div>
+      <div class="plan-table-wrap"><table class="plan-table admin-table proj-admin-table"><colgroup><col class="col-pname"><col class="col-pcat">${localOnly ? '' : '<col class="col-pmem"><col class="col-padd">'}<col class="col-pdel"></colgroup>
+      <thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th>${localOnly ? '' : '<th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th>'}<th scope="col"><span class="sr-only">삭제</span></th></tr></thead><tbody>
+      ${adminNewProject ? `<tr class="proj-new-row"><td><input type="text" class="ad-input proj-new-name" maxlength="60" placeholder="새 프로젝트 이름" aria-label="새 프로젝트 이름"></td><td>${catSel('proj-new-cat', projectCategory && cats.includes(projectCategory) ? projectCategory : cats[0], '새 프로젝트 분류')}</td><td colspan="${localOnly ? 1 : 3}" class="sub-txt">Enter로 추가 · Esc로 취소</td></tr>` : ''}
       ${historyList.map(h=>{
-        const ms = authState.members.filter(m=>m.project === h._id), have = new Set(ms.map(m=>m.user_id));
+        const ms = (st.members || []).filter(m=>m.project === h._id), have = new Set(ms.map(m=>m.user_id));
         return `<tr data-admin-proj="${escapeHtml(h._id)}"><th scope="row"><input type="text" class="ad-input proj-name cell-edit" maxlength="60" value="${escapeHtml(h.title || h.fileName || '')}" aria-label="프로젝트 이름"></th><td>${catSel('proj-cat', categoryOf(h), '분류')}</td>
-          <td><div class="member-chips">${ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>'}</div></td>
-          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td>
+          ${localOnly ? '' : `<td><div class="member-chips">${ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>'}</div></td>
+          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td>`}
           <td><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm proj-del" data-proj-del aria-label="${escapeHtml(h.title || h.fileName || '프로젝트')} 삭제">삭제</button></td></tr>`;
-      }).join('') || (adminNewProject ? '' : '<tr><td colspan="5"><div class="ad-empty">프로젝트가 없어요. [+ 새 프로젝트]로 추가해 주세요.</div></td></tr>')}</tbody></table></div></div>`;
+      }).join('') || (adminNewProject ? '' : `<tr><td colspan="${localOnly ? 3 : 5}"><div class="ad-empty">프로젝트가 없어요. [+ 새 프로젝트]로 추가해 주세요.</div></td></tr>`)}</tbody></table></div></div>`;
     document.getElementById('projNewBtn').addEventListener('click', ()=>{ adminNewProject = true; renderAdmin(); });
     document.getElementById('projImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
     const nn = box.querySelector('.proj-new-name');
@@ -7820,7 +7921,8 @@ function renderAdmin(){
       tr.querySelector('[data-proj-del]').addEventListener('click', ()=>adminDeleteProject(project));
       tr.querySelectorAll('.member-perm').forEach(sel=>sel.addEventListener('change', ()=>adminWrite(sb.from('cvt_project_members').update({ perm: sel.value }).eq('project', project).eq('user_id', sel.dataset.memUser))));
       tr.querySelectorAll('[data-mem-del]').forEach(b=>b.addEventListener('click', ()=>adminWrite(sb.from('cvt_project_members').delete().eq('project', project).eq('user_id', b.dataset.memDel), '멤버를 뺐어요.')));
-      tr.querySelector('.member-add-btn').addEventListener('click', ()=>{
+      const addBtn = tr.querySelector('.member-add-btn');
+      if(addBtn) addBtn.addEventListener('click', ()=>{
         const uid = tr.querySelector('.member-add-user').value;
         if(!uid) return showGlobalError('추가할 계정을 골라 주세요.');
         adminWrite(sb.from('cvt_project_members').insert({ project, user_id: uid, perm: tr.querySelector('.member-add-perm').value }), '멤버를 추가했어요.');
@@ -8234,6 +8336,10 @@ tcListEl.addEventListener('click', async e=>{
   initClaudeSample();
   initClaudeDownloads();
   document.body.classList.toggle('in-artifact', IN_ARTIFACT);
+  { // 로그인 없이 쓸 때(아티팩트 등): 계정 메뉴가 없으니 머리에 '프로젝트 관리'를 둔다
+    const b = document.getElementById('localProjBtn');
+    if(b && !SYNC_CONFIGURED){ b.hidden = false; b.addEventListener('click', ()=>goRoute({ view: 'admin', page: 'projects' })); }
+  }
   await loadHistory();
   await loadTesters();
   if(SYNC_ENABLED){
