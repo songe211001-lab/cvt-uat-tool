@@ -1879,6 +1879,25 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   .ca-chip{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--grey-100);color:var(--ink-soft);font-size:12px;white-space:nowrap;}
   .ca-chip.is-none{background:var(--fatal-soft);color:var(--fatal-text);font-weight:600;}
   @media (max-width:640px){ .ca-row{grid-template-columns:minmax(0,1fr) auto;} .ca-count{display:none;} .ca-who{grid-column:1 / -1;order:3;} }
+
+  /* 담당 지정(관리자 메뉴, 2026-11 12차) */
+  .ca-proj{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px;}
+  .ca-proj-lab{font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .ca-proj .ad-select{width:auto;min-width:220px;max-width:100%;}
+  .ca-proj .ca-sum{font-size:12.5px;font-weight:600;color:var(--muted);}
+  .ca-proj .ca-sum.is-warn{color:var(--fatal-text);}
+  .admin-card .cat-assign-list{border:1px solid var(--line);border-radius:10px;}
+  #localAssignBtn{margin-right:4px;}
+
+  /* 상세 패널 시나리오 쪽 글자 14px·입력 칸 위아래 여백(2026-11 12차) */
+  #tcCardList dialog.tc-pop .tc-pop-l .tc-scn, #tcCardList dialog.tc-pop .tc-pop-l .tc-ro-box{min-height:40px;padding:9px 12px;font-size:14px;line-height:1.6;box-sizing:border-box;}
+  dialog.tc-pop .tc-pop-l select, dialog.tc-pop .tc-pop-l input.ad-input{height:42px;padding-top:0;padding-bottom:0;border-radius:8px;font-size:14px;box-sizing:border-box;}
+  dialog.tc-pop .tc-pop-l .tc-field-label{font-size:13px;}
+
+  /* 시나리오 수정: 유형·우선순위 선택칸도 다른 입력 칸과 같은 모양(테두리·높이·글자) */
+  #tcCardList dialog.tc-pop .tc-pop-l select.pri-select, #tcCardList dialog.tc-pop .tc-pop-l select.screentype-select{width:100%;height:42px;min-height:42px;padding:0 32px 0 12px;border:1px solid var(--line);border-radius:8px;background-color:var(--panel);background-position:calc(100% - 16px) 52%, calc(100% - 11px) 52%;box-shadow:none;font:inherit;font-size:14px;font-weight:500;line-height:1.6;color:var(--ink);box-sizing:border-box;}
+  #tcCardList dialog.tc-pop .tc-pop-l select.pri-select.is-High{color:var(--fatal-text);font-weight:600;}
+  #tcCardList dialog.tc-pop .tc-pop-l select.pri-select.is-Low{color:var(--muted);}
 </style>
 </head>
 <body class="ad-root">
@@ -1940,6 +1959,7 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
     <!-- 로그인했을 때만: 알림함(🔔) + 프로필 메뉴(이름 바꾸기·관리자 메뉴·로그아웃) -->
     <div class="hdr-end">
     <button type="button" class="ad-btn ad-btn--sm" id="localProjBtn" hidden>프로젝트 관리</button>
+    <button type="button" class="ad-btn ad-btn--sm" id="localAssignBtn" hidden>담당 지정</button>
     <button type="button" class="ad-btn ad-btn--ghost hdr-ico" id="themeBtn" aria-label="어두운 모드로 바꾸기"></button>
     <div class="hdr-user" id="hdrUser" hidden>
       <div class="hdr-pop-wrap">
@@ -2030,11 +2050,6 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
         <button class="ad-btn ad-btn--sm" id="bulkClearBtn" type="button">선택 해제</button>
         <button class="ad-btn ad-btn--sm ad-btn--danger" id="bulkDeleteBtn" type="button">선택 삭제</button>
       </div>
-
-      <details class="cat-assign" id="catAssign" hidden>
-        <summary>대분류별 담당 지정 <span class="ca-sum" id="catAssignSum"></span></summary>
-        <div class="cat-assign-list" id="catAssignList"></div>
-      </details>
 
       <div class="tc-search-row">
         <label class="tc-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" class="tc-list-search" id="tcListSearch" placeholder="TC ID · 대분류 · 중분류 · 제목 검색" aria-label="테스트 시나리오 검색" autocomplete="off" /></label>
@@ -4435,7 +4450,6 @@ function renderTable(){
   updateButtons();
   renderDistribution();
   renderBulkBar();
-  renderCatAssign();
 
   // 전체 선택 체크박스 상태 동기화 (필터에 걸린 항목 기준)
   const selectAllCb = document.getElementById('selectAllTc');
@@ -4551,16 +4565,14 @@ function catAssignStats(rows){
   return [...m.values()];
 }
 const catRowsOf = cat=>tcData.filter(r=>(String(r.category || '').trim() || CAT_NONE) === cat);
-function renderCatAssign(){
-  const box = document.getElementById('catAssign'), list = document.getElementById('catAssignList');
-  if(!box || !list) return;
-  if(!tcData.length){ box.hidden = true; return; }
-  box.hidden = false;
-  const ro = (()=>{ try{ return projectReadOnly(); }catch(e){ return false; } })();
+// 관리자 > 담당 지정 화면의 대분류 목록(list 요소에 그린다). 지금 불러온 프로젝트의 TC 기준
+function renderCatAssign(list){
+  if(!list) return;
+  if(!tcData.length){ list.innerHTML = '<div class="ad-empty">이 프로젝트에는 테스트 시나리오가 없어요.</div>'; return; }
+  const ro = false; // 관리자 메뉴에서만 연다
   const stats = catAssignStats(tcData), none = stats.reduce((a, x)=>a + x.none, 0);
-  document.getElementById('catAssignSum').textContent = none ? `미배정 ${none}건` : '모두 배정됨';
-  document.getElementById('catAssignSum').classList.toggle('is-warn', !!none);
-  if(none && !box.dataset.touched) box.open = true; // 미배정이 있으면 펼쳐 둔다(사용자가 접으면 그대로)
+  const sum = document.getElementById('catAssignSum');
+  if(sum){ sum.textContent = none ? `미배정 ${none}건` : '모두 배정됨'; sum.classList.toggle('is-warn', !!none); }
   list.innerHTML = stats.map(x=>{
     const who = Object.entries(x.by).map(([n, c])=>`<span class="ca-chip">${escapeHtml(n)} ${c}</span>`).join('') + (x.none ? `<span class="ca-chip is-none">미배정 ${x.none}</span>` : '');
     return `<div class="ca-row"><span class="ca-name" title="${escapeHtml(x.cat)}">${escapeHtml(x.cat)}</span><span class="ca-count">${x.total}건</span><span class="ca-who">${who}</span>${ro ? '' : `<button type="button" class="ad-btn ad-btn--sm ca-btn" data-ca-cat="${escapeHtml(x.cat)}" aria-haspopup="dialog">담당 지정</button>`}</div>`;
@@ -4592,14 +4604,14 @@ function openCatPicker(cat, anchor){
     const n = cb.value;
     catRowsOf(cat).forEach(row=>{ row.tester = joinTesters(cb.checked ? [...testersOf(row), n] : testersOf(row).filter(t=>t !== n)); });
     scheduleAutoSave();
-    renderTable(); // 팝오버는 목록 밖에 있어 그대로 열려 있다
+    renderTable();
+    renderCatAssign(document.getElementById('catAssignList')); // 팝오버는 목록 밖에 있어 그대로 열려 있다
   }));
   const first = pop.querySelector('input:not([disabled])');
   if(first) first.focus();
 }
 document.addEventListener('mousedown', e=>{ if(document.getElementById('catPopover') && !e.target.closest('#catPopover') && !e.target.closest('[data-ca-cat]')) closeCatPicker(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && document.getElementById('catPopover')) closeCatPicker(); });
-document.getElementById('catAssign').addEventListener('toggle', e=>{ e.currentTarget.dataset.touched = '1'; });
 
 // 담당자 고르기 팝오버(카드 머리 버튼): 체크하는 즉시 저장. Esc·바깥 클릭으로 닫힌다
 let testerPickerIdx = -1;
@@ -5991,6 +6003,7 @@ function renderPlan(){
         <input type="text" class="ad-input" id="roundAddName" maxlength="30" placeholder="${roundsOf(p).length + 1}차" aria-label="새 회차 이름">
         <input type="date" class="ad-input" id="roundAddFrom" aria-label="새 회차 시작일"><input type="date" class="ad-input" id="roundAddTo" aria-label="새 회차 종료일">
         <label class="round-failonly"><input type="checkbox" id="roundAddFail"> 지난 회차 Fail만</label>
+        <label class="round-failonly"><input type="checkbox" id="roundAddPending"> 지난 회차 미실행만</label>
         <button type="button" class="ad-btn ad-btn--sm ad-btn--primary" id="roundAddBtn">추가</button></div></details></div></div>
   </section>`;
   // C. 일정 예측 · 다음 할 일(지금 회차의 단계 기준)
@@ -6074,7 +6087,7 @@ async function saveRoundField(idx, rid, field, value){
   if(!entry) return;
   await saveRounds(entry, roundsOf(entry).map(r=>r.id === rid ? { ...r, [field]: String(value || '').trim() } : r));
 }
-// 새 회차: 시나리오·담당 테스터는 이어받고 결과는 비운다. failOnly면 지난(지금) 회차에서 Fail이 아닌 시나리오는 검수 제외(N/A)로 시작
+// 새 회차: 시나리오·담당 테스터는 이어받고 결과는 비운다. failOnly(Fail만)·pendingOnly(미실행만)를 고르면 그에 해당하지 않는 시나리오는 검수 제외(N/A)로 시작
 /* ---------- 단계 레일 (테스트 계획 탭): DVT → CVT → UAT ----------
    단계마다 목적·참여·범위(우선순위)·종료 기준을 두고, 그 단계의 마지막 회차로 판정한다(현황판 관문과 같은 판정).
    프로젝트 data.stages[단계] = { purpose, who, scope:{priority:[]}, exit:{기준:값}, signedBy, signedAt, forced:{by,at,reason} } (스키마 변경 없음) */
@@ -6330,12 +6343,18 @@ async function startNextStage(idx, from, next){
   }
   await addRound(idx, { stage: next, name: '1차' });
 }
-async function addRound(idx, { stage, name, from, to, failOnly }){
+// 새 회차로 넘길 시나리오인가 (순수 함수): 아무것도 고르지 않으면 전부, Fail만·미실행만은 고른 것을 합쳐서 넘긴다. 나머지는 검수 제외(N/A)
+function carryToRound(prevRes, opts){
+  const o = opts || {};
+  if(!o.failOnly && !o.pendingOnly) return true;
+  return (!!o.failOnly && FAIL_RESULTS.includes(prevRes)) || (!!o.pendingOnly && !prevRes);
+}
+async function addRound(idx, { stage, name, from, to, failOnly, pendingOnly }){
   const entry = historyList[idx];
   if(!entry) return;
   const rid = 'r' + Date.now().toString(36), prev = currentRoundId;
-  if(failOnly) tcData.forEach(row=>{
-    if(FAIL_RESULTS.includes(withRound(prev, ()=>effectiveResult(row)))) return;
+  if(failOnly || pendingOnly) tcData.forEach(row=>{
+    if(carryToRound(withRound(prev, ()=>effectiveResult(row)), { failOnly, pendingOnly })) return;
     row[rk('result', rid)] = 'N/A';
     row[rk('reviewStage', rid)] = '검수 제외';
     assigneesOf(row).forEach(n=>{ row[rk('tr:' + n, rid)] = 'N/A'; });
@@ -6368,7 +6387,7 @@ function bindRounds(box, p){
   box.querySelectorAll('[data-round-view]').forEach(b=>b.addEventListener('click', ()=>setCurrentRound(b.dataset.roundView)));
   box.querySelectorAll('[data-round-del]').forEach(b=>b.addEventListener('click', ()=>removeRound(idx, b.dataset.roundDel)));
   const add = box.querySelector('#roundAddBtn');
-  if(add) add.addEventListener('click', ()=>addRound(idx, { stage: box.querySelector('#roundAddStage').value, name: box.querySelector('#roundAddName').value, from: box.querySelector('#roundAddFrom').value, to: box.querySelector('#roundAddTo').value, failOnly: box.querySelector('#roundAddFail').checked }));
+  if(add) add.addEventListener('click', ()=>addRound(idx, { stage: box.querySelector('#roundAddStage').value, name: box.querySelector('#roundAddName').value, from: box.querySelector('#roundAddFrom').value, to: box.querySelector('#roundAddTo').value, failOnly: box.querySelector('#roundAddFail').checked, pendingOnly: box.querySelector('#roundAddPending').checked }));
 }
 async function savePlanField(idx, key, field, value){
   value = String(value || '').trim();
@@ -7395,7 +7414,7 @@ async function openSharedProjectOnce(){
    테스트 시나리오 리스트는 여전히 하나(지금 작업 중인 리스트)이고, 화면 전환은 보이는 영역만 바꾼다. */
 // 주소의 해시 → 화면. 주소가 없거나 형식이 틀리면 {view:'main'}(기본 분류로 연다) (순수 함수)
 function parseRoute(hash){
-  const a = /^#\/admin\/(accounts|projects)$/.exec(hash || '');
+  const a = /^#\/admin\/(accounts|projects|assign)$/.exec(hash || '');
   if(a) return { view: 'admin', page: a[1] };
   const m = /^#\/(?:c\/([^/]+)(?:\/p\/([^/]+))?)?$/.exec(hash || '');
   if(!m || !m[1]) return { view: 'main' };
@@ -7406,7 +7425,7 @@ function parseRoute(hash){
 }
 // 화면 → 주소의 해시 (순수 함수)
 function routeHash(r){
-  if(r && r.view === 'admin') return '#/admin/' + (r.page === 'projects' ? 'projects' : 'accounts');
+  if(r && r.view === 'admin') return '#/admin/' + (['projects', 'assign'].includes(r.page) ? r.page : 'accounts');
   if(!r || r.view === 'main' || !r.cat) return '#/';
   const c = '#/c/' + encodeURIComponent(r.cat);
   return r.view === 'proj' ? `${c}/p/${encodeURIComponent(r.id || 'new')}` : c;
@@ -7796,7 +7815,7 @@ function renderAuthUi(){
   menu.innerHTML = `<div class="pm-head"><span class="gnb-avatar" aria-hidden="true">${escapeHtml(name.slice(0, 1))}</span>
     <span class="gnb-profile-txt"><span class="gnb-profile-name">${escapeHtml(name)}<span class="role-badge${admin ? ' is-admin' : ''}">${admin ? '관리자' : '멤버'}</span></span><small title="${escapeHtml(authState.email)}">${escapeHtml(authState.email)}</small></span></div>
     <button type="button" class="pm-item" id="profileNameBtn">이름 바꾸기</button>
-    ${admin ? `<div class="pm-sep">관리자</div><button type="button" class="pm-item" data-admin-page="accounts">계정 관리</button><button type="button" class="pm-item" data-admin-page="projects">프로젝트 관리</button>` : ''}
+    ${admin ? `<div class="pm-sep">관리자</div><button type="button" class="pm-item" data-admin-page="accounts">계정 관리</button><button type="button" class="pm-item" data-admin-page="projects">프로젝트 관리</button><button type="button" class="pm-item" data-admin-page="assign">담당 지정</button>` : ''}
     <div class="pm-sep" role="separator"></div><button type="button" class="pm-item" id="logoutBtn">로그아웃</button>`;
   const closeMenu = ()=>toggleHdrPop(document.getElementById('profileBtn'), menu, false);
   document.getElementById('logoutBtn').addEventListener('click', signOutNow);
@@ -7825,7 +7844,7 @@ function applyReadOnly(){
   if(b) b.hidden = !ro;
 }
 /* 관리자 메뉴: 계정 관리 / 프로젝트 관리 (관리자만. 서버도 관리자만 고치게 막는다) */
-const ADMIN_PAGES = { accounts: '계정 관리', projects: '프로젝트 관리' };
+const ADMIN_PAGES = { accounts: '계정 관리', projects: '프로젝트 관리', assign: '담당 지정' };
 let adminNewProject = false; // 프로젝트 관리 목록 맨 위의 '새 프로젝트' 입력 줄
 // 빈 프로젝트를 만든다(관리자 > 프로젝트 관리). 서버에 올라가면 만든 관리자가 첫 편집 멤버가 된다(cvt_on_history_insert)
 async function createAdminProject(title, cat){
@@ -7877,8 +7896,18 @@ async function adminWrite(promise, okMsg){
 function renderAdmin(){
   const box = document.getElementById('panel-admin'), page = currentRoute.page;
   const localOnly = !SYNC_CONFIGURED; // 로그인 없이(아티팩트 등): 이 브라우저의 프로젝트만, 멤버·권한 칸 없음
-  if(localOnly && page !== 'projects'){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">로그인 없이 쓸 때는 프로젝트 관리만 볼 수 있어요.</div></div>'; return; }
+  if(localOnly && page === 'accounts'){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">로그인 없이 쓸 때는 프로젝트 관리·담당 지정만 볼 수 있어요.</div></div>'; return; }
   if(!localOnly && !isAdminUser()){ box.innerHTML = '<div class="card ad-card ad-panel"><div class="ad-empty">관리자만 볼 수 있어요.</div></div>'; return; }
+  if(page === 'assign'){ // 담당 지정: 프로젝트를 골라 대분류 단위로 담당 테스터를 더하거나 뺀다(관리자만)
+    const cur = historyList.findIndex(h=>h._id === loadedHistoryId);
+    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">담당 지정</h3><span class="legend">대분류를 골라 그 대분류 TC 전체에 담당 테스터를 지정해요. 테스터는 자기에게 지정된 TC만 봐요.</span></div>
+      <div class="ca-proj"><label class="ca-proj-lab" for="caProjSel">프로젝트</label><select class="ad-select" id="caProjSel">${cur < 0 ? '<option value="">프로젝트 고르기</option>' : ''}${historyList.map((h, i)=>`<option value="${i}"${i === cur ? ' selected' : ''}>${escapeHtml(h.title || h.fileName || '(이름 없음)')}</option>`).join('')}</select><span class="ca-sum" id="catAssignSum"></span></div>
+      <div class="cat-assign-list" id="catAssignList"></div></div>`;
+    const list = document.getElementById('catAssignList');
+    if(cur >= 0) renderCatAssign(list); else list.innerHTML = '<div class="ad-empty">프로젝트를 골라 주세요.</div>';
+    document.getElementById('caProjSel').addEventListener('change', e=>{ const i = +e.target.value; if(e.target.value === '' || !historyList[i]) return; closeCatPicker(); loadHistoryEntry(i); goRoute({ view: 'admin', page: 'assign' }); renderAdmin(); });
+    return;
+  }
   if(page === 'projects'){
     const st = authState || { profiles: [], members: [] };
     const opts = (st.profiles || []).filter(p=>p.active);
@@ -8339,6 +8368,8 @@ tcListEl.addEventListener('click', async e=>{
   { // 로그인 없이 쓸 때(아티팩트 등): 계정 메뉴가 없으니 머리에 '프로젝트 관리'를 둔다
     const b = document.getElementById('localProjBtn');
     if(b && !SYNC_CONFIGURED){ b.hidden = false; b.addEventListener('click', ()=>goRoute({ view: 'admin', page: 'projects' })); }
+    const a = document.getElementById('localAssignBtn');
+    if(a && !SYNC_CONFIGURED){ a.hidden = false; a.addEventListener('click', ()=>goRoute({ view: 'admin', page: 'assign' })); }
   }
   await loadHistory();
   await loadTesters();
