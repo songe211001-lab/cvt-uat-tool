@@ -1898,6 +1898,53 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
   #tcCardList dialog.tc-pop .tc-pop-l select.pri-select, #tcCardList dialog.tc-pop .tc-pop-l select.screentype-select{width:100%;height:42px;min-height:42px;padding:0 32px 0 12px;border:1px solid var(--line);border-radius:8px;background-color:var(--panel);background-position:calc(100% - 16px) 52%, calc(100% - 11px) 52%;box-shadow:none;font:inherit;font-size:14px;font-weight:500;line-height:1.6;color:var(--ink);box-sizing:border-box;}
   #tcCardList dialog.tc-pop .tc-pop-l select.pri-select.is-High{color:var(--fatal-text);font-weight:600;}
   #tcCardList dialog.tc-pop .tc-pop-l select.pri-select.is-Low{color:var(--muted);}
+
+  /* 상세 '엑셀 다운로드'(2026-11 13차) */
+  .tc-excel-menu > summary{white-space:nowrap;}
+  .tc-excel-menu .export-menu__list{min-width:140px;}
+
+  /* TC 목록 표 글자 14px 통일(2026-11 13차): 열 머리·행 칸 안의 글자·선택칸 모두 */
+  .tc-table-head, .tc-table-head .tc-c{font-size:14px !important;}
+  #tcCardList .tc-card-head, #tcCardList .tc-card-head .tc-c, #tcCardList .tc-card-head .tc-c *:not(svg):not(path){font-size:14px !important;}
+
+  /* 프로젝트 관리: 분류 영역 · 읽기 전용 표 · 수정 팝업(2026-11 14차) */
+  .pa-cat-card{margin-bottom:12px;}
+  .pa-cats{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;}
+  .pa-cat{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;background:var(--grey-100);color:var(--ink);font-size:13px;font-weight:600;}
+  .pa-cat b{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .pa-cat-add{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .pa-cat-add .ad-input{width:220px;max-width:100%;}
+  .pa-cat-err{font-size:12.5px;color:var(--fatal-text);}
+  .pa-table{width:100%;min-width:0 !important;table-layout:auto;}
+  .pa-table thead th{white-space:nowrap;}
+  .pa-table .pa-name, .pa-table thead th:first-child{min-width:180px;width:45%;}
+  .pa-table td.pa-date{width:1%;}
+  .pa-table td.pa-act{width:1%;}
+  .pa-table td.num{width:56px;}
+  .pa-table th, .pa-table td{vertical-align:middle;}
+  .pa-table .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .pa-row{cursor:pointer;}
+  .pa-row:hover, .pa-row:focus-visible{background:var(--grey-100);outline:none;}
+  .pa-name{font-weight:600;color:var(--ink);text-align:left;}
+  .pa-date{white-space:nowrap;color:var(--muted);}
+  .pa-act{white-space:nowrap;text-align:right;}
+  .pa-act .ad-btn + .ad-btn{margin-left:4px;}
+  @media (max-width:700px){ .pa-table .pa-date, .pa-table thead th:nth-last-child(2), .pa-table .num{display:none;} .pa-table .pa-name, .pa-table thead th:first-child{min-width:0;width:auto;} .pa-table th, .pa-table td{padding-left:8px;padding-right:8px;} }
+  dialog.proj-edit-dlg{width:min(520px, calc(100vw - 32px));max-height:calc(100vh - 32px);padding:20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);box-shadow:var(--shadow-3);}
+  dialog.proj-edit-dlg::backdrop{background:rgba(0,0,0,.35);}
+  .pe-title{margin:0 0 14px;font-size:17px;font-weight:700;}
+  .pe-f{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .pe-f > span{font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .pe-f .ad-input, .pe-f .ad-select{width:100%;height:40px;box-sizing:border-box;}
+  .pe-mems{display:flex;flex-wrap:wrap;gap:6px;}
+  .pe-mems .member-chip{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+  .pe-mems .member-perm{width:auto;height:28px;font-size:12.5px;}
+  .pe-add{display:flex;gap:6px;align-items:center;}
+  .pe-add .member-add-user{flex:1 1 auto;min-width:0;width:auto;height:36px;}
+  .pe-add .member-add-perm{flex:none;width:80px;height:36px;}
+  .pe-note{margin:0 0 12px;}
+  .pe-err{min-height:18px;margin:0 0 8px;font-size:12.5px;color:var(--fatal-text);}
+  .pe-actions{display:flex;justify-content:flex-end;gap:8px;}
 </style>
 </head>
 <body class="ad-root">
@@ -2031,6 +2078,14 @@ body.in-artifact #qcGenOpenBtn{display:inline-flex !important;} /* 아티팩트:
             <button type="button" class="ad-btn ad-btn--sm" data-type="FO" aria-pressed="false">FO</button>
             <button type="button" class="ad-btn ad-btn--sm" data-type="BO" aria-pressed="false">BO</button>
           </div>
+          <details class="export-menu tc-excel-menu" id="tcExcelMenu">
+            <summary class="ad-btn ad-btn--sm" aria-label="엑셀 다운로드 범위 고르기"><span aria-hidden="true">↓</span> 엑셀 다운로드</summary>
+            <div class="export-menu__list" role="menu">
+              <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" role="menuitem" data-xl="ALL">전체 시나리오</button>
+              <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" role="menuitem" data-xl="FO">FO 시나리오</button>
+              <button type="button" class="ad-btn ad-btn--ghost ad-btn--sm" role="menuitem" data-xl="BO">BO 시나리오</button>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -5500,6 +5555,9 @@ async function exportExcel(scope = 'ALL'){
 document.getElementById('exportBtn').addEventListener('click', ()=>exportExcel('ALL'));
 document.getElementById('exportFoBtn').addEventListener('click', ()=>exportExcel('FO'));
 document.getElementById('exportBoBtn').addEventListener('click', ()=>exportExcel('BO'));
+// 상세(테스트 목록) 위 '엑셀 다운로드': 전체 / FO / BO
+document.querySelectorAll('#tcExcelMenu [data-xl]').forEach(b=>b.addEventListener('click', ()=>{ document.getElementById('tcExcelMenu').open = false; exportExcel(b.dataset.xl); }));
+document.addEventListener('mousedown', e=>{ const m = document.getElementById('tcExcelMenu'); if(m && m.open && !m.contains(e.target)) m.open = false; });
 
 /* ---------- 작업 중인 TC 임시 저장 (새로고침·창 닫기로 인한 작업 손실 방지) ----------
    엑셀 내보내기 전까지 tcData는 화면에만 존재하므로, 편집할 때마다 draftDirty를
@@ -7893,6 +7951,74 @@ async function adminWrite(promise, okMsg){
   renderAdmin();
   return !error;
 }
+// 프로젝트 수정 팝업(관리자 > 프로젝트 관리). h가 없으면 새 프로젝트. [저장]할 때만 바뀐 값을 기존 함수로 보낸다
+function openProjEdit(h){
+  const old = document.getElementById('projEditDlg'); if(old) old.remove();
+  const localOnly = !SYNC_CONFIGURED, st = authState || { profiles: [], members: [] };
+  const cats = categoryStats(historyList, addedCategories, hiddenCategories).map(x=>x.cat).filter(c=>c !== 'ALL');
+  if(!cats.includes(UNCATEGORIZED)) cats.push(UNCATEGORIZED);
+  const curCat = h ? categoryOf(h) : (projectCategory && cats.includes(projectCategory) ? projectCategory : cats[0]);
+  const showMem = !localOnly && !!h;
+  const before = showMem ? (st.members || []).filter(m=>m.project === h._id).map(m=>({ user_id: m.user_id, perm: m.perm === 'view' ? 'view' : 'edit' })) : [];
+  let ms = before.map(m=>({ ...m }));
+  const opts = (st.profiles || []).filter(p=>p.active);
+  const dlg = document.createElement('dialog');
+  dlg.id = 'projEditDlg'; dlg.className = 'ad-modal proj-edit-dlg';
+  dlg.setAttribute('aria-labelledby', 'projEditTitle');
+  dlg.innerHTML = `<form class="pe-form" novalidate><h3 class="pe-title" id="projEditTitle">${h ? '프로젝트 수정' : '새 프로젝트'}</h3>
+    <label class="pe-f"><span>프로젝트 이름</span><input type="text" class="ad-input pe-name" maxlength="60" value="${escapeHtml(h ? (h.title || h.fileName || '') : '')}" placeholder="프로젝트 이름"></label>
+    <label class="pe-f"><span>분류</span><select class="ad-select pe-cat">${cats.map(c=>`<option value="${escapeHtml(c)}"${c === curCat ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select></label>
+    ${showMem ? `<div class="pe-f"><span>멤버 · 권한</span><div class="member-chips pe-mems"></div><div class="member-add pe-add"><select class="ad-select member-add-user" aria-label="추가할 계정"></select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></div></div>` : (!h && !localOnly ? '<p class="sub-txt pe-note">멤버는 만든 뒤 [수정]에서 지정해요. 만든 관리자가 첫 멤버가 돼요.</p>' : '')}
+    <p class="pe-err" role="alert"></p>
+    <div class="pe-actions"><button type="button" class="ad-btn" data-pe-cancel>취소</button><button type="submit" class="ad-btn ad-btn--primary" data-pe-save>저장</button></div></form>`;
+  document.body.appendChild(dlg);
+  const q = sel=>dlg.querySelector(sel), err = q('.pe-err');
+  const drawMem = ()=>{
+    if(!showMem) return;
+    q('.pe-mems').innerHTML = ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>';
+    const have = new Set(ms.map(m=>m.user_id));
+    q('.member-add-user').innerHTML = `<option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}`;
+    dlg.querySelectorAll('.pe-mems .member-perm').forEach(sel=>sel.addEventListener('change', ()=>{ const m = ms.find(x=>x.user_id === sel.dataset.memUser); if(m) m.perm = sel.value; }));
+    dlg.querySelectorAll('.pe-mems [data-mem-del]').forEach(b=>b.addEventListener('click', ()=>{ ms = ms.filter(x=>x.user_id !== b.dataset.memDel); drawMem(); }));
+  };
+  drawMem();
+  if(showMem) q('.member-add-btn').addEventListener('click', ()=>{
+    const uid = q('.member-add-user').value;
+    if(!uid){ err.textContent = '추가할 계정을 골라 주세요.'; return; }
+    err.textContent = '';
+    ms.push({ user_id: uid, perm: q('.member-add-perm').value === 'view' ? 'view' : 'edit' });
+    drawMem();
+  });
+  const close = ()=>{ try{ dlg.close(); }catch(e){ /* 이미 닫힘 */ } dlg.remove(); };
+  q('[data-pe-cancel]').addEventListener('click', close);
+  dlg.addEventListener('cancel', e=>{ e.preventDefault(); close(); }); // Esc: 바꾼 내용을 버린다
+  dlg.addEventListener('mousedown', e=>{ const r = dlg.getBoundingClientRect(); if(e.target === dlg && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) close(); });
+  q('.pe-name').addEventListener('input', ()=>{ err.textContent = ''; });
+  q('.pe-form').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const name = q('.pe-name').value.trim(), cat = q('.pe-cat').value;
+    if(!name){ err.textContent = '프로젝트 이름을 입력해 주세요.'; q('.pe-name').focus(); return; }
+    if(historyList.some(x=>x !== h && String(x.title || x.fileName || '').trim() === name)){ err.textContent = `"${name}" 프로젝트가 이미 있어요.`; q('.pe-name').focus(); return; }
+    close();
+    if(!h){ await createAdminProject(name, cat); showInfoToast(`'${name}' 프로젝트를 추가했어요.`); renderAdmin(); return; }
+    let changed = false;
+    if(String(h.title || h.fileName || '') !== name){ h.title = name; changed = true; }
+    if(cat !== categoryOf(h)){ if(cat === UNCATEGORIZED) delete h.category; else h.category = cat; changed = true; }
+    if(changed) saveProjectMetaChange(h);
+    if(showMem){
+      const project = h._id, was = new Map(before.map(m=>[m.user_id, m.perm])), now = new Map(ms.map(m=>[m.user_id, m.perm]));
+      for(const [uid] of was) if(!now.has(uid)) await adminWrite(sb.from('cvt_project_members').delete().eq('project', project).eq('user_id', uid));
+      for(const [uid, perm] of now){
+        if(!was.has(uid)) await adminWrite(sb.from('cvt_project_members').insert({ project, user_id: uid, perm }));
+        else if(was.get(uid) !== perm) await adminWrite(sb.from('cvt_project_members').update({ perm }).eq('project', project).eq('user_id', uid));
+      }
+    }
+    showInfoToast(`'${name}' 프로젝트를 저장했어요.`);
+    renderAdmin();
+  });
+  try{ dlg.showModal(); }catch(e){ dlg.setAttribute('open', ''); }
+  q('.pe-name').focus();
+}
 function renderAdmin(){
   const box = document.getElementById('panel-admin'), page = currentRoute.page;
   const localOnly = !SYNC_CONFIGURED; // 로그인 없이(아티팩트 등): 이 브라우저의 프로젝트만, 멤버·권한 칸 없음
@@ -7908,54 +8034,41 @@ function renderAdmin(){
     document.getElementById('caProjSel').addEventListener('change', e=>{ const i = +e.target.value; if(e.target.value === '' || !historyList[i]) return; closeCatPicker(); loadHistoryEntry(i); goRoute({ view: 'admin', page: 'assign' }); renderAdmin(); });
     return;
   }
-  if(page === 'projects'){
+  if(page === 'projects'){ // 읽기 전용 표 + 수정 팝업 + 위쪽 분류 영역(2026-11)
     const st = authState || { profiles: [], members: [] };
-    const opts = (st.profiles || []).filter(p=>p.active);
-    const cats = categoryStats(historyList, addedCategories, hiddenCategories).map(x=>x.cat).filter(c=>c !== 'ALL');
-    if(!cats.includes(UNCATEGORIZED)) cats.push(UNCATEGORIZED);
-    const catSel = (cls, v, label)=>`<select class="ad-select ${cls}" aria-label="${escapeHtml(label)}">${cats.map(c=>`<option value="${escapeHtml(c)}"${c === v ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select>`;
-    box.innerHTML = `<div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">${localOnly ? '이 브라우저에만 저장돼요. 만든 뒤 "내보내기 > JSON"으로 받아 사이트로 옮길 수 있어요.' : '관리자만 프로젝트를 추가·수정·삭제해요. 만든 관리자가 첫 멤버가 되고, 멤버를 지정하면 멤버만 봐요.'}</span><button type="button" class="ad-btn ad-btn--sm proj-new-btn" id="projImportBtn" title="아티팩트에서 생성하고 내보낸 JSON 파일을 프로젝트로 가져와요">JSON 가져오기</button><button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="projNewBtn">+ 새 프로젝트</button></div>
-      <div class="plan-table-wrap"><table class="plan-table admin-table proj-admin-table"><colgroup><col class="col-pname"><col class="col-pcat">${localOnly ? '' : '<col class="col-pmem"><col class="col-padd">'}<col class="col-pdel"></colgroup>
-      <thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th>${localOnly ? '' : '<th scope="col">멤버 · 권한</th><th scope="col">멤버 추가</th>'}<th scope="col"><span class="sr-only">삭제</span></th></tr></thead><tbody>
-      ${adminNewProject ? `<tr class="proj-new-row"><td><input type="text" class="ad-input proj-new-name" maxlength="60" placeholder="새 프로젝트 이름" aria-label="새 프로젝트 이름"></td><td>${catSel('proj-new-cat', projectCategory && cats.includes(projectCategory) ? projectCategory : cats[0], '새 프로젝트 분류')}</td><td colspan="${localOnly ? 1 : 3}" class="sub-txt">Enter로 추가 · Esc로 취소</td></tr>` : ''}
-      ${historyList.map(h=>{
-        const ms = (st.members || []).filter(m=>m.project === h._id), have = new Set(ms.map(m=>m.user_id));
-        return `<tr data-admin-proj="${escapeHtml(h._id)}"><th scope="row"><input type="text" class="ad-input proj-name cell-edit" maxlength="60" value="${escapeHtml(h.title || h.fileName || '')}" aria-label="프로젝트 이름"></th><td>${catSel('proj-cat', categoryOf(h), '분류')}</td>
-          ${localOnly ? '' : `<td><div class="member-chips">${ms.length ? ms.map(m=>`<span class="member-chip">${escapeHtml(profileName(m.user_id))}<select class="ad-select member-perm" data-mem-user="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 권한"><option value="edit"${m.perm !== 'view' ? ' selected' : ''}>편집</option><option value="view"${m.perm === 'view' ? ' selected' : ''}>보기</option></select><button type="button" class="member-del" data-mem-del="${escapeHtml(m.user_id)}" aria-label="${escapeHtml(profileName(m.user_id))} 빼기">✕</button></span>`).join('') : '<span class="ad-badge ad-badge--neutral">공개(멤버 없음)</span>'}</div></td>
-          <td class="member-add"><select class="ad-select member-add-user" aria-label="추가할 계정"><option value="">계정 고르기</option>${opts.filter(p=>!have.has(p.user_id)).map(p=>`<option value="${escapeHtml(p.user_id)}">${escapeHtml(p.name || p.email)}</option>`).join('')}</select><select class="ad-select member-add-perm" aria-label="권한"><option value="edit">편집</option><option value="view">보기</option></select><button type="button" class="ad-btn ad-btn--sm member-add-btn">추가</button></td>`}
-          <td><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm proj-del" data-proj-del aria-label="${escapeHtml(h.title || h.fileName || '프로젝트')} 삭제">삭제</button></td></tr>`;
-      }).join('') || (adminNewProject ? '' : `<tr><td colspan="${localOnly ? 3 : 5}"><div class="ad-empty">프로젝트가 없어요. [+ 새 프로젝트]로 추가해 주세요.</div></td></tr>`)}</tbody></table></div></div>`;
-    document.getElementById('projNewBtn').addEventListener('click', ()=>{ adminNewProject = true; renderAdmin(); });
+    const stats = categoryStats(historyList, addedCategories, hiddenCategories);
+    const memSum = h=>{ const ms = (st.members || []).filter(m=>m.project === h._id); if(!ms.length) return '<span class="ad-badge ad-badge--neutral">공개</span>';
+      const e = ms.filter(m=>m.perm !== 'view').length; return `${ms.length}명 <span class="sub-txt">편집 ${e} · 보기 ${ms.length - e}</span>`; };
+    const pname = h=>h.title || h.fileName || '(이름 없음)';
+    box.innerHTML = `<div class="card ad-card ad-panel admin-card pa-cat-card"><div class="plan-head"><h3 class="plan-title">분류</h3><span class="legend">프로젝트를 묶는 분류예요. 숫자는 그 분류의 프로젝트 수예요.</span></div>
+      <div class="pa-cats">${stats.map(x=>`<span class="pa-cat">${escapeHtml(x.cat)}<b>${x.projects}</b></span>`).join('')}</div>
+      <div class="pa-cat-add"><input type="text" class="ad-input" id="paCatName" maxlength="20" placeholder="새 분류 이름" aria-label="새 분류 이름"><button type="button" class="ad-btn ad-btn--sm" id="paCatAdd">+ 분류 추가</button><span class="pa-cat-err" id="paCatErr" role="alert"></span></div></div>
+      <div class="card ad-card ad-panel admin-card"><div class="plan-head"><h3 class="plan-title">프로젝트 관리</h3><span class="legend">${localOnly ? '이 브라우저에만 저장돼요. 만든 뒤 "내보내기 > JSON"으로 받아 사이트로 옮길 수 있어요.' : '행을 누르면 이름·분류·멤버를 고칠 수 있어요. 멤버를 지정하면 멤버만 봐요.'}</span><button type="button" class="ad-btn ad-btn--sm proj-new-btn" id="projImportBtn" title="아티팩트에서 생성하고 내보낸 JSON 파일을 프로젝트로 가져와요">JSON 가져오기</button><button type="button" class="ad-btn ad-btn--primary ad-btn--sm" id="projNewBtn">+ 새 프로젝트</button></div>
+      <div class="plan-table-wrap"><table class="plan-table admin-table pa-table"><thead><tr><th scope="col">프로젝트</th><th scope="col">분류</th>${localOnly ? '' : '<th scope="col">멤버</th>'}<th scope="col" class="num">TC</th><th scope="col">날짜</th><th scope="col"><span class="sr-only">관리</span></th></tr></thead><tbody>
+      ${historyList.map(h=>`<tr class="pa-row" data-admin-proj="${escapeHtml(h._id)}" tabindex="0" title="눌러서 수정"><th scope="row" class="pa-name">${escapeHtml(pname(h))}</th><td>${escapeHtml(categoryOf(h))}</td>${localOnly ? '' : `<td>${memSum(h)}</td>`}<td class="num">${+h.count || 0}</td><td class="pa-date">${escapeHtml(h.date || '')}</td>
+        <td class="pa-act"><button type="button" class="ad-btn ad-btn--sm" data-proj-edit>수정</button><button type="button" class="ad-btn ad-btn--ghost ad-btn--sm proj-del" data-proj-del aria-label="${escapeHtml(pname(h))} 삭제">삭제</button></td></tr>`).join('')
+        || `<tr><td colspan="${localOnly ? 5 : 6}"><div class="ad-empty">프로젝트가 없어요. [+ 새 프로젝트]로 추가해 주세요.</div></td></tr>`}</tbody></table></div></div>`;
+    document.getElementById('projNewBtn').addEventListener('click', ()=>openProjEdit(null));
     document.getElementById('projImportBtn').addEventListener('click', ()=>document.getElementById('jsonImportInput').click());
-    const nn = box.querySelector('.proj-new-name');
-    if(nn){
-      nn.focus();
-      let done = false;
-      const finish = async save=>{
-        if(done) return; done = true;
-        const name = nn.value.trim(), cat = box.querySelector('.proj-new-cat').value;
-        adminNewProject = false;
-        if(save && name){ await createAdminProject(name, cat); showInfoToast(`'${name}' 프로젝트를 추가했어요.`); }
-        renderAdmin();
-      };
-      nn.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); finish(true); } else if(e.key === 'Escape'){ e.preventDefault(); finish(false); } });
-      nn.addEventListener('blur', ()=>setTimeout(()=>{ if(!box.contains(document.activeElement) || !document.activeElement.closest('.proj-new-row')) finish(true); }, 0));
-    }
+    const catIn = document.getElementById('paCatName'), catErr = document.getElementById('paCatErr');
+    const addCat = ()=>{ // 상단 분류 추가와 같은 저장 경로(addedCategories·hiddenCategories → saveCategoryLists)
+      const v = sanitizeCategory(catIn.value);
+      if(!v){ catErr.textContent = '분류 이름을 입력해 주세요.'; catIn.focus(); return; }
+      if(v === UNCATEGORIZED || categoryList(historyList, addedCategories, hiddenCategories).includes(v)){ catErr.textContent = `"${v}" 분류가 이미 있어요.`; catIn.focus(); return; }
+      if(hiddenCategories.includes(v)) hiddenCategories = hiddenCategories.filter(c=>c !== v); else addedCategories.push(v);
+      saveCategoryLists();
+      renderHistory();
+      showInfoToast(`'${v}' 분류를 추가했어요.`);
+      renderAdmin();
+    };
+    document.getElementById('paCatAdd').addEventListener('click', addCat);
+    catIn.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); addCat(); } });
+    catIn.addEventListener('input', ()=>{ catErr.textContent = ''; });
     box.querySelectorAll('[data-admin-proj]').forEach(tr=>{
       const project = tr.dataset.adminProj, entry = ()=>historyList.find(h=>h._id === project);
-      const nameIn = tr.querySelector('.proj-name');
-      nameIn.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); nameIn.blur(); } });
-      nameIn.addEventListener('change', ()=>{ const h = entry(), v = nameIn.value.trim(); if(!h || !v) return; h.title = v; saveProjectMetaChange(h); });
-      tr.querySelector('.proj-cat').addEventListener('change', e=>{ const h = entry(); if(!h) return; if(e.target.value === UNCATEGORIZED) delete h.category; else h.category = e.target.value; saveProjectMetaChange(h); });
+      tr.addEventListener('click', e=>{ if(e.target.closest('[data-proj-del]')) return; const h = entry(); if(h) openProjEdit(h); });
+      tr.addEventListener('keydown', e=>{ if(e.key === 'Enter' && e.target === tr){ e.preventDefault(); const h = entry(); if(h) openProjEdit(h); } });
       tr.querySelector('[data-proj-del]').addEventListener('click', ()=>adminDeleteProject(project));
-      tr.querySelectorAll('.member-perm').forEach(sel=>sel.addEventListener('change', ()=>adminWrite(sb.from('cvt_project_members').update({ perm: sel.value }).eq('project', project).eq('user_id', sel.dataset.memUser))));
-      tr.querySelectorAll('[data-mem-del]').forEach(b=>b.addEventListener('click', ()=>adminWrite(sb.from('cvt_project_members').delete().eq('project', project).eq('user_id', b.dataset.memDel), '멤버를 뺐어요.')));
-      const addBtn = tr.querySelector('.member-add-btn');
-      if(addBtn) addBtn.addEventListener('click', ()=>{
-        const uid = tr.querySelector('.member-add-user').value;
-        if(!uid) return showGlobalError('추가할 계정을 골라 주세요.');
-        adminWrite(sb.from('cvt_project_members').insert({ project, user_id: uid, perm: tr.querySelector('.member-add-perm').value }), '멤버를 추가했어요.');
-      });
     });
     return;
   }
